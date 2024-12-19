@@ -1,0 +1,20 @@
+# Ignore auto-save files
+**/auto-save-list/
+
+# Ignore backups
+**/backups/
+
+# Ignore compiled Elisp files
+**/eln-cache/
+
+# Ignore Emacs packages
+**/elpa/
+
+# Ignore recent files list
+**/recentf
+
+# Ignore transient files
+**/transient/
+
+# Ignore TRAMP connections
+**/tramp/

@@ -1,0 +1,32 @@
+(asdf:load-system "stumpwm")
+;; avoid repeating stumpwm:define-key or stumpwm:kbd instead of simply define-key and kbd. 
+(in-package :stumpwm)
+
+(defvar guix-home-path "~/.guix-home/profile/share/"
+  "Define Guix Home profile PATH.")
+
+;; Modules
+(set-module-dir "/run/current-system/profile/share/common-lisp/sbcl/")
+(load-module "swm-gaps")
+
+ (setf swm-gaps:*head-gaps-size*  0
+       swm-gaps:*inner-gaps-size* 10
+       swm-gaps:*outer-gaps-size* 10)
+
+(setf *data-dir* "~/.local/share/stumpwm")
+;; (defvar stumpwm-data-dir (concat (getenv "XDG_CACHE_HOME") "/stumpwm/")
+;;  "Define the directory where StumpWM should work with data.")
+
+(load ".config/stumpwm/modeline.lisp")
+(load ".config/stumpwm/ui.lisp")
+(load ".config/stumpwm/keybindings.lisp")
+
+;; Init
+(when *initializing*
+      (run-shell-command "xrandr --output HDMI-2 --auto --output eDP-1 --off")
+      (run-shell-command "picom -b")
+      (run-shell-command "feh --bg-max ~/Images/01-Wallpaper/guts.jpg")
+      (swm-gaps:toggle-gaps)
+      ;;(run-shell-command "setxkbmap de bone")
+      
+)

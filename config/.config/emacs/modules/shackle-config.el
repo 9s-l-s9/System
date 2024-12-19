@@ -1,0 +1,15 @@
+(require 'shackle)
+(provide 'shackle-config)
+
+(setq shackle-rules
+        ;; CONDITION(:regexp/:class/:mode/:function): :select(:t/:nil): :inhibit-window-quit(:t/:nil): :size+/:other/:same/:regexp/:function)
+        '(((compilation-mode) :other t :size 0.3 :align 'below)
+          ((comint-mode) :other t :size 0.3 :align 'above)
+          ((dired-mode) :other t :size 0.25 :align 'left)
+          ((help-mode) :other t :size 0.3 :align 'right)
+          ("*Help*" :other t :size 0.3 :align 'right)
+          ("*Apropos*" :other t :size 0.3 :align 'right)
+          ("*info*" :other t :size 0.3 :align 'right)
+          ("*shell*" :other t :size 0.3 :align 'below)
+          ("*Async Shell Command*" :other t :size 0.3 :align 'below)
+          ))

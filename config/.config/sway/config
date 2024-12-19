@@ -1,0 +1,133 @@
+set $mod Print
+
+# Configure displays
+output * bg ~/Images/01-Wallpaper/guts.jpg fill
+output "eDP-1" disable
+
+input "1:1:AT_Translated_Set_2_keyboard" {
+   xkb_layout de(bone)
+}
+
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+
+bindsym $mod+c kill
+bindsym $mod+q exit
+bindsym $mod+shift+r reload
+bindsym $mod+space exec konsole
+
+bindsym $mod+n focus left
+bindsym $mod+p focus right
+bindsym $mod+h split horizontal
+
+# Move workspace to display
+bindsym $mod+Mod1+h move workspace to output left
+bindsym $mod+Mod1+l move workspace to output right
+bindsym $mod+Mod1+Left move workspace to output left
+bindsym $mod+Mod1+Right move workspace to output right
+
+# alternatively, you can use the cursor keys:
+bindsym $mod+Shift+h move left 30 px
+bindsym $mod+Shift+j move down 30 px
+bindsym $mod+Shift+k move up 30 px
+bindsym $mod+Shift+l move right 30 px
+
+bindsym $mod+f fullscreen toggle
+bindsym $mod+Shift+f floating toggle
+bindsym $mod+Shift+p sticky toggle
+
+# change focus between tiling / floating windows
+bindsym $mod+Control+space focus mode_toggle
+
+# Apps
+bindsym $mod+r exec fuzzel
+bindsym $mod+b exec nyxt
+
+# Set defaults
+default_orientation horizontal
+workspace_layout tabbed
+
+# Configure gaps and borders
+default_border pixel 1
+gaps outer 6
+gaps inner 6
+smart_borders off
+hide_edge_borders --i3 none 
+
+# Define variables for workspace numbers
+set $ws0 0
+set $ws1 1
+set $ws2 2
+set $ws3 3
+set $ws4 4
+set $ws5 5
+
+# Move specific workspaces to outputs
+workspace $ws0 output $laptop
+workspace $ws2 output $primary $laptop
+workspace $ws3 output $laptop
+workspace $ws4 output $laptop
+workspace $ws5 output $laptop
+workspace $ws1 output $primary $laptop # Set ws 1 last to land there on startup
+
+# Switch to workspace
+bindsym $mod+grave workspace $ws0
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+
+# Move focused container to workspace
+bindsym $mod+Shift+grave move container to workspace $ws0
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4
+bindsym $mod+Shift+5 move container to workspace $ws5
+
+# Bind hotkeys for brightness and volume
+bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
+bindsym --locked $mod+p exec playerctl play-pause
+
+# Screenshots
+# bindsym Print exec grimshot --notify save output bindsym Alt+Print exec grimshot --notify save area
+
+set $bgcolor #232635dd
+set $bordercolor #c792eacc
+
+# Style the UI
+client.focused $bordercolor $bgcolor #ffffffff #ffffffff #c792eacc 
+client.unfocused $bordercolor #1c1f2bef #ffffffff #ffffffff #c792eacc 
+
+# Set up screen locking
+
+# Window rules for_window [title="Firefox — Sharing Indicator"]kill for_window [title=".* - mpv$"] floating enable, sticky enable
+
+bar {
+    position top
+    mode hide
+    font pango:JetBrains Mono 8
+
+    status_command while date +'%Y-%m-%d %I:%M:%S %p W%U'; do sleep 1; done
+
+    tray_bindsym button1 Activate
+    tray_bindsym button2 ContextMenu
+
+    colors {
+        statusline #ffffff
+        background $bgcolor
+        inactive_workspace #1c1f2bef #323232CC #5c5c5c
+    }
+}
+
+# Autostart applications
+exec mako --border-radius=2 --font="JetBrains Mono 8" --max-visible=5 --outer-margin=5 --margin=3 --background="#1c1f26" --border-color="#89AAEB" --border-size=1 --default-timeout=7000
+exec nm-applet --indicator
+exec udiskie -t
+exec gammastep-indicator -l 37.983810:23.727539 -t 6500:3500 -b 1.0:0.7
+exec emacs
+
+# Update DBUS activation records to ensure Flatpak apps work
+exec dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
