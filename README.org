@@ -1,0 +1,17 @@
+My personal system configuration 
+
+Using Guix to add  everything together.
+
+Overall structure based on the systemcrafters guide.
+
+* Overview File Structure
+- config: The top-level module path for your Guix configuration
+  - systems: For all your operating-system configurations
+  - services: For any custom system-level services you might create
+  - packages: For any custom package definitions you create
+  - home: For all home-environment configurations
+    - services: For any custom home services you create
+-files: Miscellanous files that are needed for your home configuration
+
+* Changelog
+Changed from multiple repos to a mono-repo structure: Easier to keep updated

@@ -1,0 +1,13 @@
+#+TITLE: A 'simple' emacs configuration
+
+The following is my configuration for emacs.
+After spending months with Spacemacs, Doom Emacs, Nano Emacs and finally Crafted Emacs, I want one thing from my config:
+
+Simplicity. 
+
+-> Most package have their own configuration file (see "./modules" folder). Easy to replace.
+-> It uses GNU Guix for managing packages.
+-> Modeline is inspired by the first version of Nano Emacs.
+
+
+

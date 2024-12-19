@@ -1,0 +1,2 @@
+
+(:COLOR-THEME "chalk" :ISEARCH-PREVIOUS-STRING "")
