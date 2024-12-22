@@ -1,13 +1,4 @@
-
-My personal system configuration 
-
-Using Guix to add  everything together.
-
-Overall structure based on the systemcrafters guide.
+My personal system configuration. 
 
 For more details visit:
 www.s-l-s.one/system
-
-
-* Changelog
-Changed from multiple repos to a mono-repo structure: Easier to keep updated
