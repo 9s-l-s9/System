@@ -1,9 +1,13 @@
-;; replacing it with the Emacs’ text. (setq native-comp-speed 3) (setq fast-but-imprecise-scrolling 't) (setq jit-lock-defer-time 0) (setq gc-cons-threshold most-positive-fixnum) (setq comp-speed 2) (setq max-specpdl-size 3200) (setq max-lisp-eval-depth 3200) (require 'vertico) (setq vertico-resize nil) (vertico-mode 1)
+;; (setq native-comp-speed 3) (setq jit-lock-defer-time 0) (setq comp-speed 2) (setq max-specpdl-size 3200) (setq max-lisp-eval-depth 3200) (require 'vertico) (setq vertico-resize nil) (vertico-mode 1)
+
 
 (setq native-comp-async-report-warnings-errors nil)
+(setq gc-cons-threshold most-positive-fixnum)
 (setq fast-but-imprecise-scrolling 't)
 (add-to-list 'load-path "~/.config/emacs/modules/")
 
+
+;; Some general settings
 (setq frame-resize-pixelwise t
       frame-inhibit-implied-resize t
       frame-title-format '("%b")
