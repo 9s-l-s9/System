@@ -25,7 +25,7 @@
 (when *initializing*
       (run-shell-command "xrandr --output HDMI-2 --auto --output eDP-1 --off")
       (run-shell-command "picom -b")
-      (run-shell-command "feh --bg-max ~/Images/01-Wallpaper/guts.jpg")
+      (run-shell-command "feh --bg-max ~/Images/01-Wallpaper/pe_blue.jpg")
       (swm-gaps:toggle-gaps)
       ;;(run-shell-command "setxkbmap de bone")
       
