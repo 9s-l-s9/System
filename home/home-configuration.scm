@@ -119,9 +119,9 @@
     "emacs-all-the-icons"
     "emacs-elisp-demos"
     "emacs-helpful"
-    ;"emacs-eshell-prompt-extras"
-    ;"emacs-eshell-did-you-mean"
-    ;"emacs-eshell-syntax-highlighting"
+    "emacs-eshell-prompt-extras"
+    "emacs-eshell-did-you-mean"
+    "emacs-eshell-syntax-highlighting"
     "emacs-focus"
     "emacs-doom-themes"
     "emacs-flycheck"
@@ -168,7 +168,7 @@
 
    (service home-dotfiles-service-type
             (home-dotfiles-configuration
-             (directories '("../config"))))
+             (directories '("../files"))))
    )
   )
  )
