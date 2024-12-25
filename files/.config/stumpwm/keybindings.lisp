@@ -15,7 +15,7 @@
 
 ;; Frame Management
 (define-key *root-map* (kbd "F") "float-this")
-(define-key *root-map* (kbd "f") "fnext")
+(define-key *root-map* (kbd "n") "fnext")
 (define-key *root-map* (kbd "v") "vsplit")
 (define-key *root-map* (kbd "h") "hsplit")
 (define-key *root-map* (kbd "c") "remove-split")
@@ -23,7 +23,7 @@
 ;; Window Management
 (define-key *root-map* (kbd "l") "windowlist")
 (define-key *root-map* (kbd "k") "kill")
-(define-key *root-map* (kbd "n") "next")
+(define-key *root-map* (kbd "f") "next")
 (define-key *root-map* (kbd "p") "pull")
 (define-key *root-map* (kbd "m") "move-window")
 
@@ -37,9 +37,20 @@
 (define-key *root-map* (kbd "d") "delete-window")	
 
 (defcommand shutdown () ()(
-run-shell-command "shutdown"))
+			   run-shell-command "shutdown"))
+
 (define-key *root-map* (kbd "Q") "shutdown")
 
+
+(defcommand show-uncommitted-changes () ()
+  "Display projects with uncommitted changes."
+  (let ((output (run-shell-command "~/.config/stumpwm/check-uncommitted.sh" t)))
+    (if (string= output "")
+        (echo "All projects are clean!")
+        (echo output))))
+
+
+(define-key *root-map* (kbd "E") "show-uncommitted-changes")
 
 ;; Screenshots
 (defcommand screenshot () ()(
@@ -83,3 +94,6 @@ run-shell-command "flameshot gui"))
 
 
 (define-key *root-map* (kbd "i") "internet-10-min")
+
+
+
