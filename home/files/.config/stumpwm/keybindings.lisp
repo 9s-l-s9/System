@@ -42,6 +42,7 @@
 (define-key *root-map* (kbd "Q") "shutdown")
 
 
+
 (defcommand show-uncommitted-changes () ()
   "Display projects with uncommitted changes."
   (let ((output (run-shell-command "~/.config/stumpwm/check-uncommitted.sh" t)))
@@ -50,7 +51,17 @@
         (echo output))))
 
 
-(define-key *root-map* (kbd "E") "show-uncommitted-changes")
+(defcommand show-downloads () ()
+  "Display the files in the Downloads directory."
+  (let ((output (directory "/home/samuel/Downloads/*.*")))
+    (if (null output)
+        (echo "Download directory is clean!")
+	(echo output)
+	)))
+
+
+(define-key *root-map* (kbd "E") "show-downloads")
+(define-key *root-map* (kbd "C") "show-uncommitted-changes")
 
 ;; Screenshots
 (defcommand screenshot () ()(
