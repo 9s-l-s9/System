@@ -16,20 +16,9 @@
              "2A39 3FFF 68F4 EF7A 3D29  12AF 6F51 20A0 22FB B2D5"))))
       (channel
        (name 'binary-guix)
-       (url "https://gitlab.com/s-l-s/binary-guix")
+       (url "https://codeberg.org/s-l-s/BinaryGuix")
        (branch "main"))
       
-
-
-      ;; (channel
-      ;;  (name 'home-service-dwl-guile)
-      ;;  (url "https://github.com/engstrand-config/home-service-dwl-guile")
-      ;;  (branch "main")
-      ;;  (introduction
-      ;; 	(make-channel-introduction
-      ;; 	 "314453a87634d67e914cfdf51d357638902dd9fe"
-      ;; 	 (openpgp-fingerprint
-      ;;     "C9BE B8A0 4458 FDDF 1268 1B39 029D 8EB7 7E18 D68C"))))
       (channel
        (name 'radix)
        (url "https://codeberg.org/anemofilia/radix.git")
@@ -41,14 +30,14 @@
           "F164 709E 5FC7 B32B AEC7  9F37 1F2E 76AC E3F5 31C8"))))
 
 
-  (channel
-   (name 'rosenthal)
-   (url "https://codeberg.org/hako/rosenthal.git")
-   (branch "trunk")
-   (introduction
-    (make-channel-introduction
-     "7677db76330121a901604dfbad19077893865f35"
-     (openpgp-fingerprint
-      "13E7 6CD6 E649 C28C 3385  4DF5 5E5A A665 6149 17F7"))))
+      (channel
+       (name 'rosenthal)
+       (url "https://codeberg.org/hako/rosenthal.git")
+       (branch "trunk")
+       (introduction
+	(make-channel-introduction
+	 "7677db76330121a901604dfbad19077893865f35"
+	 (openpgp-fingerprint
+	  "13E7 6CD6 E649 C28C 3385  4DF5 5E5A A665 6149 17F7"))))
 
       )
