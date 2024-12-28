@@ -54,12 +54,11 @@
 
 ;; Theme 
 (setq custom-safe-themes t)
-;; (require 'doom-themes)
-(require 'doom-rouge)
+(require 'doom-themes)
 ;; (require 'nano-theme)
 ;;(load-theme 'nano-light)
 ;; (load-theme 'nano-light)
-(load-theme 'ef-dark t)
+(load-theme 'doom-rouge t)
 (setq custom-safe-themes t)
 
 
