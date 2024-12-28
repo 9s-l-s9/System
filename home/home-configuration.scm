@@ -168,7 +168,7 @@
 
    (service home-dotfiles-service-type
             (home-dotfiles-configuration
-             (directories '("../files"))))
+             (directories '("./files"))))
    )
   )
  )
