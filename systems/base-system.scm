@@ -55,7 +55,6 @@
      (bootloader (bootloader-configuration
               (bootloader grub-efi-bootloader)
               (targets '("/boot/efi"))
-	      ;; (keyboard-layout keyboard-layout)
 	      ))
 
     (file-systems (cons*
@@ -129,7 +128,6 @@
 
        ;(bluetooth-service #:auto-enable? #t)
        )
-
       ;; Modify services from old system.scm
       (modify-services %desktop-services
 

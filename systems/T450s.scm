@@ -4,6 +4,7 @@
 
 (operating-system
  (inherit base-system)
+ (keyboard-layout (keyboard-layout "de" "bone"))
  
  (host-name "T450s")
 
@@ -19,6 +20,8 @@
     (bootloader
    (bootloader-configuration
     (bootloader grub-bootloader) ; Specifies the GRUB EFI bootloader.
-    (targets (list "/dev/sda")))) ; Specifies the installation target for the bootloader.
- )
+    (targets (list "/dev/sda")))
+   ) ; Specifies the installation target for the bootloader.
+
+    )
 
