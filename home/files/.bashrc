@@ -2,6 +2,26 @@ source ~/.profile
 source ~/.guix-home/setup-environment
 GUIX_LOCPATH=$HOME_ENVIRONMENT/profile/lib/locales
 
+export SHELL
+
+if [[ $- != *i* ]]
+then
+    # We are being invoked from a non-interactive shell.  If this
+    # is an SSH session (as in "ssh host command"), source
+    # /etc/profile so we get PATH and other essential variables.
+    [[ -n "$SSH_CLIENT" ]] && source /etc/profile
+
+    # Don't do anything else.
+    return
+fi
+
+# Source the system-wide file.
+[ -f /etc/bashrc ] && source /etc/bashrc
+
+alias ls='ls -p --color=auto'
+alias ll='ls -l'
+alias grep='grep --color=auto'
+
 
 deno () {
   docker run \
