@@ -23,13 +23,13 @@
    ; NO x, h, g, m or c (already defined as C-x ...
    '("p" . sls-new-entry-pkb)
    '("E" . sls-export-org-to-html-and-pdf)
-   '("e" . eat)
+   '("t" . eat)
    '("v" . magit-status)
    '("d" . dired)
-   '("b" . ibuffer)
+   '("i" . ibuffer)
    '("s" . imenu-list-smart-toggle)
    '("y" . sls-copy-file-path)
-   '("m" . consult-bookmark)
+   '("b" . consult-bookmark)
    )
   (meow-normal-define-key
    '("ü" . delete-window)
