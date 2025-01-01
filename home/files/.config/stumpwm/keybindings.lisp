@@ -64,6 +64,7 @@
 (define-key *root-map* (kbd "C") "show-uncommitted-changes")
 
 
+;; Read TODOs command (unchanged from before)
 (defcommand show-todos () ()
   "Show open TODOs from org file"
   (let* ((todo-file "/home/samuel/Projects/WorkingMemory/wm-t450s.org")
@@ -96,8 +97,21 @@
                          "No open TODOs")))
     (message "Open TODOs:~%~A" todo-string)))
 
-;; Optional: Bind it to a key
+;; New command to add a TODO
+(defcommand add-todo (todo-text) ((:string "Enter TODO: "))
+  "Add a new TODO to the org file"
+  (let ((todo-file "/home/samuel/Projects/WorkingMemory/wm-t450s.org"))
+    (with-open-file (stream todo-file
+                           :direction :output
+                           :if-exists :append
+                           :if-does-not-exist :create)
+      ;; Add a newline first to ensure separation from previous content
+      (format stream "~%* TODO ~A" todo-text))
+    (message "Added TODO: ~A" todo-text)))
+
+;; Key bindings
 (define-key *root-map* (kbd "t") "show-todos")
+(define-key *root-map* (kbd "T") "add-todo")
 
 
 ;; Screenshots
