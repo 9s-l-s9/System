@@ -7,6 +7,13 @@
 (add-to-list 'load-path "~/.config/emacs/modules/")
 
 
+(setq user-full-name "Samuel Levi Schmidt"
+      user-email-address (concat "schmidt.l.samuel" "@" "gmail.com")
+      copyright-names-regexp (format "%s <%s>"
+                                       user-full-name
+                                       user-mail-address))
+
+
 ;; Some general settings
 (setq frame-resize-pixelwise t
       frame-inhibit-implied-resize t
@@ -25,11 +32,29 @@
 
 
 
+;; keep ~/.config/emacs/ clean
+(setq user-emacs-directory
+      (expand-file-name "~/.cache/emacs/"))
+(setq url-history-file
+      (expand-file-name "url/history" user-emacs-directory))
 
+;; Set up backup and auto-save directories
+(let ((backup-dir
+       (expand-file-name "backups" "~/.cache/emacs/")))
+  (setq backup-directory-alist `(("." . ,backup-dir)))
+  (setq auto-save-file-name-transforms `((".*" ,backup-dir t)))
+  (setq undo-tree-history-directory-alist `(("." . ,backup-dir))))
 
-(setq backup-directory-alist `(("." . "~/.config/emacs/backups")))
-(setq auto-save-file-name-transforms `((".*" "~/.config/emacs/backups" t)))
-(setq undo-tree-history-directory-alist '(("." . "~/.config/emacs/backups")))
+;; backups
+(setq create-lockfiles nil
+      backup-by-copying t
+      version-control t
+      delete-old-versions t
+      vc-make-backup-files t
+      kept-old-versions 10
+      kept-new-versions 10)
+
+;; Enable global auto-revert mode
 (global-auto-revert-mode 1)
 
 
@@ -75,7 +100,7 @@
 
 (require 'cape-conf)
 (require 'orderless-conf)
-; (require 'marginalia-conf) 
+;(require 'vertico-conf) (require 'marginalia-conf) 
 ; (all-the-icons-completion-mode)
 ; (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
 
