@@ -63,6 +63,43 @@
 (define-key *root-map* (kbd "E") "show-downloads")
 (define-key *root-map* (kbd "C") "show-uncommitted-changes")
 
+
+(defcommand show-todos () ()
+  "Show open TODOs from org file"
+  (let* ((todo-file "/home/samuel/Projects/WorkingMemory/wm-t450s.org")
+         (todos (with-open-file (stream todo-file)
+                  (loop for line = (read-line stream nil nil)
+                        while line
+                        ;; First trim leading/trailing whitespace
+                        for cleaned-line = (string-trim " " line)
+                        ;; Check if line starts with any number of asterisks followed by TODO
+                        when (and (> (length cleaned-line) 6)
+                                (char= (char cleaned-line 0) #\*)
+                                ;; Find position after asterisks
+                                (let* ((content-start (position-if-not 
+                                                     (lambda (c) (char= c #\*)) 
+                                                     cleaned-line))
+                                      (content (string-trim " " 
+                                                          (subseq cleaned-line content-start))))
+                                  (and content-start
+                                       (> (length content) 4)
+                                       (string= "TODO" (subseq content 0 4)))))
+                        ;; Collect the actual todo text, removing asterisks and TODO
+                        collect (let* ((content-start (position-if-not 
+                                                     (lambda (c) (char= c #\*)) 
+                                                     cleaned-line))
+                                     (content (string-trim " " 
+                                                         (subseq cleaned-line content-start))))
+                                (string-trim " " (subseq content 4))))))
+         (todo-string (if todos
+                         (format nil "~{~A~^~%~}" todos)
+                         "No open TODOs")))
+    (message "Open TODOs:~%~A" todo-string)))
+
+;; Optional: Bind it to a key
+(define-key *root-map* (kbd "t") "show-todos")
+
+
 ;; Screenshots
 (defcommand screenshot () ()(
 run-shell-command "flameshot gui"))
