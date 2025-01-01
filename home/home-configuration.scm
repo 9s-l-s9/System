@@ -118,6 +118,7 @@
     "emacs-meow"
     "emacs-nano-modeline"
     "emacs-next"
+    "emacs-orderless"
     "emacs-org-modern"
     "emacs-org-present"
     "emacs-org-transclusion"

@@ -1,7 +1,15 @@
+(require 'orderless) 
 (use-package orderless
-  :ensure t
   :custom
+  (orderless-matching-styles '(orderless-initialism orderless-flex))
   (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion)))))
+  :config
+  (defun orderless-fast-dispatch (word index total)
+    (and (= index 0) (= total 1) (length< word 4)
+         (cons 'orderless-literal-prefix word)))
+
+  (orderless-define-completion-style orderless-fast
+    (orderless-style-dispatchers '())
+    (orderless-matching-styles '(orderless-flexg orderless-regexp))))
 
 (provide 'orderless-conf) 

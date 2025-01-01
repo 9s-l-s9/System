@@ -103,10 +103,12 @@
 (show-paren-mode t)
 
 ;; Line Numbers
-
-(add-hook 'prog-mode-hook #'display-line-numbers-mode)
-;; (setq display-line-numbers 'relative)
-
+;; display-line-numbers variables
+  (setq display-line-numbers-current-absolute t
+        display-line-numbers-grow-only        t
+        display-line-numbers-type             'relative
+        display-line-numbers-width            4
+        display-line-numbers-width-start      t)
 
 ;; Modeline
 ;;(require 'nano-modeline)
