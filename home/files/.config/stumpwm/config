@@ -5,17 +5,16 @@
 (defvar guix-home-path "~/.guix-home/profile/share/"
   "Define Guix Home profile PATH.")
 
+(setf *data-dir* "~/.local/share/stumpwm")
+
+
 ;; Modules
- (set-module-dir "/run/current-system/profile/share/common-lisp/sbcl/")
- (load-module "swm-gaps")
+(set-module-dir "/run/current-system/profile/share/common-lisp/sbcl/")
+(load-module "swm-gaps")
 
   (setf swm-gaps:*head-gaps-size*  0
         swm-gaps:*inner-gaps-size* 10
        swm-gaps:*outer-gaps-size* 10)
-
-(setf *data-dir* "~/.local/share/stumpwm")
-;; (defvar stumpwm-data-dir (concat (getenv "XDG_CACHE_HOME") "/stumpwm/")
-;;  "Define the directory where StumpWM should work with data.")
 
 (load ".config/stumpwm/modeline.lisp")
 (load ".config/stumpwm/ui.lisp")
