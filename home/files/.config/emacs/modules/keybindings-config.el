@@ -30,11 +30,9 @@
    '("s" . imenu-list-smart-toggle)
    '("y" . sls-copy-file-path)
    '("b" . consult-bookmark)
+   '("f" . delete-other-windows) ;focus
    )
   (meow-normal-define-key
-   '("ü" . delete-window)
-   '("ö" . other-window)
-   '("ä" . make-frame-command)
    '("0" . meow-expand-0)
    '("9" . meow-expand-9)
    '("8" . meow-expand-8)
