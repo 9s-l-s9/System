@@ -1,19 +1,19 @@
+(in-package :lem-user)
 
-;; (in-package :lem-user)
+(load-theme "modus-vivendi")
 
-;; (load-theme "chalk")
+(defvar *sls-main-keymap*
+  (make-keymap :name '*sls-main-keymap*)
+  "Private keymap.")
 
-;; (defvar *sls-main-keymap*
-;;   (make-keymap :name '*sls-main-keymap*)
-;;   "Private keymap.")
+(define-key *sls-main-keymap* "b" 'describe-bindings)
+(define-key *sls-main-keymap* "f" 'find-file)
+(define-key *sls-main-keymap* "s" 'save-current-buffer)
+(define-key *sls-main-keymap* "q" 'execute-command)
+(define-key *sls-main-keymap* "d" 'delete-active-window)
+(define-key *sls-main-keymap* "o" 'lem-core/commands/file:find-file-recursively)
 
-;; (define-key *sls-main-keymap* "b" 'describe-bindings)
-;; (define-key *sls-main-keymap* "f" 'find-file)
-;; (define-key *sls-main-keymap* "q" 'execute-command)
-;; (define-key *sls-main-keymap* "d" 'delete-active-window)
-;; (define-key *sls-main-keymap* "o" 'lem-core/commands/file:find-file-recursively)
-
-;; (define-key *global-keymap* "F12" *sls-main-keymap*)
+(define-key *global-keymap* "F12" *sls-main-keymap*)
 
 
 
