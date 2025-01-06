@@ -1,8 +1,7 @@
 ;; Set StumpWMs prefix
 (set-prefix-key (kbd "Print"))
 
-
-(define-key *root-map* (kbd "Return") "exec konsole")
+(define-key *root-map* (kbd "Return") "exec kitty")
 (define-key *root-map* (kbd "b") "exec nyxt")
 (define-key *root-map* (kbd "e") "exec emacsclient -c")
 
