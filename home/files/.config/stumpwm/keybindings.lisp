@@ -9,7 +9,7 @@
   (run-shell-command
    "rofi -show-icons -show drun"))
 
-(define-key *root-map* (kbd "r") "launcher")
+(define-key *root-map* (kbd "r") "exec")
 
 
 ;; Frame Management
