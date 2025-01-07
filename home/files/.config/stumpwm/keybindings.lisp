@@ -112,7 +112,6 @@
 (define-key *root-map* (kbd "t") "show-todos")
 (define-key *root-map* (kbd "T") "add-todo")
 
-
 ;; Screenshots
 (defcommand screenshot () ()(
 run-shell-command "flameshot gui"))
@@ -133,7 +132,6 @@ run-shell-command "flameshot gui"))
 (define-key *root-map* (kbd ",") "get-latex")
 
 ;; Productivity hacks?
-
 (defun toggle-internet ()
   "Toggle Wi-Fi on or off. Needs nmcli."
   (let ((status (uiop:run-program '("nmcli" "-t" "-f" "WIFI" "radio") :output :string)))
