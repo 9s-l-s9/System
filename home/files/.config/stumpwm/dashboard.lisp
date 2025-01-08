@@ -25,7 +25,7 @@
                                                          (subseq cleaned-line content-start))))
                                 (string-trim " " (subseq content 4))))))
          (todo-string (if todos
-                         (format nil "Open TODOs:~%~{~A~^~%~}" todos)
+                         (format nil "~%~{~A~^~%~}" todos)
                          "No open TODOs")))
     todo-string))
 
