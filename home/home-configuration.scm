@@ -137,6 +137,7 @@
     "yt-dlp"
     "lem"
     "nushell-bin"
+    "kitty"
     ;"calibre"
     ;"zotero"
     ))
