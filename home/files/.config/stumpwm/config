@@ -20,11 +20,17 @@
 (load ".config/stumpwm/ui.lisp")
 (load ".config/stumpwm/keybindings.lisp")
 
+
+;; Groups
+(grename "main")
+(add-group (current-screen) "music")
+(add-group (current-screen) "chat")
+
 ;; Init
 (when *initializing*
       ;;(run-shell-command "xrandr --output HDMI-2 --auto --output eDP-1 --off")
       (run-shell-command "picom -b")
-      (run-shell-command "feh --bg-max ~/Images/01-Wallpaper/ducks.jpg")
+      (run-shell-command "feh --bg-max ~/Projects/images/ducks.jpg")
       (swm-gaps:toggle-gaps)
       ;;(run-shell-command "setxkbmap de bone")
       
