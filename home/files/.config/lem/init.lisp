@@ -13,7 +13,7 @@
 (define-key *sls-main-keymap* "d" 'delete-active-window)
 (define-key *sls-main-keymap* "o" 'lem-core/commands/file:find-file-recursively)
 (define-key *sls-main-keymap* "c" 'copy-region-to-clipboard)
-(define-key *sls-main-keymap* "Enter" 'terminal)
+(define-key *sls-main-keymap* "Return" 'terminal)
 
 (define-key *global-keymap* "F12" *sls-main-keymap*)
 
