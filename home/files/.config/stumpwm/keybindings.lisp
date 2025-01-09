@@ -8,7 +8,7 @@
 
 (define-key *root-map* (kbd "Return") "exec kitty")
 (define-key *root-map* (kbd "b") "exec nyxt")
-(define-key *root-map* (kbd "e") "exec emacsclient -c")
+(define-key *root-map* (kbd "e") "exec lem")
 
 (define-key *root-map* (kbd "r") "exec")
 
