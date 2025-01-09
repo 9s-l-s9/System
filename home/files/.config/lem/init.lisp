@@ -1,6 +1,6 @@
 (in-package :lem-user)
 
-(load-theme "modus-vivendi")
+(load-theme "black-metal-bathory")
 
 (defvar *sls-main-keymap*
   (make-keymap :name '*sls-main-keymap*)
@@ -13,6 +13,7 @@
 (define-key *sls-main-keymap* "d" 'delete-active-window)
 (define-key *sls-main-keymap* "o" 'lem-core/commands/file:find-file-recursively)
 (define-key *sls-main-keymap* "c" 'copy-region-to-clipboard)
+(define-key *sls-main-keymap* "Enter" 'terminal)
 
 (define-key *global-keymap* "F12" *sls-main-keymap*)
 
