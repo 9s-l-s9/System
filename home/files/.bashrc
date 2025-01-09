@@ -22,6 +22,9 @@ alias ls='ls -p --color=auto'
 alias ll='ls -l'
 alias grep='grep --color=auto'
 
+alias gh='guix home reconfigure ~/Projects/System/home/home-configuration.scm'
+alias gs='sudo guix system reconfigure ~/Projects/System/systems/$(hostname).scm'
+
 
 deno () {
   docker run \
