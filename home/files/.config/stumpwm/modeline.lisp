@@ -1,9 +1,9 @@
+(load ".config/stumpwm/colors.lisp")
+
 (defun modeline/init-bar ()
-  ;; Colors
-  ;;(load "~/.cache/wal/colors.lisp")
-  ;;(setf *mode-line-background-color* background)
-  ;;(setf *mode-line-border-color* background)
-  ;;(setf *mode-line-foreground-color* foreground)
+  (setf *mode-line-background-color* base00)
+  (setf *mode-line-border-color* base05)
+  (setf *mode-line-foreground-color* base0B)
 
   ;; Mode line's contents
   (setf *group-format* "%t")

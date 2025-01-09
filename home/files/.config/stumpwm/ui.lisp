@@ -1,12 +1,15 @@
+(load ".config/stumpwm/colors.lisp")
 ; Theme
-(setf *colors* '("#140A1D" ;; Black
-		 "#b52a5b" ;; Red
-		 "#ff4971" ;; Green
-		 "#8897f4" ;; Yellow
-		 "#bd93f9" ;; Blue
-		 "#e9729d" ;; Magenta
-		 "#f18fb0" ;; Cyan
-		 "#f1c4e0")) ;; White
+(setq *colors*
+      `(,base00   ;; 0 black
+        ,base08   ;; 1 green
+        ,base0B   ;; 2 yellow
+        ,base0A   ;; 3 orange
+        ,base0D   ;; 4 grey
+        ,base0E   ;; 5 light grey
+        ,base0C   ;; 6 light grey 2
+        ,base05)) ;; 7 light grey 3
+
 (update-color-map (current-screen))
 
 
