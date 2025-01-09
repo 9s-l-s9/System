@@ -1,3 +1,5 @@
+
+
 (defun show-username-at-host-formatter ()
   "Retrieve and format the current user's UNIX name, followed by a @ and %h for
    use with the hostname StumpWM module.
@@ -103,7 +105,7 @@
 ;; Format Modeline
 (setf *mode-line-background-color* "#1D2021"
       *mode-line-border-color* "#EBDBB2"
-      *mode-line-border-width* 3
+      *mode-line-border-width* 0
       *mode-line-pad-x* 4
       *mode-line-pad-y* 6
       *mode-line-timeout* 15)
