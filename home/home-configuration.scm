@@ -58,7 +58,7 @@
   '(
     "rofi"
     "dunst"
-    "flameshot"
+    "spectacle"
     "kmix"
     "xrandr"
     "picom"
