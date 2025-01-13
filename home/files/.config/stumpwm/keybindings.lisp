@@ -43,8 +43,24 @@
 
 (define-key *root-map* (kbd "t") "dashboard")
 (define-key *root-map* (kbd "T") "add-todo")
-(define-key *root-map* (kbd ".") "screenshot")
-(define-key *root-map* (kbd ",") "get-latex")
+
+
+(defvar *screenshot-map* nil
+  "The keymap that groups screenshot related key bindings sit on")
+
+(fill-keymap *screenshot-map*
+             (kbd ".") "screenshot"
+             (kbd ",") "get-latex")
+
+(defcommand show-screenshot-options () ()
+  "Show screenshot options and enter screenshot keymap"
+  (message "Screenshot Options:~%~
+           . - Take screenshot~%~
+           , - Get latex")
+  (push-top-map *screenshot-map*))
+
+(define-key *root-map* (kbd "S") '*screenshot-map*)
+
 (define-key *root-map* (kbd "i") "internet-10-min")
 
 
