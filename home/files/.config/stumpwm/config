@@ -22,9 +22,9 @@
 
 
 ;; Groups
-(grename "main")
-(add-group (current-screen) "music")
-(add-group (current-screen) "chat")
+(grename " I ")
+(add-group (current-screen) " II ")
+(add-group (current-screen) " III ")
 
 ;; Init
 (when *initializing*
