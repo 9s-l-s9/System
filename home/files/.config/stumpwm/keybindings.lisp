@@ -61,7 +61,13 @@
 
 (define-key *root-map* (kbd "S") '*screenshot-map*)
 
-(define-key *root-map* (kbd "i") "internet-10-min")
+(defvar *misc-map* nil
+  "The keymap that groups unrelated commands")
 
+(fill-keymap *misc-map*
+             (kbd "i") "internet-10-min"
+             (kbd "t") "insert-timestamp")
+
+(define-key *root-map* (kbd "P") '*misc-map*)
 
 

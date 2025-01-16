@@ -8,3 +8,10 @@
       ;; Add a newline first to ensure separation from previous content
       (format stream "~%* TODO ~A" todo-text))
     (message "Added TODO: ~A" todo-text)))
+
+
+(defcommand insert-timestamp () ()
+  "Insert current date"
+  (multiple-value-bind (sec min hour day month year) (get-decoded-time)
+    (window-send-string 
+     (format nil "~4,'0d-~2,'0d-~2,'0d" year month day))))
