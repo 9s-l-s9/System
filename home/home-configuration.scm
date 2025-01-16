@@ -166,10 +166,10 @@
    (service home-redshift-service-type
             (home-redshift-configuration
              (location-provider 'manual)
-             (daytime-temperature 3500)
+             (daytime-temperature 3500) ; just no bluelight a tall
              (nighttime-temperature 3000)
-             (latitude 35.81)    ; northern hemisphere
-             (longitude -0.80))) ; west of Greenwich
+             (latitude 35.81)    
+             (longitude -0.80))) 
 
    (service home-dotfiles-service-type
             (home-dotfiles-configuration
