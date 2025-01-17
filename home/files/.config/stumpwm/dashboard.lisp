@@ -47,25 +47,49 @@
                            (namestring path)) 
                         files)))))
 
+(defun get-random-file (directory)
+  "Returns a random file from the specified directory"
+  (let* ((files (directory (concatenate 'string directory "/*.*")))
+         (file-count (length files)))
+    (if (> file-count 0)
+        (nth (random file-count) files)
+        nil)))
+
+(defun format-file-content (file)
+  "Formats the content of a file for display"
+  (handler-case
+      (with-open-file (stream file)
+        (let ((content (make-string (file-length stream))))
+          (read-sequence content stream)
+          (format nil "=== Random Quote: ~A ===~%~A" file content)))
+    (error (e)
+      (format nil "Error reading file: ~A" e))))
+
 (defcommand dashboard () ()
-  "Displays comprehensive dashboard including TODOs, git status, and downloads"
+  "Displays comprehensive dashboard including TODOs, git status, downloads, and a random file"
   (let* ((org-files '("/home/samuel/Projects/WorkingMemory/wm-t450s.org"
                       "/home/samuel/Projects/WorkingMemory/wm-x1.org"
                       "/home/samuel/Projects/WorkingMemory/wm-palma.org"))
+         (random-file (get-random-file "/home/samuel/Projects/Reflections/Quotes/"))
          (todos-section (format nil "=== TODOs ===~%~{~A~%~%~}"
-                              (loop for file in org-files
-                                    collect (format nil "--- ~A ---~%~A"
-                                                  (car (last (split-string file "/")))
-                                                  (handler-case
-                                                      (show-todos file)
-                                                    (error (e)
-                                                      (format nil "Error reading file: ~A" e)))))))
+                                (loop for file in org-files
+                                      collect (format nil "--- ~A ---~%~A"
+                                                      (car (last (split-string file "/")))
+                                                      (handler-case
+                                                          (show-todos file)
+                                                        (error (e)
+                                                          (format nil "Error reading file: ~A" e)))))))
          (git-section (format nil "=== Git Status ===~%~A" 
-                            (get-uncommitted-changes)))
+                              (get-uncommitted-changes)))
          (downloads-section (format nil "=== Downloads ===~%~A"
-                                  (get-downloads)))
-         (dashboard-text (format nil "~A~%~%~A~%~%~A" 
-                               todos-section
-                               git-section
-                               downloads-section)))
+                                    (get-downloads)))
+         (random-file-section (if random-file
+                                  (format-file-content random-file)
+                                  "=== Random File ===~%No files found"))
+         (dashboard-text (format nil "~A~%~%~A~%~%~A~%~%~A"
+                                 random-file-section
+                                 todos-section
+                                 git-section
+                                 downloads-section
+                                 )))
     (message "~A" dashboard-text)))
