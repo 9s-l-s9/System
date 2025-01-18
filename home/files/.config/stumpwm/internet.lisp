@@ -1,3 +1,14 @@
+(defcommand browser-search (search-term) ((:string "Search: "))
+  "Prompt for search term and open it in the default browser"
+  (run-shell-command 
+    (concatenate 'string 
+                 "xdg-open 'https://www.google.com/search?q="
+                 (string-trim " " search-term)
+                 "'")))
+
+
+
+
 (defun toggle-internet ()
   "Toggle Wi-Fi on or off. Needs nmcli."
   (let ((status (uiop:run-program '("nmcli" "-t" "-f" "WIFI" "radio") :output :string)))
