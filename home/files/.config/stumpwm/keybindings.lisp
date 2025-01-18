@@ -65,6 +65,7 @@
   "The keymap that groups unrelated commands")
 
 (fill-keymap *misc-map*
+	     (kbd "s") "browser-search"
              (kbd "i") "internet-10-min"
              (kbd "t") "insert-timestamp")
 
