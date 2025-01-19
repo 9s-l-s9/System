@@ -3,6 +3,7 @@
   #:use-module (srfi srfi-1)
   #:use-module (gnu system nss)
   #:use-module (gnu services pm)
+  #:use-module (gnu services xorg)
   #:use-module (gnu services desktop)
   #:use-module (gnu services docker)
   #:use-module (gnu services networking)
@@ -113,6 +114,7 @@
 			pipewire
                         tlp
                         xf86-input-libinput
+			(specification->package "xf86-input-wacom")
                         gvfs)         ;; for user mounts
                       %base-packages))
 
@@ -129,9 +131,24 @@
        ;(bluetooth-service #:auto-enable? #t)
        )
       ;; Modify services from old system.scm
+
       (modify-services %desktop-services
 
-                       (guix-service-type config => (guix-configuration
+       (gdm-service-type config =>
+    (gdm-configuration
+      (inherit config)
+      (xorg-configuration
+        (xorg-configuration
+          (modules (cons* (specification->package "xf86-input-wacom")
+                         %default-xorg-modules))
+          (extra-config '("Section \"InputClass\"
+                           Identifier \"Wacom Tablet\"
+                           MatchDevicePath \"/dev/input/event*\"
+                           MatchIsTablet \"on\"
+                           Driver \"wacom\"
+                         EndSection"))))))
+
+      (guix-service-type config => (guix-configuration
                                                      (inherit config)
                                                      (substitute-urls
                                                       (append (list "https://substitutes.nonguix.org")
