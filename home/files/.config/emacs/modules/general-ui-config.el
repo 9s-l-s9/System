@@ -58,7 +58,7 @@
 ;; (require 'nano-theme)
 ;;(load-theme 'nano-light)
 ;; (load-theme 'nano-light)
-(load-theme 'doom-rouge t)
+(load-theme 'doom-gruvbox t)
 (setq custom-safe-themes t)
 
 
