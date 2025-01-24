@@ -86,7 +86,7 @@ def main():
     invalid_repos = [path for path in args.repo_paths if not os.path.exists(os.path.join(path, '.git'))]
     if invalid_repos:
         print(f"Error: The following are not valid git repositories: {', '.join(invalid_repos)}")
-        return 1
+        
 
     existing_data = load_contribution_data_csv(args.output) if args.merge and os.path.exists(args.output) else {}
 
