@@ -67,8 +67,8 @@
 
 (defcommand dashboard () ()
   "Displays comprehensive dashboard including TODOs, git status, downloads, and a random file"
-  (let* ((org-files '("/home/samuel/Projects/WorkingMemory/wm-t450s.org"
-                      "/home/samuel/Projects/WorkingMemory/wm-x1.org"
+  (let* ((org-files '("/home/samuel/Projects/WorkingMemory/wm-T450s.org"
+                      "/home/samuel/Projects/WorkingMemory/wm-X1.org"
                       "/home/samuel/Projects/WorkingMemory/wm-palma.org"))
          (random-file (get-random-file "/home/samuel/Projects/Reflections/Quotes/"))
          (todos-section (format nil "=== TODOs ===~%~{~A~%~%~}"
