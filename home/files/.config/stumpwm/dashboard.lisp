@@ -1,3 +1,5 @@
+(load ".config/stumpwm/helper.lisp")
+
 (defun show-todos (todo-file)
   "Show open TODOs from org file at TODO-FILE path. Returns a string of TODOs or 'No open TODOs' message."
   (let* ((todos (with-open-file (stream todo-file)
@@ -47,13 +49,6 @@
                            (namestring path)) 
                         files)))))
 
-(defun get-random-file (directory)
-  "Returns a random file from the specified directory"
-  (let* ((files (directory (concatenate 'string directory "/*.*")))
-         (file-count (length files)))
-    (if (> file-count 0)
-        (nth (random file-count) files)
-        nil)))
 
 (defun format-file-content (file)
   "Formats the content of a file for display"

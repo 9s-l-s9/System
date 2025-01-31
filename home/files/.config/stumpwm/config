@@ -30,7 +30,7 @@
 (when *initializing*
       ;;(run-shell-command "xrandr --output HDMI-2 --auto --output eDP-1 --off")
       (run-shell-command "picom -b")
-      (run-shell-command "feh --bg-fill ~/Projects/images/ducks.jpg")
+      (run-shell-command "feh --bg-fill $(find ~/Projects/images/ -type f | shuf -n 1)")
       (modeline/init)
       (swm-gaps:toggle-gaps)
       ;;(run-shell-command "setxkbmap de bone")
