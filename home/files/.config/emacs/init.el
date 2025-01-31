@@ -108,16 +108,15 @@
 					; -- Programming --
 
 (require 'eglot-conf)
-;; (require 'treesitter-conf)
+(require 'treesitter-conf)
 (require 'flycheck-config)
 (require 'highlight-indent-guides)
 (require 'magit)
 ;; (require 'dap-config)
-
 					; -- Languages / Modes --
 (require 'markdown-preview-mode)
 ;; (require 'lean4-conf)
-
+;; (require 'ada-conf)
 
 					; -- Apps --
 
