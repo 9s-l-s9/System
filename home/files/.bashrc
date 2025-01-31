@@ -25,6 +25,8 @@ alias grep='grep --color=auto'
 alias gh='guix home reconfigure ~/Projects/System/home/home-configuration.scm'
 alias gs='sudo guix system reconfigure ~/Projects/System/systems/$(hostname).scm'
 
+alias alire-shell='guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME'
+
 
 deno () {
   docker run \
