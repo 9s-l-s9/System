@@ -58,7 +58,7 @@
 ;; (require 'nano-theme)
 ;;(load-theme 'nano-light)
 ;; (load-theme 'nano-light)
-(load-theme 'doom-gruvbox t)
+(load-theme 'modus-vivendi-tinted t)
 (setq custom-safe-themes t)
 
 
@@ -81,7 +81,7 @@
 (tool-bar-mode -1)
 
 ;; Font and frame size
-(set-face-font 'default "Courier Prime 16")
+;; (set-face-font 'default "Courier Prime 16")
 
 ;; Line spacing, can be 0 for code and 1 or 2 for text
 (setq-default line-spacing 2)
@@ -120,7 +120,7 @@
 ;; (setq-default header-line-format mode-line-format)
 
 ;; (require 'multiline)
-(require 'min-modeline)
+;; (require 'min-modeline)
 
 ;; (setq-default mode-line-format'("--------"))
 
