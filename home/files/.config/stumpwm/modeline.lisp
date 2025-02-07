@@ -23,4 +23,7 @@
 
 
 (defun modeline/init ()
-  (modeline/init-bar))
+  (modeline/init-bar)
+  (dolist (h (screen-heads (current-screen)))   
+    (enable-mode-line (current-screen) h t))
+  )
