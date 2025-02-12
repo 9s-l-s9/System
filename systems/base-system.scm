@@ -34,6 +34,7 @@
 (use-service-modules desktop xorg)
 (use-package-modules certs)
 (use-package-modules shells)
+(use-service-modules desktop networking ssh xorg cups)
 
 
 (define-public base-system
@@ -126,6 +127,12 @@
        (service bluetooth-service-type
 		(bluetooth-configuration
 		 (auto-enable? #t)))
+
+       (service cups-service-type
+         (cups-configuration
+           (web-interface? #t)
+           (extensions
+             (list cups-filters epson-inkjet-printer-escpr hplip-minimal))))
        ;(service gnome-desktop-service-type)
 
        ;(bluetooth-service #:auto-enable? #t)
