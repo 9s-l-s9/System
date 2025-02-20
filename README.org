@@ -4,3 +4,6 @@ My personal system configuration.
 
 Long term goal is to create a lisp machine :)
 
+Current goal:
+Rewrite scripts in Guile.
+
