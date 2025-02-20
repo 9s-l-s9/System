@@ -15,5 +15,6 @@
     (push '("|>" . ?\u25B7) prettify-symbols-alist)))
  (before-save . eglot-format))
 
- 
+(add-to-list 'eglot-server-programs '((c++-mode c-mode) "ccls"))
+
 (provide 'eglot-conf)
