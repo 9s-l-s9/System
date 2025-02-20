@@ -1,5 +1,10 @@
 (provide 'own-functions)
 ;; add custom compilation command for C++ with debugging info
+(defun sls-reload-init-file ()
+  (interactive)
+  (server-force-delete)
+  (load-file user-init-file))
+
 (defun sls-compile-cpp-debug ()
   (interactive)
   (compile (format "g++ -std=c++17 -Wshadow -Wall -o %s %s -g -fsanitize=address -fsanitize=undefined -D_GLIBCXX_DEBUG"
