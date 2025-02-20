@@ -158,10 +158,22 @@
  (packages (specifications->packages all-packages))
  (services
   (list
-   ;; (service home-bash-service-type
-            ;; (home-bash-configuration
-            ;;  (aliases '())
-            ;;  (bashrc (list (local-file "../.config/.bashrc" )))))
+   (service home-bash-service-type
+           (home-bash-configuration
+            (environment-variables
+             '(("GUIX_LOCPATH" . "$HOME_ENVIRONMENT/profile/lib/locales")
+               ("PATH" . "$HOME/Apps:$HOME/.local/share/gem/ruby/3.3.0/bin:/usr/lib/cuda-11.2/bin:$PATH")
+               ("LD_LIBRARY_PATH" . "/usr/lib/cuda-11.2/lib64:$LD_LIBRARY_PATH")
+               ("GEM_PATH" . "$HOME/.local/share/gem/ruby/3.3.0")))
+            
+            (aliases
+             '(("ls" . "ls -p --color=auto")
+               ("ll" . "ls -l")
+               ("grep" . "grep --color=auto")
+               ("gh" . "guix home reconfigure ~/Projects/System/home/home-configuration.scm")
+               ("gs" . "sudo guix system reconfigure ~/Projects/System/systems/$(hostname).scm")
+               ("alire-shell" . "guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME")))
+            ))
 
    (service home-redshift-service-type
             (home-redshift-configuration
