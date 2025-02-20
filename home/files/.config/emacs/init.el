@@ -107,7 +107,7 @@
 
 					; -- Programming --
 
-(require 'eglot-conf)
+;;(require 'eglot-conf)
 (require 'treesitter-conf)
 (require 'flycheck-config)
 (require 'highlight-indent-guides)
@@ -133,8 +133,8 @@
 					; -- Org Configurations --
 ;; (require 'org-config)
 ;; (require 'org-noter-config)
-(require 'org-modern-config)
-(require 'org-babel)
+;; (require 'org-modern-config)
+;; (require 'org-babel)
 ;(require 'org-transclusion)
 
 ;; (require 'gptel-config)
