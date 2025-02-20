@@ -49,4 +49,14 @@
 	 "b1fe5aaff3ab48e798a4cce02f0212bc91f423dc"
 	 (openpgp-fingerprint
 	  "CA4F 8CF4 37D7 478F DA05  5FD4 4213 7701 1A37 8446"))))
+
+      (channel
+       (name 'saayix)
+       (branch "entropy")
+       (url "https://codeberg.org/look/saayix")
+       (introduction
+	(make-channel-introduction
+	 "12540f593092e9a177eb8a974a57bb4892327752"
+	 (openpgp-fingerprint
+          "3FFA 7335 973E 0A49 47FC  0A8C 38D5 96BE 07D3 34AB"))))
       )
