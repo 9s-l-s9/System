@@ -13,8 +13,14 @@
     ;"gcc-toolchain"
     ))
 
+(define guile-setup
+  '("guile-ts"
+    "guile-lsp-server"
+    ))
+
 (define web-packages
   '("nyxt"
+    "zen-browser-bin"
     "google-chrome-beta"
     "openssh"
     "network-manager"
@@ -94,7 +100,7 @@
     "emacs-consult"
     "emacs-corfu"
     "emacs-dashboard"
-    "emacs-dired-preview"
+    ;"emacs-dired-preview"
     "emacs-diredfl"
     "emacs-doom-themes"
     "emacs-eat"
@@ -102,9 +108,9 @@
     "emacs-ef-themes"
     "emacs-elisp-demos"
     "emacs-engrave-faces"
-    "emacs-eshell-did-you-mean"
-    "emacs-eshell-prompt-extras"
-    "emacs-eshell-syntax-highlighting"
+    ;;"emacs-eshell-did-you-mean"
+    ;;"emacs-eshell-prompt-extras"
+    ;;"emacs-eshell-syntax-highlighting"
     "emacs-flycheck"
     "emacs-focus"
     "emacs-gptel"
@@ -116,13 +122,13 @@
     "emacs-marginalia"
     "emacs-markdown-preview-mode"
     "emacs-meow"
-    "emacs-nano-modeline"
+    ;; "emacs-nano-modeline"
     "emacs-next"
     "emacs-orderless"
-    "emacs-org-modern"
-    "emacs-org-present"
-    "emacs-org-transclusion"
-    "emacs-pdf-tools"
+    ;;"emacs-org-modern"
+    ;;"emacs-org-present"
+    ;;"emacs-org-transclusion"
+    ;;"emacs-pdf-tools"
     "emacs-popper"
     "emacs-rg"
     "emacs-sudo-edit"
@@ -136,7 +142,8 @@
     "gimp"
     "yt-dlp"
     "lem"
-    "nushell-bin"
+    "fish"
+    ;"nushell-bin"
     "kitty"
     ;"calibre"
     ;"zotero"
@@ -146,6 +153,7 @@
 ;; Combine all package groups
 (define all-packages
   (append programming-packages
+	  guile-setup
 	  x-packages
           web-packages
           system-utilities
@@ -159,13 +167,19 @@
  (services
   (list
    (service home-bash-service-type
-           (home-bash-configuration
-            (environment-variables
-             '(("GUIX_LOCPATH" . "$HOME_ENVIRONMENT/profile/lib/locales")
-               ("PATH" . "$HOME/Apps:$HOME/.local/share/gem/ruby/3.3.0/bin:/usr/lib/cuda-11.2/bin:$PATH")
-               ("LD_LIBRARY_PATH" . "/usr/lib/cuda-11.2/lib64:$LD_LIBRARY_PATH")
-               ("GEM_PATH" . "$HOME/.local/share/gem/ruby/3.3.0")))
-            
+            (home-bash-configuration
+	    (environment-variables
+	     `(("GUILE_LOAD_PATH"
+		. ,(string-join '("$XDG_CONFIG_HOME/guix/current/share/guile/site/3.0"
+				  "$HOME/.guix-home/profile/share/guile/site/3.0")
+				":"))
+	       ("GUILE_LOAD_COMPILED_PATH"
+		. ,(string-join '("$HOME/.guix-home/profile/lib/guile/3.0/site-ccache"
+				  "$XDG_CONFIG_HOME/guix/current/lib/guile/3.0/site-ccache")
+				":"))
+	       ("GUIX_LOCPATH" . "$HOME_ENVIRONMENT/profile/lib/locales")
+	       ("LD_LIBRARY_PATH" . "/usr/lib/cuda-11.2/lib64:$LD_LIBRARY_PATH")))
+
             (aliases
              '(("ls" . "ls -p --color=auto")
                ("ll" . "ls -l")
@@ -175,10 +189,11 @@
                ("alire-shell" . "guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME")))
             ))
 
+   
    (service home-redshift-service-type
             (home-redshift-configuration
              (location-provider 'manual)
-             (daytime-temperature 3500) ; just no bluelight a tall
+             (daytime-temperature 3500) ; no blue light for me ;) 
              (nighttime-temperature 3000)
              (latitude 35.81)    
              (longitude -0.80))) 

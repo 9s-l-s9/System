@@ -108,7 +108,7 @@
 					; -- Programming --
 
 ;;(require 'eglot-conf)
-(require 'treesitter-conf)
+;;(require 'treesitter-conf)
 (require 'flycheck-config)
 (require 'highlight-indent-guides)
 (require 'magit)
@@ -124,7 +124,7 @@
 (require 'dired-config)
 ;(require 'eshell-config)
 (require 'ebib-config)
-					; (require 'pdf-tools-config)
+;(require 'pdf-tools-config)
 (require 'popper-config)
 (require 'helpful-config)
 (require 'eat)
