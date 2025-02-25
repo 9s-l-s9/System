@@ -131,11 +131,11 @@ max-diagnostics = 10
 # Keybinds
 #
 
-[keys.normal]
+# [keys.normal]
 # "=" = [":pipe parinfer-rust"]
 # "A-c" = "@mammammammammammammammammammammammammammammammam"
 
-[keys.normal."@"]
+# [keys.normal."@"]
 # m = ":cd ~/projects/guile/misako"
 # s = ":cd ~/projects/guile/saayix"
 # r = ":cd ~/projects/guile/radix"
@@ -146,24 +146,24 @@ max-diagnostics = 10
 # R = ":cd ~/projects/guile/Rosenthal"
 # o = ":cd ~/projects/guile/sops-guix"
 
-[keys.normal."#"]
-h = ":sh guix home reconfigure ~/.config/guix/home.scm --allow-downgrades"
-s = ":sh doas guix system reconfigure /etc/system.scm --allow-downgrades"
-p = ":sh guix pull --allow-downgrades"
+# [keys.normal."#"]
+# h = ":sh guix home reconfigure ~/.config/guix/home.scm --allow-downgrades"
+# s = ":sh doas guix system reconfigure /etc/system.scm --allow-downgrades"
+# p = ":sh guix pull --allow-downgrades"
 
-[keys.normal.g.a]
+# [keys.normal.g.a]
 # guix show package where cursor is inside the definition
-s = "@mammammammammammammammammammammammammammammammams\\(name<ret>f\";mim\"0y:sh guix show <C-r>0<ret>"
-# compute and replace HASH for PACKAGE where cursor is inside the definition
-h = "@mammammammammammammammammammammammammammammammams\\(name<ret>f\";mim\"0ymammammammammammammammammammammammammammammammams\\(base32<ret>f\";mimr0:w!<ret>|guix build -L. <C-r>0<ret>sactual hash: *<ret>lvgl<esc>\"0ymim\"0Rzz:w!<ret>;"
-# call personal committer
-c = [":sh ./committer"]
-# execute guix build on the current PACKAGE where cursor is inside the definition and display in-line
-b = "@mammammammammammammammammammammammammammammammams\\(name<ret>f\";mim\"0y:sh guix build -L. <C-r>0<ret>"
-# execute guix build on the current PACKAGE where cursor is inside the definition and display in a new vertical buffer window
-B = "@mammammammammammammammammammammammammammammammams\\(name<ret>f\";mim\"0y<space>wnv|guix build -L. <C-r>0<ret>"
+# s = "@mammammammammammammammammammammammammammammammams\\(name<ret>f\";mim\"0y:sh guix show <C-r>0<ret>"
+# # compute and replace HASH for PACKAGE where cursor is inside the definition
+# h = "@mammammammammammammammammammammammammammammammams\\(name<ret>f\";mim\"0ymammammammammammammammammammammammammammammammams\\(base32<ret>f\";mimr0:w!<ret>|guix build -L. <C-r>0<ret>sactual hash: *<ret>lvgl<esc>\"0ymim\"0Rzz:w!<ret>;"
+# # call personal committer
+# c = [":sh ./committer"]
+# # execute guix build on the current PACKAGE where cursor is inside the definition and display in-line
+# b = "@mammammammammammammammammammammammammammammammams\\(name<ret>f\";mim\"0y:sh guix build -L. <C-r>0<ret>"
+# # execute guix build on the current PACKAGE where cursor is inside the definition and display in a new vertical buffer window
+# B = "@mammammammammammammammammammammammammammammammams\\(name<ret>f\";mim\"0y<space>wnv|guix build -L. <C-r>0<ret>"
 
-[keys.normal.g.c]
-S = ["yank_to_clipboard", ":pipe guix-style"]
-c = [":sh ./pre-inst-env etc/committer.scm"]
-i = [":pipe inherit-fix"]
+# [keys.normal.g.c]
+# S = ["yank_to_clipboard", ":pipe guix-style"]
+# c = [":sh ./pre-inst-env etc/committer.scm"]
+# i = [":pipe inherit-fix"]

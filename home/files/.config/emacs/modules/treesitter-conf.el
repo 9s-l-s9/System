@@ -1,18 +1,7 @@
-(use-package
- emacs
- :ensure nil
- :custom
+;; Enable Tree-sitter in all buffers that support it
+(global-tree-sitter-mode)
 
- ;; Should use:
-(mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
- ;; at least once per installation or while changing this list
- (treesit-language-source-alist
-  '((heex "https://github.com/phoenixframework/tree-sitter-heex")
-    (elixir "https://github.com/elixir-lang/tree-sitter-elixir")
-    (typst "https://github.com/uben0/tree-sitter-typst")
-    ))
+;; Automatically enable Tree-sitter based syntax highlighting
+(add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 
- (major-mode-remap-alist
-  '((elixir-mode . elixir-ts-mode)))
-)
 (provide 'treesitter-conf)
