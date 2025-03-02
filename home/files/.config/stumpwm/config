@@ -32,6 +32,5 @@
       (run-shell-command "feh --bg-fill $(find ~/Projects/images/ -type f | shuf -n 1)")
       (modeline/init)
       (swm-gaps:toggle-gaps)
-      ;;(run-shell-command "setxkbmap de bone")
       
 )
