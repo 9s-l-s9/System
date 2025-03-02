@@ -1,4 +1,11 @@
 (load ".config/stumpwm/colors.lisp")
+(load-module "swm-gaps")
+
+(setf swm-gaps:*head-gaps-size*  0
+      swm-gaps:*inner-gaps-size* 10
+      swm-gaps:*outer-gaps-size* 10)
+
+
 ; Theme
 (setq *colors*
       `(,base00   ;; 0 black
