@@ -54,11 +54,11 @@
 
 ;; Theme 
 (setq custom-safe-themes t)
-(require 'doom-themes)
+;; (require 'doom-themes)
 ;; (require 'nano-theme)
 ;;(load-theme 'nano-light)
 ;; (load-theme 'nano-light)
-(load-theme 'modus-vivendi-tinted t)
+(load-theme 'modus-operandi t)
 (setq custom-safe-themes t)
 
 
