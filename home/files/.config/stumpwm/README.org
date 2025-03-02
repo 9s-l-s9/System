@@ -1,4 +1,0 @@
-A somewhat minimal StumpWM config. 
-
-
-That is an oxymoron? Yeah :D I am using StumpWM because I like the idea of seperating "Frames" and "Windows". 

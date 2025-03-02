@@ -34,14 +34,14 @@
 
 (defun get-uncommitted-changes ()
   "Returns a string listing projects with uncommitted changes."
-  (let ((output (run-shell-command "~/.config/stumpwm/check-uncommitted.sh" t)))
+  (let ((output (run-shell-command "~/Projects/System/scripts/git-status-check.scm" t)))
     (if (string= output "")
         "All projects are clean!"
         output)))
 
 (defun get-downloads ()
   "Returns a string listing files in the Downloads directory."
-  (let ((files (directory "/home/samuel/Downloads/*.*")))
+  (let ((files (directory "~/Downloads/*.*")))
     (if (null files)
         "Download directory is clean!"
         (format nil "~{~A~^~%~}" 
