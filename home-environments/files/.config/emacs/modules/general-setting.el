@@ -5,6 +5,10 @@
                                        user-mail-address))
 
 
+(setq package-selected-packages nil)
+(setq warning-suppress-log-types '((treesit) (comp)))
+(setq warning-suppress-types '((treesit)))))
+
 (setq delete-by-moving-to-trash t)
 ; Watch webp and similar images
 (setq image-use-external-converter t)
@@ -37,5 +41,12 @@
 ;; Save whatever’s in the current (system) clipboard before
 ;; replacing it with the Emacs’ text.
 (setq save-interprogram-paste-before-kill t)
+
+
+;; Srcolling
+(setq-default scroll-preserve-screen-position t
+                scroll-conservatively 1 ; affects `scroll-step'
+                scroll-margin 0
+                next-screen-context-lines 0)
 
 (provide 'general-setting)
