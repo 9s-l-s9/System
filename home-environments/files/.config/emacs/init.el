@@ -1,67 +1,4 @@
-;; (setq native-comp-speed 3) (setq jit-lock-defer-time 0) (setq comp-speed 2) (setq max-specpdl-size 3200) (setq max-lisp-eval-depth 3200) (require 'vertico) (setq vertico-resize nil) (vertico-mode 1)
-
-
-(setq native-comp-async-report-warnings-errors nil)
-(setq gc-cons-threshold most-positive-fixnum)
-(setq fast-but-imprecise-scrolling 't)
 (add-to-list 'load-path "~/.config/emacs/modules/")
-
-
-(setq user-full-name "Samuel Levi Schmidt"
-      user-email-address (concat "schmidt.l.samuel" "@" "gmail.com")
-      copyright-names-regexp (format "%s <%s>"
-                                       user-full-name
-                                       user-mail-address))
-
-
-;; Some general settings
-(setq frame-resize-pixelwise t
-      frame-inhibit-implied-resize t
-      frame-title-format '("%b")
-      ring-bell-function 'ignore
-      use-dialog-box t ; only for mouse events, which I seldom use
-      use-file-dialog nil
-      delete-by-moving-to-trash t
-      
-      use-short-answers t
-      inhibit-splash-screen t
-      inhibit-startup-screen t
-      inhibit-x-resources t
-      inhibit-startup-echo-area-message user-login-name ; read the docstring
-      inhibit-startup-buffer-menu t)
-
-
-
-;; keep ~/.config/emacs/ clean
-(setq user-emacs-directory
-      (expand-file-name "~/.cache/emacs/"))
-(setq url-history-file
-      (expand-file-name "url/history" user-emacs-directory))
-
-;; Set up backup and auto-save directories
-(let ((backup-dir
-       (expand-file-name "backups" "~/.cache/emacs/")))
-  (setq backup-directory-alist `(("." . ,backup-dir)))
-  (setq auto-save-file-name-transforms `((".*" ,backup-dir t)))
-  (setq undo-tree-history-directory-alist `(("." . ,backup-dir))))
-
-;; backups
-(setq create-lockfiles nil
-      backup-by-copying t
-      version-control t
-      delete-old-versions t
-      vc-make-backup-files t
-      kept-old-versions 10
-      kept-new-versions 10)
-
-;; Enable global auto-revert mode
-(global-auto-revert-mode 1)
-
-
-;; Save whatever’s in the current (system) clipboard before
-;; replacing it with the Emacs’ text.
-;; https://github.com/dakrone/eos/blob/master/eos.org
-(setq save-interprogram-paste-before-kill t)
 
 
 ;; (setq debug-on-error t)
@@ -100,7 +37,10 @@
 
 (require 'cape-conf)
 (require 'orderless-conf)
-;(require 'vertico-conf) (require 'marginalia-conf) 
+(require 'vertico)
+(setq vertico-resize nil)
+(vertico-mode 1)
+(require 'marginalia-conf) 
 ; (all-the-icons-completion-mode)
 ; (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
 
@@ -113,7 +53,6 @@
 (require 'highlight-indent-guides)
 (require 'magit)
 ;; (require 'dap-config)
-					; -- Languages / Modes --
 (require 'markdown-preview-mode)
 ;; (require 'lean4-conf)
 ;; (require 'ada-conf)
@@ -128,14 +67,6 @@
 (require 'popper-config)
 (require 'helpful-config)
 (require 'eat)
-
-
-					; -- Org Configurations --
-;; (require 'org-config)
-;; (require 'org-noter-config)
-;; (require 'org-modern-config)
-;; (require 'org-babel)
-;(require 'org-transclusion)
 
 ;; (require 'gptel-config)
 ;; (require 'citar-conf)
