@@ -1,0 +1,458 @@
+#+TITLE: My old configurations
+
+This is sadly not everything but I now store it in this file to keep an overview of what I have tried
+
+* Emacs as an app-launcher
+... no
+#+begin_src elisp
+(provide 'app-launcher-config)
+(require 'app-launcher)
+
+(defun emacs-run-launcher ()
+  "Create and select a frame called emacs-run-launcher which consists only of a minibuffer and has specific dimensions. Runs app-launcher-run-app on that frame, which is an emacs command that prompts you to select an app and open it in a dmenu like behaviour. Delete the frame after that command has exited"
+  (interactive)
+  (with-selected-frame 
+    (make-frame '((name . "emacs-run-launcher")
+                  (minibuffer . only)
+                  (fullscreen . 0) ; no fullscreen
+                  (undecorated . t) ; remove title bar
+                  ;;(auto-raise . t) ; focus on this frame
+                  ;;(tool-bar-lines . 0)
+                  ;;(menu-bar-lines . 0)
+                  (internal-border-width . 10)
+                  (width . 80)
+                  (height . 11)))
+                  (unwind-protect
+                    (app-launcher-run-app)
+                    (delete-frame))))
+
+#+end_src
+
+* Programming Languages:
+** C++
+#+begin_src elisp
+  (provide 'cpp-config)
+
+
+  (defun sls-compile-cpp-debug ()
+  (interactive)
+  (compile (format "g++ -std=c++17 -Wshadow -Wall -o %s %s -g -fsanitize=address -fsanitize=undefined -D_GLIBCXX_DEBUG"
+                   "main"                                ; output file name is always "main"
+                   (buffer-file-name))))                 ; input file name is the full path to the current buffer
+
+  
+  (defvar regular-emacs-state nil "State variable to toggle between regular and minimalist Emacs look.")
+
+  (defun toggle-regular-emacs-look ()
+    "Toggle between regular and minimalist Emacs look."
+    (interactive)
+    (if regular-emacs-state
+        (progn
+          ;; Set up minimalist look
+          (tool-bar-mode -1)
+          (menu-bar-mode -1)
+          (scroll-bar-mode -1)
+          ;; Set up your special modeline here
+          ;; ...
+          (setq regular-emacs-state nil))
+      (progn
+        ;; Set up regular Emacs look
+        (tool-bar-mode 1)
+        (menu-bar-mode 1)
+        (scroll-bar-mode 1)
+        ;; Set up regular modeline here
+        ;; ...
+        (setq regular-emacs-state t))))
+
+  (defun my-cpp-debug ()
+    "Compile the current file with g++ and debug it with GDB in Emacs."
+    (interactive)
+    (let ((file-name (buffer-file-name))
+          (exec-name (file-name-sans-extension (buffer-file-name)))
+          (compile-command "g++ -g -o "))
+      (if file-name
+          (progn
+            ;; Toggle to regular Emacs look
+            (toggle-regular-emacs-look)
+            ;; Compile the current file
+            (shell-command (concat compile-command exec-name " " file-name))
+            ;; Start GDB
+            (gdb (concat "gdb -i=mi " exec-name))
+            ;; Set up multi-window GDB layout
+            (gdb-many-windows))
+        (message "Buffer is not visiting a file!"))))
+
+#+end_src
+
+** Lean4
+I had several configurations to better use Lean4 in emacs, for example also a org-babel config :)
+It was nice but I am not using the language anymore.
+
+#+begin_src elisp
+;; You need to modify the following line
+(setq load-path (cons "~/Projects/lean4-mode" load-path))
+(setq lean4-rootdir "~/.elan/")
+;; (setq lean4-mode-required-packages '(dash f flycheck magit-section s))
+
+;; (require 'package)
+;; (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+;; (package-initialize)
+;; (let ((need-to-refresh t))
+;;   (dolist (p lean4-mode-required-packages)
+;;     (when (not (package-installed-p p))
+;;       (when need-to-refresh
+;;         (package-refresh-contents)
+;;         (setq need-to-refresh nil))
+;;       (package-install p))))
+
+(require 'lean4-mode)
+
+(provide 'lean4-conf)
+
+  
+#+end_src
+
+** Ada
+never really managed to use ada in emacs :(((
+#+begin_src elisp
+
+    (when (and (fboundp 'treesit-available-p)
+             (treesit-available-p))
+    (use-package ada-ts-mode
+      :ensure t
+      :defer t ; autoload updates `auto-mode-alist'
+      :custom (ada-ts-mode-indent-backend 'lsp) ; Use Ada LS indentation
+      :bind (:map ada-ts-mode-map
+                  (("C-c C-b" . ada-ts-mode-defun-comment-box)
+                   ("C-c C-o" . ada-ts-mode-find-other-file)
+                   ("C-c C-p" . ada-ts-mode-find-project-file)))
+      :init
+      ;; Configure source blocks for Org Mode.
+      (with-eval-after-load 'org-src
+        (add-to-list 'org-src-lang-modes '("ada" . ada-ts)))))
+
+  ;; Configure Electric Pair
+
+  (use-package elec-pair
+    :ensure nil ; built-in
+    :hook (ada-ts-mode . electric-pair-local-mode))
+
+
+
+  (provide 'ada-conf)
+
+#+end_src
+* dirvish
+Dirvish was great in principle but I had several bugs :( Decide to no longer use it.
+
+#+begin_src elisp
+(provide 'dirvish-config)
+(dirvish-override-dired-mode)
+(customize-set-variable 'dirvish-quick-access-entries
+   '(("h" "~/"                          "Home")
+     ("d" "~/Downloads/"                "Downloads")
+     ("t" "~/.local/share/Trash/files/" "TrashCan")))
+
+(dirvish-peek-mode) ; Preview files in minibuffer
+
+(setq dirvish-mode-line-format
+      '(:left (sort symlink) :right (omit yank index)))
+(setq dirvish-attributes
+      '(all-the-icons file-time file-size collapse subtree-state vc-state git-msg))
+
+(setq delete-by-moving-to-trash t)
+(setq dired-listing-switches
+      "-l --almost-all --human-readable --group-directories-first --no-group")
+
+
+(define-key dirvish-mode-map (kbd "C-c f") 'dirvish-fd)
+(define-key dirvish-mode-map (kbd "a") 'dirvish-quick-access)
+(define-key dirvish-mode-map (kbd "f") 'dirvish-file-info-menu)
+(define-key dirvish-mode-map (kbd "y") 'dirvish-yank-menu)
+(define-key dirvish-mode-map (kbd "N") 'dirvish-narrow)
+(define-key dirvish-mode-map (kbd "^") 'dirvish-history-last)
+(define-key dirvish-mode-map (kbd "s") 'dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
+(define-key dirvish-mode-map (kbd "v") 'dirvish-vc-menu)      ; remapped `dired-view-file'
+(define-key dirvish-mode-map (kbd "TAB") 'dirvish-subtree-toggle)
+(define-key dirvish-mode-map (kbd "M-f") 'dirvish-history-go-forward)
+(define-key dirvish-mode-map (kbd "M-b") 'dirvish-history-go-backward)
+(define-key dirvish-mode-map (kbd "M-l") 'dirvish-ls-switches-menu)
+(define-key dirvish-mode-map (kbd "M-m") 'dirvish-mark-menu)
+(define-key dirvish-mode-map (kbd "M-t") 'dirvish-layout-toggle)
+(define-key dirvish-mode-map (kbd "M-s") 'dirvish-setup-menu)
+(define-key dirvish-mode-map (kbd "M-e") 'dirvish-emerge-menu)
+(define-key dirvish-mode-map (kbd "M-j") 'dirvish-fd-jump)
+#+end_src
+
+* treemacs-conf.el
+Treemacs was just not super useful for me as it is adding additional overhead. Though I still like the general idea of the sidebuffer.
+But it is not necessary for it to be a tree, just a 'smaller' dired would be fine as well.
+
+#+begin_src elisp
+(require 'treemacs)
+(setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
+          treemacs-deferred-git-apply-delay        0.5
+          treemacs-directory-name-transformer      #'identity
+          treemacs-display-in-side-window          t
+          treemacs-eldoc-display                   'simple
+          treemacs-file-event-delay                2000
+          treemacs-file-extension-regex            treemacs-last-period-regex-value
+          treemacs-file-follow-delay               0.2
+          treemacs-file-name-transformer           #'identity
+          treemacs-follow-after-init               t
+          treemacs-expand-after-init               t
+          treemacs-find-workspace-method           'find-for-file-or-pick-first
+          treemacs-git-command-pipe                ""
+          treemacs-goto-tag-strategy               'refetch-index
+          treemacs-header-scroll-indicators        '(nil . "^^^^^^")
+          treemacs-hide-dot-git-directory          t
+          treemacs-indentation                     2
+          treemacs-indentation-string              " "
+          treemacs-is-never-other-window           nil
+          treemacs-max-git-entries                 5000
+          treemacs-missing-project-action          'ask
+          treemacs-move-forward-on-expand          nil
+          treemacs-no-png-images                   nil
+          treemacs-no-delete-other-windows         t
+          treemacs-project-follow-cleanup          nil
+          treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-position                        'left
+          treemacs-read-string-input               'from-child-frame
+          treemacs-recenter-distance               0.1
+          treemacs-recenter-after-file-follow      nil
+          treemacs-recenter-after-tag-follow       nil
+          treemacs-recenter-after-project-jump     'always
+          treemacs-recenter-after-project-expand   'on-distance
+          treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
+          treemacs-project-follow-into-home        nil
+          treemacs-show-cursor                     nil
+          treemacs-show-hidden-files               t
+          treemacs-silent-filewatch                nil
+          treemacs-silent-refresh                  nil
+          treemacs-sorting                         'alphabetic-asc
+          treemacs-select-when-already-in-treemacs 'move-back
+          treemacs-space-between-root-nodes        t
+          treemacs-tag-follow-cleanup              t
+          treemacs-tag-follow-delay                1.5
+          treemacs-text-scale                      nil
+          treemacs-user-mode-line-format           nil
+          treemacs-user-header-line-format         nil
+          treemacs-wide-toggle-width               70
+          treemacs-width                           35
+          treemacs-width-increment                 1
+          treemacs-width-is-initially-locked       t
+          treemacs-workspace-switch-cleanup        nil)
+
+    ;; The default width and height of the icons is 22 pixels. If you are
+    ;; using a Hi-DPI display, uncomment this to double the icon size.
+    ;;(treemacs-resize-icons 44)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode 'always)
+    (when treemacs-python-executable
+      (treemacs-git-commit-diff-mode t))
+
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple)))
+
+(treemacs-hide-gitignored-files-mode nil)
+
+(provide 'treemacs-config)
+
+#+end_src
+I am no longer really using .org files
+* Org Modern
+(provide 'org-modern-config)
+(require 'org-modern)
+
+(with-eval-after-load 'org (global-org-modern-mode))
+
+(setq
+ ;; Edit settings
+ org-auto-align-tags nil
+ org-tags-column 0
+ org-catch-invisible-edits 'show-and-error
+ org-special-ctrl-a/e t
+ org-insert-heading-respect-content t
+
+ ;; Org styling, hide markup etc.
+ org-hide-emphasis-markers t
+ org-pretty-entities t
+ org-ellipsis "…"
+
+ ;; Agenda styling
+ org-agenda-tags-column 0
+ org-agenda-block-separator ?─
+ org-agenda-time-grid
+ '((daily today require-timed)
+   (800 1000 1200 1400 1600 1800 2000)
+   " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+ org-agenda-current-time-string
+ "◀── now ─────────────────────────────────────────────────")
+
+* Org Noter
+(provide 'org-noter-config)
+
+;;(add-to-list 'load-path "~/Projects/org-noter")
+(require 'org-noter)
+
+;; Org-noter
+  (setq org-noter-doc-split-fraction '(0.7 . 0.7)
+        org-noter-hide-other nil
+        org-noter-always-create-frame nil
+	)
+
+
+(defun my-org-noter-insert-heading-hook ()
+  (select-window (frame-first-window)))
+
+(add-hook 'org-noter-insert-heading-hook 'my-org-noter-insert-heading-hook)
+
+
+* Org Present
+
+(provide 'org-present-conf)
+(require 'org-present)
+(require 'visual-fill-column)
+
+;; Configure fill width
+(setq visual-fill-column-width 110
+      visual-fill-column-center-text t)
+
+
+(defun my/org-present-prepare-slide (buffer-name heading)
+  ;; Show only top-level headlines
+  (org-overview)
+
+  ;; Unfold the current entry
+  (org-show-entry)
+
+  ;; Show only direct subheadings of the slide but don't expand them
+  (org-show-children))
+
+(defun my/org-present-start ()
+  ;; Tweak font sizes
+  (setq-local face-remapping-alist '((default (:height 1.5) variable-pitch)
+                                     (header-line (:height 4.0) variable-pitch)
+                                     (org-document-title (:height 1.75) org-document-title)
+                                     (org-code (:height 1.55) org-code)
+                                     (org-verbatim (:height 1.55) org-verbatim)
+                                     (org-block (:height 1.25) org-block)
+                                     (org-block-begin-line (:height 0.7) org-block)))
+
+  ;; Set a blank header line string to create blank space at the top
+  (setq header-line-format " ")
+
+  ;; Display inline images automatically
+  (org-display-inline-images)
+
+  ;; Center the presentation and wrap lines
+  (visual-fill-column-mode 1)
+  (visual-line-mode 1))
+
+(defun my/org-present-end ()
+  ;; Reset font customizations
+  (setq-local face-remapping-alist '((default variable-pitch default)))
+
+  ;; Clear the header line string so that it isn't displayed
+  (setq header-line-format nil)
+
+  ;; Stop displaying inline images
+  (org-remove-inline-images)
+
+  ;; Stop centering the document
+  (visual-fill-column-mode 0)
+  (visual-line-mode 0))
+
+;; Turn on variable pitch fonts in Org Mode buffers
+(add-hook 'org-mode-hook 'variable-pitch-mode)
+
+;; Register hooks with org-present
+(add-hook 'org-present-mode-hook 'my/org-present-start)
+(add-hook 'org-present-mode-quit-hook 'my/org-present-end)
+(add-hook 'org-present-after-navigate-functions 'my/org-present-prepare-slide)
+
+
+* Org Babel
+(provide 'org-babel)
+;(require 'ess-site)
+
+;; Do not ask for confirmation
+(setq org-confirm-babel-evaluate nil)
+
+;; Syntax latex
+(require 'engrave-faces)
+(setq org-latex-src-block-backend 'engraved)
+(setq org-latex-engraved-theme t)  
+
+(setq org-babel-python-command "python3")
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((R . t)
+   ;; other languages you want to enable, e.g.,
+   (python . t)
+   ))
+* General org config
+(provide 'org-config)
+
+;; Always display images
+(setq org-startup-with-inline-images t)
+
+;; HTML export
+;; Load the publishing system
+(add-to-list 'load-path "~/Projects/org-html-themify")
+
+(setq org-startup-indented t
+      org-pretty-entities t
+      ;; show actually italicized text instead of /italicized text/
+      org-hide-emphasis-markers t
+      org-agenda-block-separator ""
+      org-fontify-whole-heading-line t
+      org-fontify-done-headline t
+      org-fontify-quote-and-verse-blocks t)
+
+
+
+
+(require 'org-html-themify)
+
+(setq org-html-themify-themes
+      '((dark . doom-oceanic-next)
+        (light . modus-operandi)))
+
+(add-hook 'org-mode-hook 'org-html-themify-mode)
+(require 'htmlize)
+(require 'ox-publish)
+
+      ;;   ;; Customize the HTML output
+      ;;   (setq org-html-validation-link nil            ;; Don't show validation link
+      ;;         org-html-head-include-scripts nil       ;; Use our own scripts
+      ;;         org-html-head-include-default-style nil ;; Use our own styles
+      ;; org-html-head "<link rel=\"stylesheet\" href=\"https://cdn.simplecss.org/simple.min.css\" />")
+
+              ;org-html-head "<link href=\"https://taopeng.me/org-notes-style/css/notes.css\" rel=\"stylesheet\" type=\"text/css\" />")
+
+
+         ;; Define the publishing project
+        (setq org-publish-project-alist
+              (list
+               (list "org-site:main"
+                     :recursive t
+                     :base-directory "./content"
+                     :publishing-function 'org-html-publish-to-html
+                     :publishing-directory "./public"
+                     :with-author nil           ;; Don't include author name
+                     :with-creator t            ;; Include Emacs and Org versions in footer
+                     :with-toc t                ;; Include a table of contents
+                     :section-numbers nil       ;; Don't include section numbers
+                     :time-stamp-file nil)))    ;; Don't include time stamp in file
+
+        ;; Generate the site output
+        (org-publish-all t)
+
