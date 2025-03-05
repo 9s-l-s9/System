@@ -7,7 +7,7 @@
 
 (setq package-selected-packages nil)
 (setq warning-suppress-log-types '((treesit) (comp)))
-(setq warning-suppress-types '((treesit)))))
+(setq warning-suppress-types '((treesit)))
 
 (setq delete-by-moving-to-trash t)
 ; Watch webp and similar images
@@ -17,18 +17,17 @@
 (global-auto-revert-mode 1)
 
 ;; keep ~/.config/emacs/ clean
-(setq user-emacs-directory
-      (expand-file-name "~/.cache/emacs/"))
+(setq user-emacs-directory "~/.cache/emacs/")
 (setq url-history-file
       (expand-file-name "url/history" user-emacs-directory))
 
 ;; Set up backup and auto-save directories
 (let ((backup-dir
-       (expand-file-name "backups" "~/.cache/emacs/")))
+       (expand-file-name "backups" user-emacs-directory)))
   (setq backup-directory-alist `(("." . ,backup-dir)))
   (setq auto-save-file-name-transforms `((".*" ,backup-dir t)))
-  (setq undo-tree-history-directory-alist `(("." . ,backup-dir))))
-
+  (setq undo-tree-history-directory-alist `(("." . ,backup-dir)))
+)
 ;; backups
 (setq create-lockfiles nil
       backup-by-copying t
@@ -49,4 +48,4 @@
                 scroll-margin 0
                 next-screen-context-lines 0)
 
-(provide 'general-setting)
+(provide 'general-settings)
