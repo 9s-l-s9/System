@@ -1,9 +1,13 @@
-(define-module (home home-configuration)
+(define-module (home-configuration)
+  #:use-module (git-home-service)
+  #:use-module (stumpwm-home-service)
   #:use-module (gnu)
+  #:use-module (gnu packages wm)
   #:use-module (gnu home)
   #:use-module (gnu home services dotfiles)
   #:use-module (gnu home services desktop)
   #:use-module (gnu home services shells))
+
 
 (define programming-packages
   '("python"
@@ -132,7 +136,7 @@
     "emacs-popper"
     "emacs-rg"
     "emacs-sudo-edit"
-    "emacs-telega"
+    ;;"emacs-telega"
     "emacs-undo-tree"
     "emacs-vertico"
     ))
@@ -189,6 +193,38 @@
                ("alire-shell" . "guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME")))
             ))
 
+   (service home-stumpwm-service-type
+         (home-stumpwm-configuration
+          (package stumpwm)
+          (stumpwm-modules (list sbcl-stumpwm-swm-gaps))
+	  (config
+           (list
+            #~"(asdf:load-system \"stumpwm\")"
+            #~";; avoid repeating stumpwm:define-key or stumpwm:kbd instead of simply define-key and kbd."
+            #~"(in-package :stumpwm)"
+            #~"(defvar guix-home-path \"~/.guix-home/profile/share/\""
+            #~"  \"Define Guix Home profile PATH.\")"
+            #~"(setf *data-dir* \"~/.local/share/stumpwm\")"
+            #~";; Modules"
+            #~"(set-module-dir \"/run/current-system/profile/share/common-lisp/sbcl/\")"
+            #~"(load-module \"swm-gaps\")"
+            #~"  (setf swm-gaps:*head-gaps-size*  0"
+            #~"        swm-gaps:*inner-gaps-size* 10"
+            #~"       swm-gaps:*outer-gaps-size* 10)"
+            #~"(load \".config/stumpwm/modeline.lisp\")"
+            #~"(load \".config/stumpwm/ui.lisp\")"
+            #~"(load \".config/stumpwm/keybindings.lisp\")"
+            #~";; Groups"
+            #~"(grename \" I \")"
+            #~"(add-group (current-screen) \" II \")"
+            #~"(add-group (current-screen) \" III \")"
+            #~";; Init"
+            #~"(when *initializing*"
+            #~"      (run-shell-command \"picom -b\")"
+            #~"      (run-shell-command \"feh --bg-fill $(find ~/Projects/images/ -type f | shuf -n 1)\")"
+            #~"      (modeline/init)"
+            #~"      (swm-gaps:toggle-gaps))"))))
+   
    
    (service home-redshift-service-type
             (home-redshift-configuration
