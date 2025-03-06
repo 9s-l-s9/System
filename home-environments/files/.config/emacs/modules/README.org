@@ -231,11 +231,9 @@ Kinda proud of this one.
 (set-modeline-faces)
 
 #+end_src
-* General editing
-** Buffer size
+* General settings
+** Buffer/window config
 #+begin_src elisp
-(provide 'navigation-config)
-
 (setq display-buffer-alist
       `((,(rx bos "*Help*" eos)
          (display-buffer-in-direction)
