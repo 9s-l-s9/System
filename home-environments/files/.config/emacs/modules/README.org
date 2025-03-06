@@ -1,7 +1,294 @@
 #+TITLE: My old configurations
 
 This is sadly not everything but I now store it in this file to keep an overview of what I have tried
+* UI
+** Margin
+#+begin_src elisp
 
+  (setq-default left-margin-width 1 right-margin-width 1) ; Define new widths.
+  (set-window-buffer nil (current-buffer)) ; Use them now.
+  (fringe-mode 50)
+
+  border width for every new frame
+  (defun set-frame-border-width (frame)
+    (set-frame-parameter frame 'internal-border-width 50))
+
+  Set for the initial frame
+  (set-frame-border-width (selected-frame))
+
+  Set for any new frames
+  (add-hook 'after-make-frame-functions 'set-frame-border-width)
+
+#+end_src
+** Transparency
+#+begin_src elisp
+
+  (defun set-frame-transparency (&optional frame)
+    "Set the transparency of the given frame, or the current frame if none is given."
+    (let ((alpha-value '(90 . 100)))
+      (when frame
+        (select-frame frame))
+      (set-frame-parameter frame 'alpha alpha-value)))
+
+  ;; Set transparency of the current frame.
+  (set-frame-transparency)
+
+  ;; Ensure all newly created frames have the same transparency.
+  (add-hook 'after-make-frame-functions 'set-frame-transparency)
+
+#+end_src
+** Modeline alternative
+#+begin_src elisp
+  (require 'nano-modeline)
+  (nano-modeline-prog-mode t)
+   (custom-set-faces '(modeline ((t :box (:line-width 4)))))
+  (custom-set-faces
+    '(mode-line ((t (:box (:line-width 4 :color "white") :override t)))))
+
+  (setq-default header-line-format mode-line-format)
+
+  (require 'multiline)
+  (require 'min-modeline)
+
+  (setq-default mode-line-format'("--------"))
+
+  (setq window-divider-default-right-width 3)
+  (setq window-divider-default-places 'right-only)
+  (window-divider-mode)
+
+  (setq-default header-line-format mode-line-format)
+  (setq-default mode-line-format nil)
+
+  (defun generate-bottom-line ()
+    "Generate a line of dashes that matches the window width."
+    (let ((line-width (window-width)))
+      (make-string (max 0 (- line-width 1)) ?-)))
+
+  (define-minor-mode global-mode-line-to-header-mode
+    "A mode to move the mode line to the header globally and replace the mode line with a dynamic line."
+    :global t
+    (if global-mode-line-to-header-mode
+        (progn
+          ;; Move mode line to header
+          (setq-default header-line-format mode-line-format)
+          ;; Set mode line to a dynamic line of dashes
+          (setq-default mode-line-format '(:eval (generate-bottom-line))))
+      ;; Revert changes
+      (setq-default header-line-format nil)
+      (setq-default mode-line-format nil)))
+
+  ;; Activate the mode
+  (global-mode-line-to-header-mode 1)
+
+
+
+  Function to format the buffer name
+  (defun my-modeline--buffer-name ()
+    "Return `buffer-name' with spaces around it."
+    (format " %s" (buffer-name)))
+  ;; Function to format the major mode name
+  (defun my-modeline--major-mode-name ()
+    "Return capitalized `major-mode' as a string."
+    (capitalize (symbol-name major-mode)))
+
+  ;; Variable to show the major mode
+  (defvar-local my-modeline-major-mode
+      '(:eval
+        (list
+         (propertize "λ" 'face 'shadow)
+         " "
+         (propertize (my-modeline--major-mode-name) 'face 'bold)))
+    "Mode line construct to display the major mode.")
+  (put 'my-modeline-major-mode 'risky-local-variable t)
+
+  (defun my-modeline--vc-branch ()
+    "Return the current VC branch."
+    (interactive)
+    (if vc-mode
+        (progn
+          (message "VC Mode is active: %s" vc-mode)
+          vc-mode)
+      (message "VC Mode is not active")))
+
+
+  ;; Function to show modified status
+  (defun my-modeline--modified-status ()
+    "Return '*' if the buffer is modified."
+    (if (buffer-modified-p) "*" " "))
+
+
+  ;; Function to show the Git branch
+  (defun my-modeline--vc-branch ()
+    "Return the current VC branch."
+    (when vc-mode
+      vc-mode))  ; Directly return the vc-mode string
+
+  ;; Variable to show the Git branch
+  (defvar-local my-modeline-vc-branch
+    '(:eval (my-modeline--vc-branch))
+    "Mode line construct to display the VC branch.")
+
+
+  ;; Assembling the mode line
+  (setq-default mode-line-format
+                '("%e"
+  		(:eval (my-modeline--buffer-name))
+                  (:eval (my-modeline--modified-status))  ; Modified status
+                  " "
+                  ;; Right-Onlyjn align (using the "mode-line-end-spaces" variable)
+                  (:eval (propertize
+                          " " 'display
+                          `((space :align-to (- right ,(string-width (format-mode-line '("%l" "    " my-modeline-major-mode "git:master"))))))))
+  		(:eval my-modeline-vc-branch)
+  		" "
+  		my-modeline-major-mode  ; Major mode
+  		" %l"  ; Line number
+  		))  ; Git branch
+
+#+end_src
+** Mini modeline
+Kinda proud of this one.
+
+#+begin_src elisp
+(provide 'min-modeline)
+
+
+(defun set-face (face style)
+  ;; "Reset a face and make it inherit style."
+  (set-face-attribute face nil
+                      :foreground 'unspecified
+                      :background 'unspecified
+                      :family 'unspecified
+                      :slant 'unspecified
+                      :weight 'unspecified
+                      :height 'unspecified
+                      :underline 'unspecified
+                      :overline 'unspecified
+                      :box 'unspecified
+                      :inherit (or style 'unspecified)))
+
+
+;; This line below makes things a bit faster
+(set-fontset-font "fontset-default"  '(#x2600 . #x26ff) "Lato 16")
+
+ (define-key mode-line-major-mode-keymap [header-line]
+   (lookup-key mode-line-major-mode-keymap [mode-line]))
+
+(defun mode-line-render (left right)
+  "Function to render the modeline LEFT to RIGHT."
+  (concat left
+          (propertize " " 'display `(space :align-to (- right ,(length right))))
+          right))
+(setq-default mode-line-format
+     '((:eval
+       (mode-line-render
+       (format-mode-line (list
+         " %b "
+         (if (and buffer-file-name (buffer-modified-p))
+             (propertize "(modified)" ))))
+       (format-mode-line
+        (propertize "%4l:%2c" ))))))
+
+
+;; Comment if you want to keep the modeline at the bottom
+(setq-default header-line-format mode-line-format)
+(setq-default mode-line-format'(""))
+
+              
+;; Vertical window divider
+(setq window-divider-default-right-width 3)
+(setq window-divider-default-places 'right-only)
+(window-divider-mode)
+
+
+
+;; Modeline
+(defun set-modeline-faces ()
+
+  ;; Mode line at top
+  (set-face 'header-line                                 'face-strong)
+  (set-face-attribute 'header-line nil
+                                :underline (face-foreground 'default))
+  (set-face-attribute 'mode-line nil
+                      :height 10
+                      :underline (face-foreground 'default)
+                      :overline nil
+                      :box nil 
+                      :foreground (face-background 'default)
+                      :background (face-background 'default))
+  (set-face 'mode-line-inactive                            'mode-line)
+  
+  (set-face-attribute 'cursor nil
+                      :background (face-foreground 'default))
+  (set-face-attribute 'window-divider nil
+                      :foreground (face-background 'mode-line))
+  (set-face-attribute 'window-divider-first-pixel nil
+                      :foreground (face-background 'default))
+  (set-face-attribute 'window-divider-last-pixel nil
+                      :foreground (face-background 'default))
+  )
+
+(set-modeline-faces)
+
+#+end_src
+* General editing
+** Buffer size
+#+begin_src elisp
+(provide 'navigation-config)
+
+(setq display-buffer-alist
+      `((,(rx bos "*Help*" eos)
+         (display-buffer-in-direction)
+         (direction . right)
+         (window-width . 0.33))
+        (,(rx bos "*compilation*" eos)
+         (display-buffer-in-direction)
+         (direction . bottom)
+         (window-height . 0.33))
+        (,(rx bos "*shell*" eos)
+         (display-buffer-in-direction)
+         (direction . top)
+         (window-height . 0.33))
+        (,(rx bos (or "*dired" "*Dired")) eos)
+         (display-buffer-in-direction)
+         (direction . left)
+         (window-width . 0.33)))
+
+
+#+end_src 
+
+** Ivy
+#+begin_src elisp
+(require 'ivy)
+;(require 'ivy-posframe)
+
+;; Enable Ivy for completion.
+(ivy-mode 1)
+
+;; Configure Ivy's appearance and behavior.
+(setq ivy-use-virtual-buffers t
+      ivy-count-format "(%d/%d) "
+      ivy-wrap t)
+
+;;; ; Enable Ivy Posframe.
+;; (ivy-posframe-mode 1)
+
+;; ;; Configure Ivy Posframe's appearance.
+;; (setq ivy-posframe-parameters
+;;       '((left-fringe . 8)
+;;         (right-fringe . 8)))
+
+;; ;; Specify which commands should use Ivy Posframe.
+;; ;; If you want all commands to use Ivy Posframe, use `t'.
+;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
+
+;; ;; Set the height of the posframe
+;; (setq ivy-posframe-height-alist
+;;       '((swiper . 20)
+;;         (t . 10)))
+
+(provide 'ivy-config)
+#+end_src
 * Programming Languages:
 ** C++
 #+begin_src elisp
@@ -118,6 +405,28 @@ never really managed to use ada in emacs :(((
 #+end_src
 
 * Apps
+** GPTel
+#+begin_src elisp
+(require 'gptel)
+;; (gptel-make-ollama
+;;  "Ollama"                               ;Any name of your choosing
+;;  :host "localhost:11434"                ;Where it's running
+;;  :models '("llama2:latest")            ;Installed models
+;;  :stream t)                             ;Stream responses
+
+
+;; OPTIONAL configuration
+(setq-default gptel-model "orca2:13b" ;Pick your default model
+              gptel-backend
+	      (gptel-make-ollama
+	       "Ollama"                               ;Any name of your choosing
+	       :host "localhost:11434"                ;Where it's running
+	       :stream t)                             ;Stream responses
+	      )
+(provide 'gptel-config)
+
+#+end_scr
+
 ** Ebib
 Ebib is really interesting but also too complicated. i am not using it enough to justify learning all the keybindings.
 This made it more confusing.
@@ -310,6 +619,7 @@ But it is not necessary for it to be a tree, just a 'smaller' dired would be fin
 (provide 'treemacs-config)
 
 #+end_src
+
 * Org
 
 I am no longer really using .org files. Basically only for README files and therefore only need the basic setup.
