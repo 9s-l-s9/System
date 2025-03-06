@@ -225,7 +225,50 @@
             #~"      (modeline/init)"
             #~"      (swm-gaps:toggle-gaps))"))))
    
-   
+
+
+   (service home-git-service-type
+	    (home-git-configuration
+	     (user.name "s-l-s")
+	     (user.email "schmidt.l.samuel@gmail.com")
+	     (extra-options
+	      '(
+		((filter "lfs") 
+		 (clean "git-lfs clean -- %f")
+		 (smudge "git-lfs smudge -- %f")
+		 (process "git-lfs filter-process")
+		 (required #t))
+		
+		(column
+		 (ui "auto"))
+		
+		(branch
+		 (sort "-committerdate"))
+		
+		(tag
+		 (sort "version:refname"))
+		
+		(init
+		 (defaultBranch "main"))
+		
+		(diff
+		 (algorithm "histogram")
+		 (colorMoved "plain")
+		 (mnemonicPrefix #t)
+		 (renames #t))
+		
+		(push
+		 (default "simple")
+		 (autoSetupRemote #t)
+		 (followTags #t))
+		
+		(fetch
+		 (prune #t)
+		 (pruneTags #t)
+		 (all #t))
+		))
+	     ))   
+
    (service home-redshift-service-type
             (home-redshift-configuration
              (location-provider 'manual)
