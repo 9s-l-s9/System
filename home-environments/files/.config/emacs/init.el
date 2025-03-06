@@ -14,6 +14,9 @@
 (setq ediff-split-window-function 'split-window-horizontally)
 (setq ediff-window-setup-function 'ediff-setup-windows-plain)
 
+(require 'focus-conf)
+(require 'imenu-list-conf)
+
 
 					; -- Completion & Snippets --
 (require 'corfu-conf)
@@ -34,7 +37,7 @@
 (require 'magit)
 ;; (require 'dap-config)
 					; -- Languages / Modes --
-(require 'markdown-preview-mode)
+;;(require 'markdown-preview-mode)
 ;; (require 'lean4-conf)
 ;; (require 'ada-conf)
 
@@ -43,7 +46,7 @@
 (require 'dashboard-config)
 (require 'dired-config)
 ;(require 'eshell-config)
-(require 'ebib-config)
+;;(require 'ebib-config)
 ;(require 'pdf-tools-config)
 (require 'popper-config)
 (require 'helpful-config)

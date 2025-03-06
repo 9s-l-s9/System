@@ -1,4 +1,4 @@
-(provide 'imenu-list-config)
+(provide 'imenu-list-conf)
 (require 'imenu-list)
 
  (setq imenu-list-focus-after-activation t
