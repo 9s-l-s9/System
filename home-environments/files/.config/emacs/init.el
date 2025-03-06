@@ -26,24 +26,41 @@
 (all-the-icons-completion-mode)
 (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
 
-
 					; -- Programming --
-
 ;;(require 'eglot-conf)
 ;;(require 'treesitter-conf)
 (require 'flycheck-config)
 (require 'highlight-indent-guides)
 (require 'magit)
+;; (require 'dap-config)
+					; -- Languages / Modes --
+(require 'markdown-preview-mode)
+;; (require 'lean4-conf)
+;; (require 'ada-conf)
 
 					; -- Apps --
 
 (require 'dashboard-config)
 (require 'dired-config)
+;(require 'eshell-config)
 (require 'ebib-config)
 ;(require 'pdf-tools-config)
 (require 'popper-config)
 (require 'helpful-config)
 (require 'eat)
 
+					; -- Org Configurations --
+;; (require 'org-config)
+;; (require 'org-noter-config)
+;; (require 'org-modern-config)
+;; (require 'org-babel)
+;(require 'org-transclusion)
+
+;; (require 'gptel-config)
+;; (require 'citar-conf)
+
+;; Load at the end
 (require 'keybindings-config)
 (server-start)
+
+;;; init.el ends here
