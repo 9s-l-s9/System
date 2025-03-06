@@ -6,9 +6,6 @@
                  (string-trim " " search-term)
                  "'")))
 
-
-
-
 (defun toggle-internet ()
   "Toggle Wi-Fi on or off. Needs nmcli."
   (let ((status (uiop:run-program '("nmcli" "-t" "-f" "WIFI" "radio") :output :string)))
