@@ -2,32 +2,6 @@
 
 This is sadly not everything but I now store it in this file to keep an overview of what I have tried
 
-* Emacs as an app-launcher
-... no
-#+begin_src elisp
-(provide 'app-launcher-config)
-(require 'app-launcher)
-
-(defun emacs-run-launcher ()
-  "Create and select a frame called emacs-run-launcher which consists only of a minibuffer and has specific dimensions. Runs app-launcher-run-app on that frame, which is an emacs command that prompts you to select an app and open it in a dmenu like behaviour. Delete the frame after that command has exited"
-  (interactive)
-  (with-selected-frame 
-    (make-frame '((name . "emacs-run-launcher")
-                  (minibuffer . only)
-                  (fullscreen . 0) ; no fullscreen
-                  (undecorated . t) ; remove title bar
-                  ;;(auto-raise . t) ; focus on this frame
-                  ;;(tool-bar-lines . 0)
-                  ;;(menu-bar-lines . 0)
-                  (internal-border-width . 10)
-                  (width . 80)
-                  (height . 11)))
-                  (unwind-protect
-                    (app-launcher-run-app)
-                    (delete-frame))))
-
-#+end_src
-
 * Programming Languages:
 ** C++
 #+begin_src elisp
@@ -142,7 +116,78 @@ never really managed to use ada in emacs :(((
   (provide 'ada-conf)
 
 #+end_src
-* dirvish
+
+* Apps
+** Ebib
+Ebib is really interesting but also too complicated. i am not using it enough to justify learning all the keybindings.
+This made it more confusing.
+Instead I want to use something more general like Recutils or my own lisp based plain text database.
+
+#+begin_src elisp
+(provide 'ebib-config)
+(require 'ebib)
+
+(setq ebib-preload-bib-files
+      '("~/References/main.bib"))
+
+(setq ebib-file-search-dirs
+      ' ("~/References/"))
+
+(setq ebib-layout 'index-only)
+(setq ebib-popup-entry-window t)
+#+end_src
+** Citar
+Similar to ebib. I am not using it enough
+#+begin_src elisp
+  ;;itar-bib liography '("~/Projects/personal-knowledge-base/main.bib"))
+(use-package citar
+  :custom
+  (citar-bibliography '("~/Downloads/export-data(1).bib"))
+  )
+
+(provide 'citar-conf)
+
+#+end_src
+** Eshell
+
+What happened to the rest of my eshell config?? lol
+#+begin_src elsip
+(provide 'eshell-config)
+
+(require 'eshell-prompt-extras)
+
+;; Change the Eshell prompt function to use eshell-prompt-extras
+(setq eshell-highlight-prompt nil
+      eshell-prompt-function 'epe-theme-multiline-with-status)
+
+#+end_src
+** Emacs as an app-launcher
+... no
+#+begin_src elisp
+(provide 'app-launcher-config)
+(require 'app-launcher)
+
+(defun emacs-run-launcher ()
+  "Create and select a frame called emacs-run-launcher which consists only of a minibuffer and has specific dimensions. Runs app-launcher-run-app on that frame, which is an emacs command that prompts you to select an app and open it in a dmenu like behaviour. Delete the frame after that command has exited"
+  (interactive)
+  (with-selected-frame 
+    (make-frame '((name . "emacs-run-launcher")
+                  (minibuffer . only)
+                  (fullscreen . 0) ; no fullscreen
+                  (undecorated . t) ; remove title bar
+                  ;;(auto-raise . t) ; focus on this frame
+                  ;;(tool-bar-lines . 0)
+                  ;;(menu-bar-lines . 0)
+                  (internal-border-width . 10)
+                  (width . 80)
+                  (height . 11)))
+                  (unwind-protect
+                    (app-launcher-run-app)
+                    (delete-frame))))
+
+#+end_src
+
+** dirvish
 Dirvish was great in principle but I had several bugs :( Decide to no longer use it.
 
 #+begin_src elisp
@@ -184,7 +229,7 @@ Dirvish was great in principle but I had several bugs :( Decide to no longer use
 (define-key dirvish-mode-map (kbd "M-j") 'dirvish-fd-jump)
 #+end_src
 
-* treemacs-conf.el
+** treemacs-conf.el
 Treemacs was just not super useful for me as it is adding additional overhead. Though I still like the general idea of the sidebuffer.
 But it is not necessary for it to be a tree, just a 'smaller' dired would be fine as well.
 
@@ -265,8 +310,71 @@ But it is not necessary for it to be a tree, just a 'smaller' dired would be fin
 (provide 'treemacs-config)
 
 #+end_src
-I am no longer really using .org files
-* Org Modern
+* Org
+
+I am no longer really using .org files. Basically only for README files and therefore only need the basic setup.
+
+** General org config
+#+begin_src elisp
+(provide 'org-config)
+
+;; Always display images
+(setq org-startup-with-inline-images t)
+
+;; HTML export
+;; Load the publishing system
+(add-to-list 'load-path "~/Projects/org-html-themify")
+
+(setq org-startup-indented t
+      org-pretty-entities t
+      ;; show actually italicized text instead of /italicized text/
+      org-hide-emphasis-markers t
+      org-agenda-block-separator ""
+      org-fontify-whole-heading-line t
+      org-fontify-done-headline t
+      org-fontify-quote-and-verse-blocks t)
+
+
+
+
+(require 'org-html-themify)
+
+(setq org-html-themify-themes
+      '((dark . doom-oceanic-next)
+        (light . modus-operandi)))
+
+(add-hook 'org-mode-hook 'org-html-themify-mode)
+(require 'htmlize)
+(require 'ox-publish)
+
+      ;;   ;; Customize the HTML output
+      ;;   (setq org-html-validation-link nil            ;; Don't show validation link
+      ;;         org-html-head-include-scripts nil       ;; Use our own scripts
+      ;;         org-html-head-include-default-style nil ;; Use our own styles
+      ;; org-html-head "<link rel=\"stylesheet\" href=\"https://cdn.simplecss.org/simple.min.css\" />")
+
+              ;org-html-head "<link href=\"https://taopeng.me/org-notes-style/css/notes.css\" rel=\"stylesheet\" type=\"text/css\" />")
+
+
+         ;; Define the publishing project
+        (setq org-publish-project-alist
+              (list
+               (list "org-site:main"
+                     :recursive t
+                     :base-directory "./content"
+                     :publishing-function 'org-html-publish-to-html
+                     :publishing-directory "./public"
+                     :with-author nil           ;; Don't include author name
+                     :with-creator t            ;; Include Emacs and Org versions in footer
+                     :with-toc t                ;; Include a table of contents
+                     :section-numbers nil       ;; Don't include section numbers
+                     :time-stamp-file nil)))    ;; Don't include time stamp in file
+
+        ;; Generate the site output
+        (org-publish-all t)
+#+end_src
+** Org Modern
+#+begin_src elisp
 (provide 'org-modern-config)
 (require 'org-modern)
 
@@ -295,7 +403,10 @@ I am no longer really using .org files
  org-agenda-current-time-string
  "◀── now ─────────────────────────────────────────────────")
 
-* Org Noter
+#+end_src
+
+** Org Noter
+#+begin_src elisp
 (provide 'org-noter-config)
 
 ;;(add-to-list 'load-path "~/Projects/org-noter")
@@ -313,9 +424,10 @@ I am no longer really using .org files
 
 (add-hook 'org-noter-insert-heading-hook 'my-org-noter-insert-heading-hook)
 
+#+end_src
 
-* Org Present
-
+** Org Present
+#+begin_src elisp
 (provide 'org-present-conf)
 (require 'org-present)
 (require 'visual-fill-column)
@@ -376,9 +488,10 @@ I am no longer really using .org files
 (add-hook 'org-present-mode-hook 'my/org-present-start)
 (add-hook 'org-present-mode-quit-hook 'my/org-present-end)
 (add-hook 'org-present-after-navigate-functions 'my/org-present-prepare-slide)
+#+end_src
 
-
-* Org Babel
+** Org Babel
+#+begin_src elisp
 (provide 'org-babel)
 ;(require 'ess-site)
 
@@ -398,61 +511,5 @@ I am no longer really using .org files
    ;; other languages you want to enable, e.g.,
    (python . t)
    ))
-* General org config
-(provide 'org-config)
 
-;; Always display images
-(setq org-startup-with-inline-images t)
-
-;; HTML export
-;; Load the publishing system
-(add-to-list 'load-path "~/Projects/org-html-themify")
-
-(setq org-startup-indented t
-      org-pretty-entities t
-      ;; show actually italicized text instead of /italicized text/
-      org-hide-emphasis-markers t
-      org-agenda-block-separator ""
-      org-fontify-whole-heading-line t
-      org-fontify-done-headline t
-      org-fontify-quote-and-verse-blocks t)
-
-
-
-
-(require 'org-html-themify)
-
-(setq org-html-themify-themes
-      '((dark . doom-oceanic-next)
-        (light . modus-operandi)))
-
-(add-hook 'org-mode-hook 'org-html-themify-mode)
-(require 'htmlize)
-(require 'ox-publish)
-
-      ;;   ;; Customize the HTML output
-      ;;   (setq org-html-validation-link nil            ;; Don't show validation link
-      ;;         org-html-head-include-scripts nil       ;; Use our own scripts
-      ;;         org-html-head-include-default-style nil ;; Use our own styles
-      ;; org-html-head "<link rel=\"stylesheet\" href=\"https://cdn.simplecss.org/simple.min.css\" />")
-
-              ;org-html-head "<link href=\"https://taopeng.me/org-notes-style/css/notes.css\" rel=\"stylesheet\" type=\"text/css\" />")
-
-
-         ;; Define the publishing project
-        (setq org-publish-project-alist
-              (list
-               (list "org-site:main"
-                     :recursive t
-                     :base-directory "./content"
-                     :publishing-function 'org-html-publish-to-html
-                     :publishing-directory "./public"
-                     :with-author nil           ;; Don't include author name
-                     :with-creator t            ;; Include Emacs and Org versions in footer
-                     :with-toc t                ;; Include a table of contents
-                     :section-numbers nil       ;; Don't include section numbers
-                     :time-stamp-file nil)))    ;; Don't include time stamp in file
-
-        ;; Generate the site output
-        (org-publish-all t)
-
+#+end_src
