@@ -1,3 +1,4 @@
+
 (defcommand add-todo (todo-text) ((:string "Enter TODO: "))
   "Add a new TODO to the org file, including the current date."
   (let* ((hostname (string-trim '(#\Newline)
