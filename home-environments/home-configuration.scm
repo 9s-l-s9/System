@@ -1,7 +1,7 @@
 (define-module (home-configuration)
   #:use-module (git-home-service)
   #:use-module (lem-home-service)
-  #:use-module (stumpwm-home-service)
+  #:use-module (stumpwm-test)
   #:use-module (gnu)
   #:use-module (gnu packages wm)
   #:use-module (gnu packages text-editors)
@@ -199,8 +199,13 @@
          (home-stumpwm-configuration
           (package stumpwm)
           (stumpwm-modules (list sbcl-stumpwm-swm-gaps))
+	  (prefix-key "Print")
 	  (config
            (list
+	    #~"(load \".config/stumpwm/dashboard.lisp\")"
+	    #~"(load \".config/stumpwm/internet.lisp\")"
+	    #~"(load \".config/stumpwm/screenshot.lisp\")"
+	    #~"(load \".config/stumpwm/misc.lisp\")"
             #~"(asdf:load-system \"stumpwm\")"
             #~";; avoid repeating stumpwm:define-key or stumpwm:kbd instead of simply define-key and kbd."
             #~"(in-package :stumpwm)"
@@ -210,7 +215,6 @@
             #~";; Modules"
             #~"(set-module-dir \"/run/current-system/profile/share/common-lisp/sbcl/\")"
             #~"(load \".config/stumpwm/ui.lisp\")"
-            #~"(load \".config/stumpwm/keybindings.lisp\")"
             #~";; Groups"
             #~"(grename \" I \")"
             #~"(add-group (current-screen) \" II \")"
@@ -220,7 +224,68 @@
             #~"      (run-shell-command \"picom -b\")"
             #~"      (run-shell-command \"feh --bg-fill $(find ~/Projects/images/ -type f | shuf -n 1)\")"
             #~"      (modeline/init)"
-            #~"      (swm-gaps:toggle-gaps))"))))
+            #~"      (swm-gaps:toggle-gaps))"))
+	  (keymaps
+	   (list
+	    ;; Main root-map bindings
+	    (stumpwm-keymap
+	     (name "root")
+	     (map-variable "stumpwm:*root-map*")
+	     (bindings
+	      (list
+               ;; Applications
+               (stumpwm-keybinding (key "Return") (command "exec kitty"))
+               (stumpwm-keybinding (key "b") (command "exec nyxt"))
+               (stumpwm-keybinding (key "e") (command "exec lem -i sdl2"))
+               (stumpwm-keybinding (key "r") (command "exec"))
+               
+               ;; Frame Management
+               (stumpwm-keybinding (key "F") (command "float-this"))
+               (stumpwm-keybinding (key "n") (command "fnext"))
+               (stumpwm-keybinding (key "v") (command "vsplit"))
+               (stumpwm-keybinding (key "h") (command "hsplit"))
+               (stumpwm-keybinding (key "c") (command "remove-split"))
+               
+               ;; Window Management
+               (stumpwm-keybinding (key "l") (command "windowlist"))
+               (stumpwm-keybinding (key "k") (command "kill"))
+               (stumpwm-keybinding (key "f") (command "next"))
+               (stumpwm-keybinding (key "p") (command "pull"))
+               (stumpwm-keybinding (key "m") (command "move-window"))
+               (stumpwm-keybinding (key "d") (command "delete-window"))
+               
+               ;; Group Management
+               (stumpwm-keybinding (key "G") (command "gnew"))
+               (stumpwm-keybinding (key "g") (command "gnext"))
+               
+               ;; Start/Shutdown
+               (stumpwm-keybinding (key "R") (command "loadrc"))
+               (stumpwm-keybinding (key "Q") (command "shutdown"))
+               
+               ;; Custom commands
+               (stumpwm-keybinding (key "t") (command "dashboard"))
+               (stumpwm-keybinding (key "T") (command "add-todo")))))
+	    
+	    ;; Screenshot map
+	    (stumpwm-keymap
+	     (name "screenshot")
+	     (prefix-key "S")
+	     (bindings
+	      (list
+               (stumpwm-keybinding (key ".") (command "screenshot"))
+               (stumpwm-keybinding (key ",") (command "get-latex")))))
+	    
+	    ;; Misc map
+	    (stumpwm-keymap
+	     (name "misc")
+	     (map-variable "*misc-map*")
+	     (prefix-key "P")
+	     (bindings
+	      (list
+               (stumpwm-keybinding (key "s") (command "browser-search"))
+               (stumpwm-keybinding (key "i") (command "internet-10-min"))
+               (stumpwm-keybinding (key "t") (command "insert-timestamp")))))))
+	  ))
    
 (service home-lem-service-type
          (home-lem-configuration

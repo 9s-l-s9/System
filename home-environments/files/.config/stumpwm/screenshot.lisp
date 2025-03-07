@@ -1,5 +1,5 @@
 (defcommand screenshot () ()(
-			     run-shell-command "flameshot gui"))
+			     run-shell-command "spectacle"))
 
 
 (defcommand get-latex () ()
