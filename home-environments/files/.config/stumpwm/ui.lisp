@@ -1,37 +1,3 @@
-; Theme
-
-;;; Base16 black metal bathory
-
-(defvar base00 "#000000")
-(defvar base01 "#121212")
-(defvar base02 "#222222")
-(defvar base03 "#333333")
-(defvar base04 "#999999")
-(defvar base05 "#c1c1c1")
-(defvar base06 "#999999")
-(defvar base07 "#c1c1c1")
-(defvar base08 "#5f8787")
-(defvar base09 "#aaaaaa")
-(defvar base0A "#e78a53")
-(defvar base0B "#fbcb97")
-(defvar base0C "#aaaaaa")
-(defvar base0D "#888888")
-(defvar base0E "#999999")
-(defvar base0F "#444444")
-
-(setq *colors*
-      `(,base00   ;; 0 black
-        ,base08   ;; 1 green
-        ,base0B   ;; 2 yellow
-        ,base0A   ;; 3 orange
-        ,base0D   ;; 4 grey
-        ,base0E   ;; 5 light grey
-        ,base0C   ;; 6 light grey 2
-        ,base05)) ;; 7 light grey 3
-
-(update-color-map (current-screen))
-
-
 ; Modeline
 
 

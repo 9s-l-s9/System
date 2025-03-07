@@ -203,7 +203,6 @@
 	  (prefix-key "Print")
 	  (config
            (list
-	    #~"(load \".config/stumpwm/internet.lisp\")"
 	    #~"(load \".config/stumpwm/misc.lisp\")"
             #~"(asdf:load-system \"stumpwm\")"
             #~";; avoid repeating stumpwm:define-key or stumpwm:kbd instead of simply define-key and kbd."
@@ -224,6 +223,15 @@
             #~"      (run-shell-command \"feh --bg-fill $(find ~/Projects/images/ -type f | shuf -n 1)\")"
             #~"      (modeline/init)"
             #~"      (swm-gaps:toggle-gaps))"))
+	  (colors (list "#000000"
+			"#121212"
+			"#222222"
+			"#333333"
+			"#999999"
+			"#c1c1c1"
+			"#999999"
+			"#c1c1c1"))
+
 	  (keymaps
 	   (list
 	    ;; Main root-map bindings
