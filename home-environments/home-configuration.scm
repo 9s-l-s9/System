@@ -1,7 +1,7 @@
 (define-module (home-configuration)
   #:use-module (git-home-service)
   #:use-module (lem-home-service)
-  #:use-module (stumpwm-test)
+  #:use-module (stumpwm-home-service)
   #:use-module (gnu)
   #:use-module (gnu packages wm)
   #:use-module (gnu packages text-editors)
@@ -76,6 +76,7 @@
     "picom"
     "redshift"
     "xdg-desktop-portal-wlr"
+    "xsel" ;; clipboard management
     ))
 
 
@@ -202,9 +203,7 @@
 	  (prefix-key "Print")
 	  (config
            (list
-	    #~"(load \".config/stumpwm/dashboard.lisp\")"
 	    #~"(load \".config/stumpwm/internet.lisp\")"
-	    #~"(load \".config/stumpwm/screenshot.lisp\")"
 	    #~"(load \".config/stumpwm/misc.lisp\")"
             #~"(asdf:load-system \"stumpwm\")"
             #~";; avoid repeating stumpwm:define-key or stumpwm:kbd instead of simply define-key and kbd."
@@ -272,7 +271,7 @@
 	     (prefix-key "S")
 	     (bindings
 	      (list
-               (stumpwm-keybinding (key ".") (command "screenshot"))
+               (stumpwm-keybinding (key ".") (command "exec spectacle"))
                (stumpwm-keybinding (key ",") (command "get-latex")))))
 	    
 	    ;; Misc map
@@ -284,7 +283,8 @@
 	      (list
                (stumpwm-keybinding (key "s") (command "browser-search"))
                (stumpwm-keybinding (key "i") (command "internet-10-min"))
-               (stumpwm-keybinding (key "t") (command "insert-timestamp")))))))
+               ;;(stumpwm-keybinding (key "t") (run-shell-command "date "+%Y-%m-%d" | xsel --clipboard --input"))
+	       )))))
 	  ))
    
 (service home-lem-service-type
