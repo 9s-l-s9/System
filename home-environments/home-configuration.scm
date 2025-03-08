@@ -203,7 +203,6 @@
 	  (prefix-key "Print")
 	  (config
            (list
-	    #~"(load \".config/stumpwm/misc.lisp\")"
             #~"(asdf:load-system \"stumpwm\")"
             #~";; avoid repeating stumpwm:define-key or stumpwm:kbd instead of simply define-key and kbd."
             #~"(in-package :stumpwm)"
@@ -212,7 +211,8 @@
             #~"(setf *data-dir* \"~/.local/share/stumpwm\")"
             #~";; Modules"
             #~"(set-module-dir \"/run/current-system/profile/share/common-lisp/sbcl/\")"
-            #~"(load \".config/stumpwm/ui.lisp\")"
+	    #~"(load-module \"swm-gaps\")"
+	    #~"(load \".config/stumpwm/misc.lisp\")"
             #~";; Groups"
             #~"(grename \" I \")"
             #~"(add-group (current-screen) \" II \")"
@@ -221,7 +221,9 @@
             #~"(when *initializing*"
             #~"      (run-shell-command \"picom -b\")"
             #~"      (run-shell-command \"feh --bg-fill $(find ~/Projects/images/ -type f | shuf -n 1)\")"
-            #~"      (modeline/init)"
+            #~"      (mode-line)"
+	    #~"      (dolist (h (screen-heads (current-screen)))"   
+            #~"        (enable-mode-line (current-screen) h t))"
             #~"      (swm-gaps:toggle-gaps))"))
 	  (colors (list "#000000"
 			"#121212"
@@ -231,6 +233,50 @@
 			"#c1c1c1"
 			"#999999"
 			"#c1c1c1"))
+
+	  (setf-entries
+           (list
+            ;; Mode line
+            (stumpwm-setf-entry
+             (variable "*mode-line-pad-x*")
+             (value 5))
+            (stumpwm-setf-entry
+             (variable "*mode-line-pad-y*")
+             (value 5))
+            (stumpwm-setf-entry
+             (variable "*group-format*")
+             (value "%t"))
+            (stumpwm-setf-entry
+             (variable "*screen-mode-line-format*")
+             (value (list "%g" "^>" "%d")))            
+            (stumpwm-setf-entry
+             (variable "*mode-line-timeout*")
+             (value 10))
+	    
+            ;; Gaps configuration
+            (stumpwm-setf-entry
+             (variable "swm-gaps:*head-gaps-size*")
+             (value 0))
+            (stumpwm-setf-entry
+             (variable "swm-gaps:*inner-gaps-size*")
+             (value 10))
+            (stumpwm-setf-entry
+             (variable "swm-gaps:*outer-gaps-size*")
+             (value 10))
+            
+            ;; Window configuration
+            (stumpwm-setf-entry
+             (variable "*ignore-wm-inc-hints*")
+             (value #t))
+            (stumpwm-setf-entry
+             (variable "*message-window-gravity*")
+             (value ':center))
+            (stumpwm-setf-entry
+             (variable "*input-window-gravity*")
+             (value ':center))
+            (stumpwm-setf-entry
+             (variable "*input-completion-show-empty*")
+             (value #t))))
 
 	  (keymaps
 	   (list
