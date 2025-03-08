@@ -212,11 +212,16 @@
             #~";; Modules"
             #~"(set-module-dir \"/run/current-system/profile/share/common-lisp/sbcl/\")"
 	    #~"(load-module \"swm-gaps\")"
-	    #~"(load \".config/stumpwm/misc.lisp\")"
             #~";; Groups"
             #~"(grename \" I \")"
             #~"(add-group (current-screen) \" II \")"
             #~"(add-group (current-screen) \" III \")"
+
+	    #~"(defcommand dashboard () ()"
+	    #~"(run-shell-command \"~/Projects/System/scripts/dashboard.scm\" t))"
+	    #~"(defcommand add-todo (todo-text) ((:string \"Enter TODO: \"))"
+	    #~"(run-shell-command (concatenate 'string \"~/Projects/System/scripts/add-todo.scm \" todo-text \" ~/Projects/WorkingMemory/wm.org\"))"
+	    #~"(format t \"Added TODO: ~A~%\" todo-text))"
             #~";; Init"
             #~"(when *initializing*"
             #~"      (run-shell-command \"picom -b\")"
@@ -336,7 +341,7 @@
 	     (bindings
 	      (list
                (stumpwm-keybinding (key "s") (command "browser-search"))
-               (stumpwm-keybinding (key "i") (command "internet-10-min"))
+               ;;(stumpwm-keybinding (key "i") (command "internet-10-min"))
                ;;(stumpwm-keybinding (key "t") (run-shell-command "date "+%Y-%m-%d" | xsel --clipboard --input"))
 	       )))))
 	  ))
