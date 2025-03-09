@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="154.17218"
+   height="20.200001"
+   id="svg2"
+   version="1.1"
+   sodipodi:docname="gnu-guix-packaged.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   inkscape:export-filename="gnu-guix-packaged.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <title
+     id="title1620">GNU Guix &quot;Packaged&quot; Badge</title>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     id="namedview24"
+     showgrid="false"
+     inkscape:showpageshadow="false"
+     inkscape:zoom="4"
+     inkscape:cx="63.75"
+     inkscape:cy="-7.75"
+     inkscape:window-x="0"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     borderlayer="true"
+     inkscape:snap-bbox="true"
+     inkscape:bbox-nodes="true"
+     showguides="false"
+     inkscape:pagecheckerboard="0"
+     inkscape:snap-grids="false"
+     inkscape:snap-page="true"
+     inkscape:snap-global="true" />
+  <defs
+     id="defs4">
+    <rect
+       x="9094.3613"
+       y="2431.5554"
+       width="363.25549"
+       height="110.18591"
+       id="rect226" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient55633"
+       id="linearGradient62731"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-437.0775,90.06558)"
+       x1="437.17722"
+       y1="-69.965584"
+       x2="437.17722"
+       y2="-89.965584" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient55633">
+      <stop
+         style="stop-color:#171717;stop-opacity:1"
+         offset="0"
+         id="stop55629" />
+      <stop
+         style="stop-color:#2b2b2b;stop-opacity:0.99806976"
+         offset="1"
+         id="stop55631" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient75239"
+       id="linearGradient62729"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-437.0775,44.06558)"
+       x1="591.23248"
+       y1="-23.96558"
+       x2="591.23248"
+       y2="-43.96558" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient75239">
+      <stop
+         style="stop-color:#e5a50a;stop-opacity:1;"
+         offset="0"
+         id="stop75235" />
+      <stop
+         style="stop-color:#ffbf2d;stop-opacity:1"
+         offset="1"
+         id="stop75237" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient59327"
+       id="linearGradient62727"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(-1,0,0,0.98990228,678.7283,43.72188)"
+       x1="591.23248"
+       y1="-23.96558"
+       x2="591.23248"
+       y2="-43.96558" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient59327">
+      <stop
+         style="stop-color:#e5730a;stop-opacity:1"
+         offset="0"
+         id="stop59323" />
+      <stop
+         style="stop-color:#ff9a2d;stop-opacity:1"
+         offset="1"
+         id="stop59325" />
+    </linearGradient>
+  </defs>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>GNU Guix &quot;Packaged&quot; Badge</dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/4.0/" />
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Luis Felipe López Acevedo</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:date>2022-07-14</dc:date>
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer2"
+     transform="translate(-8865.4034,-1057.3243)" />
+  <text
+     xml:space="preserve"
+     id="text224"
+     style="font-style:normal;font-weight:normal;font-size:96px;line-height:0;font-family:sans-serif;white-space:pre;shape-inside:url(#rect226);fill:#000000;fill-opacity:1;stroke:none"
+     transform="translate(-8865.4034,-1909.6865)"><tspan
+       x="9094.3613"
+       y="2631.4797"
+       id="tspan5621"><tspan
+         dx="0 61.078125 61.078125"
+         style="line-height:1.35;fill:#ff6600"
+         id="tspan5619">40%</tspan></tspan></text>
+  <path
+     style="fill:#fd7e14;fill-opacity:1;stroke-width:0.707107"
+     d=""
+     id="path244" />
+  <path
+     style="fill:#fd7e14;fill-opacity:1;stroke-width:0.707107"
+     d=""
+     id="path246" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="Badge">
+    <path
+       id="path62701"
+       style="fill:url(#linearGradient62731);fill-opacity:1;stroke:none;stroke-width:0.934342;stroke-linecap:round"
+       d="m 89.29754,0.1 v 20 H 2.09972 c -1.108,0 -2,-0.892 -2,-2 v -16 c 0,-1.108 0.892,-2 2,-2 z"
+       sodipodi:nodetypes="ccssssc" />
+    <text
+       xml:space="preserve"
+       style="font-size:11px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:sans-serif;text-align:start;letter-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1"
+       x="27.31752"
+       y="14.200827"
+       id="text62705"><tspan
+         sodipodi:role="line"
+         id="tspan62703"
+         x="27.31752"
+         y="14.200827"
+         style="font-size:11px">GNU Guix</tspan></text>
+    <path
+       d="M 5.0053,4.6 4.4154,4.82066 c 0.21955,0.54242 0.45201,1.00797 0.69738,1.39539 0.23891,0.38744 0.50783,0.70857 0.80486,0.9604 0.29703,0.24538 0.62774,0.42561 0.99581,0.54184 0.22169,0.07 0.46333,0.11511 0.72014,0.14226 L 6.6441,6.13639 C 6.48508,6.08709 6.33296,6.02931 6.19646,5.95304 5.97047,5.82389 5.76412,5.65337 5.57685,5.44028 5.38314,5.22073 5.19256,4.94224 5.0053,4.6 Z m 17.04563,0 c -0.18724,0.34224 -0.37784,0.62073 -0.57155,0.84028 -0.18726,0.21309 -0.39362,0.38361 -0.61961,0.51276 -0.13633,0.0762 -0.28819,0.13411 -0.44701,0.18335 l -0.98948,1.72416 c 0.25656,-0.0272 0.49799,-0.0723 0.7195,-0.14226 0.36807,-0.11623 0.69878,-0.29646 0.99581,-0.54184 0.29703,-0.25183 0.56595,-0.57296 0.80486,-0.9604 0.24538,-0.38743 0.47846,-0.85298 0.69802,-1.39539 z M 9.53857,6.13639 c -0.18266,-0.003 -0.38236,0.0135 -0.6,0.0538 -0.095,0.0176 -0.1554,0.0262 -0.21434,0.0354 -0.056,0.009 -0.11036,0.0176 -0.13657,0.0196 h -0.003 c -0.2067,0.0255 -0.44172,0.0392 -0.7037,0.0392 -0.2017,0 -0.38591,-0.009 -0.56018,-0.024 0.77702,0.57466 1.53565,1.1469 1.87401,1.66916 0.8214,0.62334 1.60552,3.62267 2.40005,5.97672 L 12.47459,10.6853 11.41078,7.49456 c 0,0 -0.01,-0.0325 -0.029,-0.0847 C 11.27262,7.11806 10.81736,6.15651 9.53875,6.13649 Z m 7.97909,0 c -1.2786,0.02 -1.73387,0.98157 -1.84303,1.27336 -0.0195,0.0522 -0.029,0.0847 -0.029,0.0847 l -2.11617,5.89896 -0.002,0.002 -0.002,-0.002 -5.2e-4,-6.3e-4 -0.0146,-0.0398 -1.29549,2.21037 c 0.005,0.0117 0.0106,0.0251 0.0158,0.0367 h 0.002 2.59099 c 1.01763,-2.2658 1.99826,-6.88437 3.03862,-7.67118 0.33864,-0.52204 1.09674,-1.09414 1.87338,-1.66852 -0.17427,0.0147 -0.35823,0.024 -0.56018,0.024 -0.26198,0 -0.49763,-0.0137 -0.70434,-0.0392 h -0.003 c -0.0262,-0.002 -0.0806,-0.0108 -0.13657,-0.0196 -0.0589,-0.009 -0.11934,-0.0178 -0.21433,-0.0354 -0.21765,-0.0403 -0.41736,-0.0566 -0.60002,-0.0537 z"
+       style="font-style:normal;font-weight:bold;font-size:144px;line-height:125%;font-family:Sans;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#ffcc00;fill-opacity:1;stroke:none;stroke-width:0.116926"
+       id="path62707"
+       sodipodi:nodetypes="ccccsccccccccccsccccsssccsccccccsscsccccccccccccsccsscc" />
+    <path
+       id="path62709"
+       style="fill:url(#linearGradient62729);fill-opacity:1;stroke:none;stroke-width:0.934342;stroke-linecap:round"
+       d="m 89.29754,0.1 v 20 h 62.85742 c 1.108,0 2,-0.892 2,-2 v -16 c 0,-1.108 -0.892,-2 -2,-2 z" />
+    <text
+       xml:space="preserve"
+       style="font-size:11px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:sans-serif;text-align:start;letter-spacing:0px;text-anchor:start;fill:#2b2b2b;fill-opacity:1"
+       x="94.916458"
+       y="14.200827"
+       id="text62713"><tspan
+         sodipodi:role="line"
+         id="tspan62711"
+         x="94.916458"
+         y="14.200827"
+         style="font-size:11px;fill:#2b2b2b;fill-opacity:1">Packaged</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:11px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:sans-serif;text-align:start;letter-spacing:0px;text-anchor:start;fill:#2b2b2b;fill-opacity:1"
+       x="94.916458"
+       y="14.200827"
+       id="text62717"><tspan
+         sodipodi:role="line"
+         id="tspan62715"
+         x="94.916458"
+         y="14.200827"
+         style="font-size:11px;fill:#2b2b2b;fill-opacity:1">Packaged</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:11px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:sans-serif;text-align:start;letter-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1"
+       x="27.31752"
+       y="14.200827"
+       id="text62721"><tspan
+         sodipodi:role="line"
+         id="tspan62719"
+         x="27.31752"
+         y="14.200827"
+         style="font-size:11px">GNU Guix</tspan></text>
+    <path
+       id="path62723"
+       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.2;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 2.1,0.1 c -1.108,0 -2,0.892 -2,2 v 16 c 0,1.108 0.892,2 2,2 49.99073,0 99.98145,0 149.97218,0 1.108,0 2,-0.892 2,-2 v -16 c 0,-1.108 -0.892,-2 -2,-2 -49.99073,0 -99.98145,0 -149.97218,0 z"
+       sodipodi:nodetypes="cssccsscc" />
+    <path
+       id="path62725"
+       style="fill:url(#linearGradient62727);fill-opacity:1;stroke:none;stroke-width:0.929612;stroke-linecap:round"
+       d="m 91.49591,0.20171 c -1.108,0 -2,0.883 -2,1.97981 v 15.83843 c 0,1.09682 0.892,1.97981 2,1.97981 h -2 c -1.108,0 -2,-0.88299 -2,-1.97981 V 2.18152 c 0,-1.09681 0.892,-1.97981 2,-1.97981 z" />
+  </g>
+</svg>
