@@ -1,13 +1,12 @@
 My personal system configuration.
 
-Long term goal is to create a lisp machine :)
+Long term goal is to create a lisp machine
 
 Current goal: 100% Scheme config
 
 
-| Category      | Software      | Icon                            |
+| Category      | Software      | Icon                          |
 |--------------+--------------+---------------------------------|
-| General      | A lot of GNUUUUUU :) | [[assets/images/gnu.svg]]    |
 | Shell        | GNU Bash      | [[assets/images/gnubash.svg]]  |
 | Browser      | GNU Icecat    | [[assets/images/gnuicecat.svg]]|
-| Text Editor  | Emacs         | [[assets/images/gnuemacs.svg]] |
+| Text Editor  | GNU Emacs     | [[assets/images/gnuemacs.svg]] |
