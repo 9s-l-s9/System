@@ -33,7 +33,7 @@ jump-label-alphabet = "abcdefghijklmnopqrstuvwxyz"
 end-of-line-diagnostics = "hint"
 
 [editor.auto-save]
-focus-lost = false
+focus-lost = true
 after-delay.enable = false
 after-delay.timeout = 1000
 
