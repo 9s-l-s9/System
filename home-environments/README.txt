@@ -11,5 +11,3 @@ home/
 │   └── redshift.scm             
 ├── services/
     ├── files/.config/          # Configurations not yet ported to guile scheme
-              ├── helix/
-	      ├── emacs/

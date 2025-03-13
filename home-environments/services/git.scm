@@ -1,13 +1,14 @@
 (define-module (services git)
   #:use-module (gnu)
+  #:use-module (shared-settings)
   #:use-module (git-home-service)
   #:export (git-service))
 
 (define (git-service)
   (service home-git-service-type
            (home-git-configuration
-            (user.name "s-l-s")
-            (user.email "schmidt.l.samuel@gmail.com")
+            (user.name user-name) ;; shared settings
+            (user.email e-mail) ;; shared setting
             (extra-options
              '(
                ((filter "lfs") 

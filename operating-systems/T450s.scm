@@ -1,5 +1,5 @@
-(define-module (systems T450s)
-  #:use-module (systems base-system)
+(define-module (T450s)
+  #:use-module (base-system)
   #:use-module (gnu))
 
 (operating-system
