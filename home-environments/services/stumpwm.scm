@@ -25,11 +25,10 @@
             #~"(grename \" I \")"
             #~"(add-group (current-screen) \" II \")"
             #~"(add-group (current-screen) \" III \")"
-
             #~"(defcommand dashboard () ()"
             #~"(run-shell-command \"~/Projects/System/scripts/dashboard.scm\" t))"
             #~"(defcommand add-todo (todo-text) ((:string \"Enter TODO: \"))"
-            #~"(run-shell-command (concatenate 'string \"~/Projects/System/scripts/add-todo.scm \"" todo-text "\" ~/Projects/WorkingMemory/wm.org\"))"
+            #~"(run-shell-command (concatenate 'string \"~/Projects/System/scripts/add-todo.scm \"\" todo-text \"\" ~/Projects/WorkingMemory/wm.org\"))"
             #~"(format t \"Added TODO: ~A~%\" todo-text))"
             #~";; Init"
             #~"(when *initializing*"
