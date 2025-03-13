@@ -3,8 +3,22 @@ My personal system configuration.
 Long term goal is to create a lisp machine
 
 Current goal: 100% Scheme config
-
-
+* Installation
+If this repo is stored as "~/Projects/System/" 
+** Update channels
+#+begin_src
+guix pull --channels=~/Projects/System/channels.scm
+#+begin_src
+** Update system
+#+begin_src sh
+sudo guix system --load-path=~/Projects/System/operating-systems reconfigure ~/Projects/System/operating-systems/$HOSTNAME.scm
+#+end_src
+** Update home
+#+begin_scr sh
+guix home --load-path=~/Projects/System/home-environments reconfigure ~/Projects/System/home-environments/home-configuration.scm
+#+end_src
+* Software
+I am trying out things all the time...
 | Category      | Software      | Icon                          |
 |--------------+--------------+---------------------------------|
 | Shell        | GNU Bash      | [[assets/images/gnubash.svg]]  |
