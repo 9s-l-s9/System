@@ -1,4 +1,5 @@
-* File Structure
+File Structure
+
 home/
 ├── home-configuration.scm      # Main file that imports and combines everything
 ├── packages.scm                # All package definitions 
@@ -10,5 +11,5 @@ home/
 │   └── redshift.scm             
 ├── services/
     ├── files/.config/          # Configurations not yet ported to guile scheme
-              ├── helix/         
-              ├── emacs/
+              ├── helix/
+	      ├── emacs/
