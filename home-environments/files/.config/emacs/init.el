@@ -16,6 +16,7 @@
 
 (require 'focus-conf)
 (require 'imenu-list-conf)
+(require 'window-conf)
 
 
 					; -- Completion & Snippets --
