@@ -2,7 +2,7 @@
   #:use-module (gnu home)
   #:use-module (gnu home services)
   #:use-module (gnu home services dotfiles)
-  #:use-module (packages)
+  #:use-module (packages base-packages)
   #:use-module (services bash)
   #:use-module (services stumpwm)
   #:use-module (services lem)

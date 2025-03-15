@@ -1,4 +1,4 @@
-(define-module (packages)
+(define-module (packages base-packages)
   #:use-module (gnu packages)
   #:export (all-packages))
 
