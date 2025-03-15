@@ -4,25 +4,17 @@ Long term goal is to create a lisp machine
 
 Current goal: 100% Scheme config
 * Installation
-If this repo is stored as "~/Projects/System/" 
+Clone this repo as "$HOME/Projects/System/" 
 ** Update channels
 #+begin_src sh
-guix pull --channels=~/Projects/System/channels.scm
+guix pull --channels=$HOME/Projects/System/channels.scm
 #+end_src
 ** Update system
 #+begin_src sh
-sudo guix system --load-path=~/Projects/System/operating-systems reconfigure ~/Projects/System/operating-systems/$HOSTNAME.scm
+sudo guix system --load-path=$HOME/Projects/System/operating-systems reconfigure $HOME/Projects/System/operating-systems/$HOSTNAME.scm
 #+end_src
 
 ** Update home
 #+begin_src sh
-guix home --load-path=~/Projects/System/home-environments reconfigure ~/Projects/System/home-environments/home-configuration.scm
+guix home --load-path=$HOME/Projects/System/home-environments reconfigure $HOME/Projects/System/home-environments/home-configuration.scm
 #+end_src
-
-* Software
-I am trying out things all the time...
-| Category      | Software      | Icon                          |
-|--------------+--------------+---------------------------------|
-| Shell        | GNU Bash      | [[assets/images/gnubash.svg]]  |
-| Browser      | GNU Icecat    | [[assets/images/gnuicecat.svg]]|
-| Text Editor  | GNU Emacs     | [[assets/images/gnuemacs.svg]] |
