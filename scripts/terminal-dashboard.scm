@@ -257,6 +257,14 @@
            (list "Bash" " " "bs" "bash")
            (list "Guile" " " "g" "guile")
            (list "Dashboard" " " "d" "#dashboard")
+	   ;;(list "Anki" " " "a" "#dashboard")
+	   ;; habits?
+	   ;; bookmarks
+	   ;; git (magit)
+	   ;; ripgrep and fzf? maybe combined with the bookmarks/projects
+	   ;; guile repl? geiser?
+	   ;; email?
+	   ;; other messangers
            (list "Quit" " " "q" "")))
          (formatted-options (format-options options))
          (welcome-screen (format #f "~a\n~a\n~a\n~a\n" 
