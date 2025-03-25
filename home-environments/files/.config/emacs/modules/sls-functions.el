@@ -1,24 +1,5 @@
 (provide 'sls-functions)
 
-(defun sls-reload-init-file ()
-  (interactive)
-  (server-force-delete)
-  (load-file user-init-file))
-
-(defun sls-new-entry-pkb (x)
-  (interactive "sEnter the name: ") ; prompt the user for the name x
-  (let* ((base-dir "~/Projects/personal-knowledge-base/pages/")
-         (dir-name (upcase x))
-         (file-name (concat x ".org"))
-         (full-dir-path (expand-file-name dir-name base-dir))
-         (full-file-path (expand-file-name file-name full-dir-path)))
-    ;; Create directory
-    (make-directory full-dir-path t)
-    ;; Create file
-    (write-region "" nil full-file-path)
-    (find-file full-file-path)
-))
-
 (defun sls-dired-sort ()
   (interactive)
   (let (-sort-by -arg)
@@ -55,10 +36,3 @@
         (clipboard-kill-region (point-min) (point-max)))
       (message filename))))
 
-(defun sls-format-names-for-cards (input-string)
-  "Format each name in INPUT-STRING as ** {{cards [[name]] }}."
-  (let ((names (split-string input-string " " t))
-        (formatted-names '()))
-    (dolist (name names)
-      (push (format "** {{cards [[%s]] }}" name) formatted-names))
-    (mapconcat 'identity (reverse formatted-names) "\n")))

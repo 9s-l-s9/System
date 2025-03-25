@@ -2,6 +2,122 @@
 
 This is sadly not everything but I now store it in this file to keep an overview of what I have tried
 * UI
+** Shackle
+I prefer configuring window rules directly.
+And this never really worked ;(
+
+#+begin_src elisp
+(require 'shackle)
+(provide 'shackle-config)
+
+(setq shackle-rules
+        ;; CONDITION(:regexp/:class/:mode/:function): :select(:t/:nil): :inhibit-window-quit(:t/:nil): :size+/:other/:same/:regexp/:function)
+        '(((compilation-mode) :other t :size 0.3 :align 'below)
+          ((comint-mode) :other t :size 0.3 :align 'above)
+          ((dired-mode) :other t :size 0.25 :align 'left)
+          ((help-mode) :other t :size 0.3 :align 'right)
+          ("*Help*" :other t :size 0.3 :align 'right)
+          ("*Apropos*" :other t :size 0.3 :align 'right)
+          ("*info*" :other t :size 0.3 :align 'right)
+          ("*shell*" :other t :size 0.3 :align 'below)
+          ("*Async Shell Command*" :other t :size 0.3 :align 'below)
+          ))
+
+#+end_src
+
+** Popper
+I prefer configuring window rules directly.
+
+#+begin_src elisp
+(provide 'popper-config)
+(require 'popper)
+(require 'popper-echo)
+
+(setq popper-reference-buffers
+      '(
+        ;; Emacs internals
+        "\\*Messages\\*"
+        "\\*scratch\\*"
+        "\\*Backtrace\\*"
+        "\\*Help\\*"
+        "\\*Apropos\\*"
+        "\\*info\\*"
+        "Output\\*$"
+        
+        ;; Compilation/build/debug buffers
+        compilation-mode
+        "\\*Warnings\\*"
+        "\\*Compile-Log\\*"
+        "\\*debug\\*"
+        "\\*GUD\\*"
+        
+        ;; Process/io buffers
+        "\\*Async Shell Command\\*"
+        "\\*Shell Command Output\\*"
+        
+        ;; Eshell and terminal
+	"^\\*eat.*\\*$" eat-mode ;eat as a popup
+	"^\\*eshell.*\\*$" eshell-mode ;eshell as a popup
+        "^\\*shell.*\\*$"  shell-mode  ;shell as a popup
+        "^\\*term.*\\*$"   term-mode   ;term as a popup
+        "^\\*vterm.*\\*$"  vterm-mode  ;vterm as a popup
+        
+        ;; Programming/REPLs
+        ;;"^\\*Python.*\\*$" python-mode ; Python REPL
+      ))
+(setq popper-echo-dispatch-keys '(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9))
+(setq popper-display-control t)
+(setq popper-window-height 0.4)
+(popper-mode +1)
+(popper-echo-mode +1)
+; Display control
+;; (setq popper-display-control nil)
+
+
+;; (setq display-buffer-alist
+;;       '(("\\*Messages\\*\\|\\*scratch\\*\\|\\*Backtrace\\*\\|\\*Help\\*\\|\\*Apropos\\*\\|\\*info\\*\\|Output\\*$"
+;;          (display-buffer-at-bottom)
+;;          (window-height . 0.3))
+
+;;         ("\\*Warnings\\*\\|\\*Compile-Log\\*\\|\\*debug\\*\\|\\*GUD\\*"
+;;          (display-buffer-at-bottom)
+;;          (window-height . 0.3))
+
+;;         (compilation-mode
+;;          (display-buffer-at-bottom)
+;;          (window-height . 0.3))
+
+;;         ("\\*Async Shell Command\\*\\|\\*Shell Command Output\\*"
+;;          (display-buffer-at-bottom)
+;;          (window-height . 0.3))
+
+;;         ("^\\*eat.*\\*$"
+;;          (display-buffer-at-bottom)
+;;          (window-height . 0.3)
+;;          (mode . eat-mode))
+
+;;         ("^\\*eshell.*\\*$"
+;;          (display-buffer-at-bottom)
+;;          (window-height . 0.3)
+;;          (mode . eshell-mode))
+
+;;         ("^\\*shell.*\\*$"
+;;          (display-buffer-at-bottom)
+;;          (window-height . 0.3)
+;;          (mode . shell-mode))
+
+;;         ("^\\*term.*\\*$"
+;;          (display-buffer-at-bottom)
+;;          (window-height . 0.3)
+;;          (mode . term-mode))
+
+;;         ("^\\*vterm.*\\*$"
+;;          (display-buffer-at-bottom)
+;;          (window-height . 0.3)
+;;          (mode . vterm-mode))))
+
+#+end_src
+
 ** Margin
 #+begin_src elisp
 
@@ -286,6 +402,35 @@ Kinda proud of this one.
 ;;         (t . 10)))
 
 (provide 'ivy-config)
+#+end_src
+* Custom functions
+** Add a new entry to pkb
+#+begin_src elisp
+  (defun sls-new-entry-pkb (x)
+  (interactive "sEnter the name: ") ; prompt the user for the name x
+  (let* ((base-dir "~/Projects/personal-knowledge-base/pages/")
+         (dir-name (upcase x))
+         (file-name (concat x ".org"))
+         (full-dir-path (expand-file-name dir-name base-dir))
+         (full-file-path (expand-file-name file-name full-dir-path)))
+    ;; Create directory
+    (make-directory full-dir-path t)
+    ;; Create file
+    (write-region "" nil full-file-path)
+    (find-file full-file-path)
+))
+#+end_src
+
+** Format flashcards
+#+begin_src elisp
+(defun sls-format-names-for-cards (input-string)
+  "Format each name in INPUT-STRING as ** {{cards [[name]] }}."
+  (let ((names (split-string input-string " " t))
+        (formatted-names '()))
+    (dolist (name names)
+      (push (format "** {{cards [[%s]] }}" name) formatted-names))
+    (mapconcat 'identity (reverse formatted-names) "\n")))
+
 #+end_src
 * Programming Languages:
 ** C++

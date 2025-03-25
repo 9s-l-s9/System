@@ -5,7 +5,6 @@
 					; -- UI -- ;
 (require 'general-ui-config)
 					; -- General Navigation & Editing --
-(require 'consult-config)
 (require 'rg)
 (rg-enable-default-bindings)
 (require 'undo-tree)
@@ -22,6 +21,7 @@
 					; -- Completion & Snippets --
 (require 'corfu-conf)
 (require 'cape-conf)
+(require 'consult)
 (require 'orderless-conf)
 (require 'vertico)
   (setq vertico-resize nil)
@@ -49,7 +49,6 @@
 ;(require 'eshell-config)
 ;;(require 'ebib-config)
 ;(require 'pdf-tools-config)
-(require 'popper-config)
 (require 'helpful-config)
 (require 'eat)
 
