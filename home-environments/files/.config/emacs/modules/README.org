@@ -432,7 +432,113 @@ Kinda proud of this one.
     (mapconcat 'identity (reverse formatted-names) "\n")))
 
 #+end_src
-* Programming Languages:
+** Emacs as an app-launcher
+... no
+#+begin_src elisp
+(provide 'app-launcher-config)
+(require 'app-launcher)
+
+(defun emacs-run-launcher ()
+  "Create and select a frame called emacs-run-launcher which consists only of a minibuffer and has specific dimensions. Runs app-launcher-run-app on that frame, which is an emacs command that prompts you to select an app and open it in a dmenu like behaviour. Delete the frame after that command has exited"
+  (interactive)
+  (with-selected-frame 
+    (make-frame '((name . "emacs-run-launcher")
+                  (minibuffer . only)
+                  (fullscreen . 0) ; no fullscreen
+                  (undecorated . t) ; remove title bar
+                  ;;(auto-raise . t) ; focus on this frame
+                  ;;(tool-bar-lines . 0)
+                  ;;(menu-bar-lines . 0)
+                  (internal-border-width . 10)
+                  (width . 80)
+                  (height . 11)))
+                  (unwind-protect
+                    (app-launcher-run-app)
+                    (delete-frame))))
+
+#+end_src
+
+* Programming:
+** treesitter
+what happened to the rest? lol
+#+begin_src elisp
+;; Enable Tree-sitter in all buffers that support it
+(global-tree-sitter-mode)
+
+;; Automatically enable Tree-sitter based syntax highlighting
+(add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+
+(provide 'treesitter-conf)
+
+#+end_src
+
+** flycheck
+#+begin_src elisp
+(provide 'flycheck-config)
+(require 'flycheck)
+(global-flycheck-mode)
+
+(flycheck-define-checker python-ruff
+  "A Python syntax and style checker using the ruff utility.
+To override the path to the ruff executable, set
+`flycheck-python-ruff-executable'.
+See URL `http://pypi.python.org/pypi/ruff'."
+  :command ("ruff"
+            "--format=text"
+            (eval (when buffer-file-name
+                    (concat "--stdin-filename=" buffer-file-name)))
+            "-")
+  :standard-input t
+  :error-filter (lambda (errors)
+                  (let ((errors (flycheck-sanitize-errors errors)))
+                    (seq-map #'flycheck-flake8-fix-error-level errors)))
+  :error-patterns
+  ((warning line-start
+            (file-name) ":" line ":" (optional column ":") " "
+            (id (one-or-more (any alpha)) (one-or-more digit)) " "
+            (message (one-or-more not-newline))
+            line-end))
+  :modes python-mode)
+
+(add-to-list 'flycheck-checkers 'python-ruff)
+
+#+end_src
+** eglot
+#+begin_src elisp
+  (use-package
+ elixir-ts-mode
+ :hook (elixir-ts-mode . eglot-ensure)
+ (elixir-ts-mode
+  .
+  (lambda ()
+    (push '(">=" . ?\u2265) prettify-symbols-alist)
+    (push '("<=" . ?\u2264) prettify-symbols-alist)
+    (push '("!=" . ?\u2260) prettify-symbols-alist)
+    (push '("==" . ?\u2A75) prettify-symbols-alist)
+    (push '("=~" . ?\u2245) prettify-symbols-alist)
+    (push '("<-" . ?\u2190) prettify-symbols-alist)
+    (push '("->" . ?\u2192) prettify-symbols-alist)
+    (push '("<-" . ?\u2190) prettify-symbols-alist)
+    (push '("|>" . ?\u25B7) prettify-symbols-alist)))
+ (before-save . eglot-format))
+
+(add-to-list 'eglot-server-programs '((c++-mode c-mode) "ccls"))
+
+(provide 'eglot-conf)
+
+#+end_src
+** dap
+#+begin_src elisp
+(require 'dap-mode)
+;; Enabling only some features
+(setq dap-auto-configure-features '(sessions locals controls tooltip))
+(require 'dap-python)
+;; if you installed debugpy, you need to set this
+;; https://github.com/emacs-lsp/dap-mode/issues/306
+(setq dap-python-debugger 'debugpy)
+(provide 'dap-config)
+
+#+end_src
 ** C++
 #+begin_src elisp
   (provide 'cpp-config)
@@ -613,32 +719,6 @@ What happened to the rest of my eshell config?? lol
       eshell-prompt-function 'epe-theme-multiline-with-status)
 
 #+end_src
-** Emacs as an app-launcher
-... no
-#+begin_src elisp
-(provide 'app-launcher-config)
-(require 'app-launcher)
-
-(defun emacs-run-launcher ()
-  "Create and select a frame called emacs-run-launcher which consists only of a minibuffer and has specific dimensions. Runs app-launcher-run-app on that frame, which is an emacs command that prompts you to select an app and open it in a dmenu like behaviour. Delete the frame after that command has exited"
-  (interactive)
-  (with-selected-frame 
-    (make-frame '((name . "emacs-run-launcher")
-                  (minibuffer . only)
-                  (fullscreen . 0) ; no fullscreen
-                  (undecorated . t) ; remove title bar
-                  ;;(auto-raise . t) ; focus on this frame
-                  ;;(tool-bar-lines . 0)
-                  ;;(menu-bar-lines . 0)
-                  (internal-border-width . 10)
-                  (width . 80)
-                  (height . 11)))
-                  (unwind-protect
-                    (app-launcher-run-app)
-                    (delete-frame))))
-
-#+end_src
-
 ** dirvish
 Dirvish was great in principle but I had several bugs :( Decide to no longer use it.
 
@@ -681,7 +761,7 @@ Dirvish was great in principle but I had several bugs :( Decide to no longer use
 (define-key dirvish-mode-map (kbd "M-j") 'dirvish-fd-jump)
 #+end_src
 
-** treemacs-conf.el
+** treemacs
 Treemacs was just not super useful for me as it is adding additional overhead. Though I still like the general idea of the sidebuffer.
 But it is not necessary for it to be a tree, just a 'smaller' dired would be fine as well.
 

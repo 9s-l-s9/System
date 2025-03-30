@@ -3,13 +3,17 @@ My personal system configuration.
 Long term goal is to create a lisp machine
 
 Current goal: 100% Scheme config
+
 * Installation
-Clone this repo as "$HOME/Projects/System/" 
+1. Install Guix System.
+2. Clone this repo as "$HOME/Projects/System/" 
+
 ** Update channels
 #+begin_src sh
 guix pull --channels=$HOME/Projects/System/channels.scm
 #+end_src
-** Update system
+
+.** Update system
 #+begin_src sh
 sudo guix system --load-path=$HOME/Projects/System/operating-systems reconfigure $HOME/Projects/System/operating-systems/$HOSTNAME.scm
 #+end_src

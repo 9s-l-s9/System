@@ -9,5 +9,4 @@ home/
 │   ├── lem.scm                  
 │   ├── git.scm                 
 │   └── redshift.scm             
-├── services/
-    ├── files/.config/          # Configurations not yet ported to guile scheme
+├── services/files/.config/     # Configurations not yet ported to guile scheme
