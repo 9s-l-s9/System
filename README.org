@@ -13,7 +13,7 @@ Current goal: 100% Scheme config
 guix pull --channels=$HOME/Projects/System/channels.scm
 #+end_src
 
-.** Update system
+** Update system
 #+begin_src sh
 sudo guix system --load-path=$HOME/Projects/System/operating-systems reconfigure $HOME/Projects/System/operating-systems/$HOSTNAME.scm
 #+end_src
