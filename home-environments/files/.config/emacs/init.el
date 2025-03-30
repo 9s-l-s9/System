@@ -57,7 +57,7 @@
 ;; (require 'org-noter-config)
 ;; (require 'org-modern-config)
 ;; (require 'org-babel)
-;(require 'org-transclusion)
+;; (require 'org-transclusion)
 
 ;; (require 'gptel-config)
 ;; (require 'citar-conf)

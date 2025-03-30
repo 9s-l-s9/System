@@ -34,8 +34,8 @@ end-of-line-diagnostics = "hint"
 
 [editor.auto-save]
 focus-lost = true
-after-delay.enable = false
-after-delay.timeout = 1000
+after-delay.enable = true
+after-delay.timeout = 600
 
 [editor.statusline]
 left = ["mode", "spinner", "file-name", "read-only-indicator", "file-modification-indicator"]

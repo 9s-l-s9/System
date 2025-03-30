@@ -23,14 +23,8 @@
 (global-hl-line-mode +1)
 
 ;; Theme 
-(setq custom-safe-themes t)
-;; (require 'doom-themes)
-;; (require 'nano-theme)
-;;(load-theme 'nano-light)
-;; (load-theme 'nano-light)
 (load-theme 'modus-operandi t)
 (setq custom-safe-themes t)
-
 
 ;; Emoji font
 (set-fontset-font t 'symbol "all-the-icons" nil 'prepend)
@@ -45,11 +39,6 @@
                                      recenter-top-bottom other-window))
   (advice-add command :after #'pulse-line))
 
-;; Disable some UI elements
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
-
 ;; Font and frame size
 ;; (set-face-font 'default "Courier Prime 16")
 
@@ -58,25 +47,16 @@
 ;; Underline line at descent position, not baseline position
 (setq x-underline-at-descent-line t)
 
-;; No ugly button for checkboxes
-(setq widget-image-enable nil)
-
 ;; Line cursor and no blink
 (set-default 'cursor-type  '(bar . 1))
 (blink-cursor-mode 0)
 
-;; No sound
-(setq visible-bell t)
-(setq ring-bell-function 'ignore)
-
-;; Paren mode is part of the theme
 (show-paren-mode t)
 
 ;; Line Numbers
-;; display-line-numbers variables
-  (setq display-line-numbers-current-absolute t
-        display-line-numbers-grow-only        t
-        display-line-numbers-type             'relative
-        display-line-numbers-width            4
-        display-line-numbers-width-start      t)
-
+(setq display-line-numbers-current-absolute t
+      display-line-numbers-grow-only        t
+      display-line-numbers-type             'relative
+      display-line-numbers-width            4
+      display-line-numbers-width-start      t)
+(display-line-numbers-mode)
