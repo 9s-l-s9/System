@@ -84,7 +84,7 @@
    "emacs-vertico"))
 
 (define app-packages
-  (list "inkscape" "gimp" "yt-dlp" "lem" "fish" "kitty" "emacs-next"))
+  (list "inkscape" "gimp" "yt-dlp" "lem" "fish" "alacritty" "emacs-next"))
 
 (define (all-packages)
   (specifications->packages

@@ -108,7 +108,7 @@
                         ;; swaybg
                         ;; swayidle
                         ;; swaylock
-
+			fish
 			xterm
                         bluez
                         bluez-alsa
