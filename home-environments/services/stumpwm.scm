@@ -100,7 +100,7 @@
              (bindings
               (list
                ;; Applications
-               (stumpwm-keybinding (key "Return") (command "exec kitty"))
+               (stumpwm-keybinding (key "Return") (command "exec alacritty"))
                (stumpwm-keybinding (key "b") (command "exec nyxt"))
                (stumpwm-keybinding (key "e") (command "exec lem -i sdl2"))
                (stumpwm-keybinding (key "r") (command "exec"))

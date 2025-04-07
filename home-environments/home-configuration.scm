@@ -7,6 +7,7 @@
   #:use-module (services stumpwm)
   #:use-module (services lem)
   #:use-module (services git)
+;;  #:use-module (services fish)
   #:use-module (services redshift))
 
 (home-environment
@@ -14,8 +15,10 @@
  (services
   (list
    (bash-service)
+;; (fish-service)
    (stumpwm-service)
    (lem-service)
+   
    (git-service)
    (redshift-service)
    
