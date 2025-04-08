@@ -1,6 +1,6 @@
 (define-module (services fish)
   #:use-module (gnu services)
-  #:use-module (radix home services shells)
+  #:use-module (gnu home services shells)
   #:export (fish-service))
 
 (define (fish-service)
@@ -21,10 +21,4 @@
                ("gs" . "sudo guix system reconfigure ~/Projects/System/systems/$(hostname).scm")
                ("alire-shell" . "guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME")))
             ;; You might want to add custom Fish config here
-            (config
-             '(,(plain-file "config-fish-extras.fish"
-                            "# Fish shell specific configurations
-# Set Fish greeting to empty
-set fish_greeting
-# Add Fish-specific behavior/customizations here
-"))))))
+			    )))

@@ -71,6 +71,7 @@
                   (name "samuel")
                   (comment "Samuel")
                   (group "users")
+		  (shell (file-append fish "/bin/fish"))
                   (home-directory "/home/samuel")
                   (supplementary-groups '(
                                           "wheel"     ;; sudo
