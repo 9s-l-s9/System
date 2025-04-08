@@ -67,7 +67,7 @@
                      (check? #f))
                    %base-file-systems))
 
-    (users (cons (user-account
+(users (append (list (user-account
                   (name "samuel")
                   (comment "Samuel")
                   (group "users")
@@ -82,10 +82,24 @@
                                           "realtime"  ;; Enable realtime scheduling
                                           "lp"        ;; control bluetooth devices
                                           "audio"     ;; control audio devices
-                                          "video")))  ;; control video devices
-
-                 %base-user-accounts))
-
+                                          "video")))
+                 (user-account
+                  (name "levi")
+                  (comment "My Work Profile")
+                  (group "users")
+                  (home-directory "/home/levi")
+                  (supplementary-groups '(
+                                          "wheel"     ;; sudo
+                                          "netdev"    ;; network devices
+                                          "kvm"
+                                          "tty"
+                                          "input"
+                                          "docker"
+                                          "realtime"  ;; Enable realtime scheduling
+                                          "lp"        ;; control bluetooth devices
+                                          "audio"     ;; control audio devices
+                                          "video"))))
+                %base-user-accounts))
     ;; Add the 'realtime' group
     (groups (cons (user-group (system? #t) (name "realtime"))
                   %base-groups))
