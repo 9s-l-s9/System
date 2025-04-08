@@ -34,7 +34,10 @@
                 (colorMoved "plain")
                 (mnemonicPrefix #t)
                 (renames #t))
-               
+
+	       (core
+		(sshCommand "ssh -i ~/.config/ssh/id_ed25519 -o UserKnownHostsFile=~/.config/ssh/known_hosts"))
+		
                (push
                 (default "simple")
                 (autoSetupRemote #t)
