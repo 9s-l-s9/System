@@ -20,5 +20,5 @@ sudo guix system --load-path=$HOME/Projects/System/operating-systems reconfigure
 
 ** Update home
 #+begin_src sh
-guix home --load-path=$HOME/Projects/System/home-environments reconfigure $HOME/Projects/System/home-environments/home-configuration.scm
+guix home --load-path=$HOME/Projects/System/home-environments reconfigure $HOME/Projects/System/home-environments/$USER-home-configuration.scm
 #+end_src
