@@ -33,7 +33,7 @@
 					; -- Programming --
 ;;(require 'eglot-conf)
 ;;(require 'treesitter-conf)
-(require 'flycheck-config)
+;(require 'flycheck-config)
 (require 'highlight-indent-guides)
 (require 'magit)
 ;; (require 'dap-config)
@@ -44,7 +44,7 @@
 
 					; -- Apps --
 
-(require 'dashboard-config)
+;;(require 'dashboard-config)
 (require 'dired-config)
 ;(require 'eshell-config)
 ;;(require 'ebib-config)
