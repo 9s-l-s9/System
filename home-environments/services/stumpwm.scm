@@ -30,10 +30,10 @@
             #~"(defcommand add-todo (todo-text) ((:string \"Enter TODO: \"))"
             #~"(run-shell-command (concatenate 'string \"~/Projects/System/scripts/add-todo.scm \\\"\" todo-text \"\\\" ~/Projects/WorkingMemory/wm.org\"))"
             #~"(format t \"Added TODO: ~A~%\" todo-text))"
-            #~";; Init"
+	    #~";; Init"
             #~"(when *initializing*"
             #~"      (run-shell-command \"picom -b\")"
-            #~"      (run-shell-command \"feh --bg-fill $(find ~/Projects/images/ -type f | shuf -n 1)\")"
+            #~"      (run-shell-command \"feh --no-fehbg --bg-fill --randomize ~/Projects/images/*\")"
             #~"      (mode-line)"
             #~"      (dolist (h (screen-heads (current-screen)))"   
             #~"        (enable-mode-line (current-screen) h t))"
@@ -56,6 +56,15 @@
             (stumpwm-setf-entry
              (variable "*mode-line-pad-y*")
              (value 5))
+	    (stumpwm-setf-entry
+             (variable "*mode-line-background-color*")
+             (value "#000000"))
+	    (stumpwm-setf-entry
+             (variable "*mode-line-foreground-color*")
+             (value "#121212"))
+	    (stumpwm-setf-entry
+             (variable "*mode-line-border-color*")
+             (value "#999999"))
             (stumpwm-setf-entry
              (variable "*group-format*")
              (value "%t"))
