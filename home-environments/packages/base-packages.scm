@@ -1,6 +1,10 @@
 (define-module (packages base-packages)
   #:use-module (gnu packages)
-  #:export (all-packages))
+  #:export (all-packages)
+  #:export (programming-packages)
+  #:export (web-packages)
+  #:export (xorg-packages)
+  )
 
 (define programming-packages
   (list "python"
@@ -28,7 +32,9 @@
   (list "gammastep" "mako" "fuzzel"))
 
 (define xorg-packages
-  (list "rofi" "dunst" "spectacle" "kmix" "xrandr" "feh" "picom" "redshift" "xdg-desktop-portal-wlr" "xsel"))
+  (list
+   ;; "rofi" Just using stumpwm :) 
+   "dunst" "spectacle" "kmix" "xrandr" "feh" "picom" "redshift" "xdg-desktop-portal-wlr" "xsel"))
 
 (define gui-theming-packages
   (list "breeze-icons" "oxygen-icons" "gtk+"))
@@ -47,8 +53,8 @@
    "emacs-cape"
    "emacs-consult"
    "emacs-corfu"
-   "emacs-dashboard"
-   ;"emacs-dired-preview"
+   ;;"emacs-dashboard"
+   ;;"emacs-dired-preview"
    "emacs-diredfl"
    ;"emacs-doom-themes"
    "emacs-eat"
