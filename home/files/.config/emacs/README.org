@@ -1,6 +1,8 @@
 #+TITLE: My old configurations
 
-This is sadly not everything but I now store it in this file to keep an overview of what I have tried
+This is sadly not everything but I now store it in this file to keep an overview of what I have tried.
+
+
 * UI
 ** Shackle
 I prefer configuring window rules directly.

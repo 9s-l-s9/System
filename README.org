@@ -2,8 +2,6 @@ My personal system configuration.
 
 Long term goal is to create a lisp machine
 
-Current goal: 100% Scheme config
-
 * Installation
 1. Install Guix System.
 2. Clone this repo as "$HOME/Projects/System/" 
@@ -15,10 +13,10 @@ guix pull --channels=$HOME/Projects/System/channels.scm
 
 ** Update system
 #+begin_src sh
-sudo guix system --load-path=$HOME/Projects/System/operating-systems reconfigure $HOME/Projects/System/operating-systems/$HOSTNAME.scm
+sudo guix system --load-path=$HOME/Projects/System/systems reconfigure $HOME/Projects/System/systems/$HOSTNAME.scm
 #+end_src
 
 ** Update home
 #+begin_src sh
-guix home --load-path=$HOME/Projects/System/home-environments reconfigure $HOME/Projects/System/home-environments/$USER-home-configuration.scm
+guix home --load-path=$HOME/Projects/System/home reconfigure $HOME/Projects/System/home/$USER-home-configuration.scm
 #+end_src
