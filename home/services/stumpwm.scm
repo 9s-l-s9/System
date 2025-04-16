@@ -25,6 +25,8 @@
             #~"(grename \" I \")"
             #~"(add-group (current-screen) \" II \")"
             #~"(add-group (current-screen) \" III \")"
+	    #~"(defcommand terminal-dashboard () ()"
+	    #~"(run-shell-command \"~/Projects/System/scripts/terminal-dashboard.scm\" t))"
             #~"(defcommand dashboard () ()"
             #~"(run-shell-command \"~/Projects/System/scripts/dashboard.scm\" t))"
             #~"(defcommand add-todo (todo-text) ((:string \"Enter TODO: \"))"
@@ -138,7 +140,8 @@
                (stumpwm-keybinding (key "Q") (command "shutdown"))
                
                ;; Custom commands
-               (stumpwm-keybinding (key "t") (command "dashboard"))
+               (stumpwm-keybinding (key "D") (command "dashboard"))
+	       (stumpwm-keybinding (key "t") (command "terminal-dashboard"))
                (stumpwm-keybinding (key "T") (command "add-todo")))))
             
             ;; Screenshot map

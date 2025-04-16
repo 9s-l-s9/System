@@ -10,6 +10,7 @@
   (list "python"
 	"guile-ts"
 	"guile-lsp-server"
+	"make"
         ;"r"
         ;"sqlite"
         ;"duckdb"
@@ -19,13 +20,15 @@
 (define web-packages
   (list ;;"nyxt"
         "zen-browser-bin"
-        "google-chrome-beta"
+	"bitwarden-desktop"
+	;;"google-chrome-beta"
         "openssh"
         "network-manager"
         "network-manager-openvpn"))
 
 (define utilities-packages
-  (list "wireplumber" "zip" "unzip" "dnsmasq" "hostapd"
+  (list "tree" "curl"
+	"rsync" "wireplumber" "zip" "unzip" "dnsmasq" "hostapd"
         "glibc-locales" "mpv" "ark" "unrar" "flatpak" "ripgrep" "git-lfs"))
 
 (define wayland-packages
@@ -90,7 +93,7 @@
    "emacs-vertico"))
 
 (define app-packages
-  (list "inkscape" "gimp" "yt-dlp" "lem" "fish" "alacritty" "emacs-next"))
+  (list "steam" "inkscape" "gimp" "yt-dlp" "lem" "fish" "alacritty" "emacs-next" "helix"))
 
 (define (all-packages)
   (specifications->packages
