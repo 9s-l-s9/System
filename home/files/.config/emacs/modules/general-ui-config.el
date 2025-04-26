@@ -59,4 +59,4 @@
       display-line-numbers-type             'relative
       display-line-numbers-width            4
       display-line-numbers-width-start      t)
-(display-line-numbers-mode)
+(global-display-line-numbers-mode)
