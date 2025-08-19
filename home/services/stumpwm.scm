@@ -49,6 +49,7 @@
             #~"(when *initializing*"
             #~"      (run-shell-command \"picom -b\")"
             #~"      (run-shell-command \"feh --no-fehbg --bg-fill --randomize ~/Projects/images/*\")"
+	    #~"      (run-shell-command \"if [ $(hostname) = 'T450s' ]; then setxkbmap de bone; fi\")"
             #~"      (mode-line)"
             #~"      (dolist (h (screen-heads (current-screen)))"   
             #~"        (enable-mode-line (current-screen) h t))"
