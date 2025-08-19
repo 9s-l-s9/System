@@ -21,18 +21,31 @@
             #~";; Modules"
             #~"(set-module-dir \"/run/current-system/profile/share/common-lisp/sbcl/\")"
             #~"(load-module \"swm-gaps\")"
+            #~"(setf *colors*"
+            #~"      '(\"#282828\""
+            #~"        \"#cc241d\""
+            #~"        \"#98971a\""
+            #~"        \"#d79921\""
+            #~"        \"#458588\""
+            #~"        \"#b16286\""
+            #~"        \"#689d6a\""
+            #~"        \"#ebdbb2\"))"
+            #~"(update-color-map (current-screen))"
+            #~"(setf *mode-line-background-color* \"#000000\")"
+            #~"(setf *mode-line-foreground-color* \"#d79921\")"
+            #~"(setf *mode-line-border-color* \"#cc241d\")"
             #~";; Groups"
             #~"(grename \" I \")"
             #~"(add-group (current-screen) \" II \")"
             #~"(add-group (current-screen) \" III \")"
-	    #~"(defcommand terminal-dashboard () ()"
-	    #~"(run-shell-command \"~/Projects/System/scripts/terminal-dashboard.scm\" t))"
+            #~"(defcommand terminal-dashboard () ()"
+            #~"(run-shell-command \"~/Projects/System/scripts/terminal-dashboard.scm\" t))"
             #~"(defcommand dashboard () ()"
             #~"(run-shell-command \"~/Projects/System/scripts/dashboard.scm\" t))"
             #~"(defcommand add-todo (todo-text) ((:string \"Enter TODO: \"))"
             #~"(run-shell-command (concatenate 'string \"~/Projects/System/scripts/add-todo.scm \\\"\" todo-text \"\\\" ~/Projects/WorkingMemory/wm.org\"))"
             #~"(format t \"Added TODO: ~A~%\" todo-text))"
-	    #~";; Init"
+            #~";; Init"
             #~"(when *initializing*"
             #~"      (run-shell-command \"picom -b\")"
             #~"      (run-shell-command \"feh --no-fehbg --bg-fill --randomize ~/Projects/images/*\")"
@@ -40,33 +53,15 @@
             #~"      (dolist (h (screen-heads (current-screen)))"   
             #~"        (enable-mode-line (current-screen) h t))"
             #~"      (swm-gaps:toggle-gaps))"))
-          (colors (list "#000000"
-                        "#121212"
-                        "#222222"
-                        "#333333"
-                        "#999999"
-                        "#c1c1c1"
-                        "#999999"
-                        "#c1c1c1"))
-
           (setf-entries
            (list
-            ;; Mode line
+            ;; Mode line padding and format (no color settings here)
             (stumpwm-setf-entry
              (variable "*mode-line-pad-x*")
              (value 5))
             (stumpwm-setf-entry
              (variable "*mode-line-pad-y*")
              (value 5))
-	    (stumpwm-setf-entry
-             (variable "*mode-line-background-color*")
-             (value "#000000"))
-	    (stumpwm-setf-entry
-             (variable "*mode-line-foreground-color*")
-             (value "#121212"))
-	    (stumpwm-setf-entry
-             (variable "*mode-line-border-color*")
-             (value "#999999"))
             (stumpwm-setf-entry
              (variable "*group-format*")
              (value "%t"))
@@ -101,7 +96,6 @@
             (stumpwm-setf-entry
              (variable "*input-completion-show-empty*")
              (value #t))))
-
           (keymaps
            (list
             ;; Main root-map bindings
@@ -141,7 +135,7 @@
                
                ;; Custom commands
                (stumpwm-keybinding (key "D") (command "dashboard"))
-	       (stumpwm-keybinding (key "t") (command "terminal-dashboard"))
+               (stumpwm-keybinding (key "t") (command "terminal-dashboard"))
                (stumpwm-keybinding (key "T") (command "add-todo")))))
             
             ;; Screenshot map
@@ -163,5 +157,4 @@
                (stumpwm-keybinding (key "s") (command "browser-search"))
                ;;(stumpwm-keybinding (key "i") (command "internet-10-min"))
                ;;(stumpwm-keybinding (key "t") (run-shell-command "date "+%Y-%m-%d" | xsel --clipboard --input"))
-               )))))
-          )))
+               )))))))))
