@@ -1,6 +1,6 @@
 (define-module (services helix)
   #:use-module (gnu services)
-  #:use-module (gnu packages editors)
+  #:use-module (gnu packages)
   #:use-module (services helix-home-services)
   #:export (helix-service))
 
@@ -8,7 +8,7 @@
   (service
    home-helix-service-type
    (home-helix-configuration
-    (package helix)
+    (package (specification->package "helix"))
     (config
      (list
       (helix-config #f

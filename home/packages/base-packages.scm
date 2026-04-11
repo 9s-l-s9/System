@@ -4,6 +4,7 @@
   #:export (programming-packages)
   #:export (web-packages)
   #:export (xorg-packages)
+  #:export (utilities-packages)
   )
 
 (define programming-packages

@@ -1,6 +1,7 @@
 (define-module (services helix-home-services)
   #:use-module (gnu home services)
-  #:use-module (gnu packages editors)
+  #:use-module (gnu packages)
+  #:use-module (guix packages)
   #:use-module (gnu services configuration)
   #:use-module (guix gexp)
   #:use-module (guix records)
@@ -63,6 +64,18 @@
   helix-grammar?
   (name helix-grammar-name)
   (source helix-grammar-source))
+
+(define (helix-sections? value)
+  (and (list? value) (every helix-section? value)))
+
+(define (helix-languages? value)
+  (and (list? value) (every helix-language? value)))
+
+(define (helix-language-servers? value)
+  (and (list? value) (every helix-language-server? value)))
+
+(define (helix-grammars? value)
+  (and (list? value) (every helix-grammar? value)))
 
 (define (escape-basic-string str)
   (let* ((escaped-backslashes (string-replace-substring str "\\" "\\\\"))
@@ -206,19 +219,19 @@
 
 (define-configuration/no-serialization home-helix-configuration
   (package
-    (package helix)
+    (package (specification->package "helix"))
     "The Helix package to use.")
   (config
-   '()
+   (helix-sections '())
    "List of Helix config sections created with @code{helix-config}.")
   (language-servers
-   '()
+   (helix-language-servers '())
    "List of language servers created with @code{helix-language-server}.")
   (languages
-   '()
+   (helix-languages '())
    "List of language definitions created with @code{helix-language}.")
   (grammars
-   '()
+   (helix-grammars '())
    "List of grammar definitions created with @code{helix-grammar}.")
   (extra-config
    (gexp-text-config '())
