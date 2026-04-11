@@ -1,5 +1,10 @@
 My personal system configuration.
 
+* Repository rules
+
+- Scripts in =scripts/= must be written in Guile.
+- Shell scripts are not allowed in this repo, even for trivial launchers or wrappers.
+
 * Installation
 
 1. Install Guix System. 
@@ -22,4 +27,3 @@ sudo guix system --load-path=$HOME/Projects/System/systems reconfigure $HOME/Pro
 #+begin_src sh
 guix home --load-path=$HOME/Projects/System/home reconfigure $HOME/Projects/System/home/$USER-home-configuration.scm
 #+end_src
-
