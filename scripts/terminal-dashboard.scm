@@ -252,12 +252,11 @@
          (first-todo (get-first-todo))
          (options 
           (list 
-           (list "Edit" " " "e" "hx")
-           (list "Fetch" " " "f" "fastfetch")
-           (list "Bash" " " "bs" "bash")
-           (list "Guile" " " "g" "guile")
-           (list "Dashboard" " " "d" "#dashboard")
-	   ;;(list "Anki" " " "a" "#dashboard")
+           (list "EDIT" " " "e" "hx")
+           (list "FETCH" " " "f" "fastfetch")
+           (list "FISH" " " "s" "fish")
+           (list "GUILE" " " "g" "guile")
+	   (list "Anki" " " "a" "")
 	   ;; habits?
 	   ;; bookmarks
 	   ;; git (magit)

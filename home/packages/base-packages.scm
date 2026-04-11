@@ -27,7 +27,7 @@
         "network-manager-openvpn"))
 
 (define utilities-packages
-  (list "tree" "curl"
+  (list "tree" "curl" "adb"
 	"rsync" "wireplumber" "zip" "unzip" "dnsmasq" "hostapd"
         "glibc-locales" "mpv" "ark" "unrar" "flatpak" "ripgrep" "git-lfs"))
 
@@ -37,7 +37,7 @@
 (define xorg-packages
   (list
    ;; "rofi" Just using stumpwm :) 
-   "dunst" "spectacle" "kmix" "xrandr" "feh" "picom" "redshift" "xdg-desktop-portal-wlr" "xsel"))
+   "dunst" "spectacle" "kmix" "xrandr" "arandr" "feh" "picom" "redshift" "xdg-desktop-portal-wlr" "xsel" "xdg-utils"))
 
 (define gui-theming-packages
   (list "breeze-icons" "oxygen-icons" "gtk+"))
@@ -92,13 +92,17 @@
    "emacs-undo-tree"
    "emacs-vertico"))
 
+(define kde-packages
+  (list "dolphin" "kmix" "konsole"))
+ 
 (define app-packages
-  (list "steam" "inkscape" "gimp" "yt-dlp" "lem" "fish" "alacritty" "emacs-next" "helix"))
+  (list "steam" "inkscape" "gimp" "yt-dlp" "lem" "fish" "alacritty" "emacs-next" "helix" "typst-bin" "haunt"))
 
 (define (all-packages)
   (specifications->packages
    (append programming-packages
            xorg-packages
+	   kde-packages
            web-packages
            utilities-packages
            fonts-packages
