@@ -6,7 +6,7 @@
   #:use-module (packages base-packages)
   ;;#:use-module (services bash)
   #:use-module (services stumpwm)
-  ;;#:use-module (services helix)
+  #:use-module (services helix)
   #:use-module (services fish)
   #:use-module (services lem)
   #:use-module (services git)
@@ -20,7 +20,7 @@
    (stumpwm-service)
    (fish-service)
    (lem-service)
-   ;;(helix-service)
+   (helix-service)
    (git-service)
    (redshift-service)   
    (service home-dotfiles-service-type
