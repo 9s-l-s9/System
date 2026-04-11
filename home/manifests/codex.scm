@@ -1,9 +1,4 @@
-(define-module (manifests manifest codex)
-  #:use-module (gnu packages)
-  #:export (manifest-codex))
-
-(define manifest-codex
-  (specifications->manifest
+(specifications->manifest
    '("bash"
      "coreutils"
      "grep"
@@ -19,4 +14,4 @@
      "guix"
      "guile"
      "make"
-     "findutils")))
+     "findutils"))

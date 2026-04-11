@@ -7,7 +7,7 @@
   (host-name "X1")    
       (swap-devices (list (swap-space
                         (target (uuid
-                                 "03b4094e-fa76-4ae1-85b8-ced35e8a2a97")))))
+                                 "ce43f82b-3ad3-449b-a73e-4129acc8c322")))))
   ;; The list of file systems that get "mounted".  The unique
   ;; file system identifiers there ("UUIDs") can be obtained
   ;; by running 'blkid' in a terminal.

@@ -12,7 +12,7 @@
         (exit 1))))
 
 (define default-manifest
-  (string-append home "/Projects/System/home/manifests/manifest/codex.scm"))
+  (string-append home "/Projects/System/home/manifests/codex.scm"))
 
 (define (expand-user-path path)
   (cond

@@ -77,6 +77,7 @@
                                           "kvm"
                                           "tty"
                                           "input"
+					  "xlib"
                                           "docker"
                                           "realtime"  ;; Enable realtime scheduling
                                           "lp"        ;; control bluetooth devices
