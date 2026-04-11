@@ -5,6 +5,14 @@ My personal system configuration.
 - Scripts in =scripts/= must be written in Guile.
 - Shell scripts are not allowed in this repo, even for trivial launchers or wrappers.
 
+* QA
+
+- Run =make qa= for the fast repository policy check.
+- Run =make qa-home-samuel= before changing Samuel's home configuration.
+- Run =make qa-home-levi= before changing Levi's home configuration.
+- Run =make qa-system-x1= or =make qa-system-t450s= when changing system definitions.
+- See =QA.md= for the broader cleanup roadmap.
+
 * Installation
 
 1. Install Guix System. 
