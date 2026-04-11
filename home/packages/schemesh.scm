@@ -1,4 +1,4 @@
- (define-module (schemesh)
+(define-module (packages schemesh)
   #:use-module (guix packages)
   #:use-module (gnu packages compression)
   #:use-module (gnu packages linux)
@@ -74,15 +74,14 @@
                        "prefix="))
              #t)))))
     (native-inputs
-     (("gcc" ,gcc)
-       ("make" ,gnu-make)))
+     (list gcc gnu-make))
     (inputs
-     (("curl" ,curl)
-       ("lz4" ,lz4)
-       ("ncurses" ,ncurses)
-       ("util-linux" ,util-linux)
-       ("chez-scheme" ,chez-scheme)
-       ("zlib" ,zlib)))
+     (list curl
+           lz4
+           ncurses
+           util-linux
+           chez-scheme
+           zlib))
     (synopsis "A lightweight tool built with Chez Scheme")
     (description
      "Schemesh is built using Chez Scheme and several C libraries.
@@ -91,4 +90,3 @@ This package definition adapts the build and install phases to work properly
 within the Guix environment by overriding the default installation directories.")
     (home-page "https://github.com/cosmos72/schemesh")
     (license license:gpl3+)))
-schemesh

@@ -1,4 +1,4 @@
-(define-module (my packages emacs)
+(define-module (packages mindre-theme)
   #:use-module (guix packages)
   #:use-module (guix download)
   #:use-module (guix git-download)
@@ -22,6 +22,3 @@
     (synopsis "A modern theme for Emacs")
     (description "Mindre is a modern theme for Emacs.")
     (license license:expat))) ; Specify the correct license
-
-
-emacs-mindre-theme

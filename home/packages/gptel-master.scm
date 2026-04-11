@@ -1,4 +1,4 @@
-(define-module (gnu packages emacs-xyz)
+(define-module (packages gptel-master)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (guix packages)
   #:use-module (guix cvs-download)
@@ -136,7 +136,7 @@
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "0"))))  ; Update this with the correct SHA256 hash
+                "0000000000000000000000000000000000000000000000000000"))))
     (build-system emacs-build-system)
     (arguments
      `(#:phases
@@ -161,5 +161,3 @@ responses encoded in Markdown or Org markup. It supports conversations, not
 just one-off queries and multiple independent sessions. It requires an OpenAI
 API key.")
     (license license:gpl3+)))
-
-emacs-gptel

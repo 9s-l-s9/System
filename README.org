@@ -11,6 +11,7 @@ My personal system configuration.
 - Run =make qa-home-samuel= before changing Samuel's home configuration.
 - Run =make qa-home-levi= before changing Levi's home configuration.
 - Run =make qa-system-x1= or =make qa-system-t450s= when changing system definitions.
+- The Guix QA targets assume your current Guix installation is already aligned with =channels.scm=.
 - See =QA.md= for the broader cleanup roadmap.
 
 * Installation

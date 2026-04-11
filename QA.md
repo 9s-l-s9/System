@@ -41,6 +41,11 @@ Current targets:
 
 These targets are intentionally thin wrappers around the real Guix commands so the checks stay transparent.
 
+Prerequisite:
+
+- the active Guix installation should already be aligned with `channels.scm`
+- otherwise package resolution can fail for channel-specific packages even when the repo itself is structurally correct
+
 ## Issue 3: Normalize Module Naming
 
 Status: todo
