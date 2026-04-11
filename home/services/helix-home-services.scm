@@ -78,9 +78,16 @@
   (and (list? value) (every helix-grammar? value)))
 
 (define (escape-basic-string str)
-  (let* ((escaped-backslashes (string-replace-substring str "\\" "\\\\"))
-         (escaped-quotes (string-replace-substring escaped-backslashes "\"" "\\\"")))
-    (string-replace-substring escaped-quotes "\n" "\\n")))
+  (call-with-output-string
+    (lambda (port)
+      (string-for-each
+       (lambda (chr)
+         (cond
+          ((char=? chr #\\) (display "\\\\" port))
+          ((char=? chr #\") (display "\\\"" port))
+          ((char=? chr #\newline) (display "\\n" port))
+          (else (write-char chr port))))
+       str))))
 
 (define (toml-string str)
   (string-append "\"" (escape-basic-string str) "\""))
