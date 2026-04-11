@@ -20,7 +20,9 @@
 
 (define web-packages
   (list ;;"nyxt"
-	;;"google-chrome-beta"
+   ;;"google-chrome-beta"
+   "zen-browser-bin"
+   "bitwarden-desktop"
         "openssh"
         "network-manager"
         "network-manager-openvpn"))
