@@ -1,10 +1,11 @@
 ;; Home configuration for the user "levi"
 ;; This users home should only be configured for focused work tasks
 
-(define-module (home-configuration)
+(define-module (levi-home-configuration)
   #:use-module (gnu home)
   #:use-module (gnu home services)
   #:use-module (gnu home services dotfiles)
+  #:use-module (gnu packages)
   #:use-module (packages base-packages)
   #:use-module (services bash)
   #:use-module (services stumpwm)
@@ -13,11 +14,11 @@
   #:use-module (services redshift))
 
 (home-environment
- (specifications->packages
-  (append
-   xorg-packages
-   "nyxt"
-   utilities-packages))
+ (packages
+  (specifications->packages
+   (append
+    xorg-packages
+    utilities-packages)))
  (services
   (list
    (bash-service)
@@ -28,4 +29,3 @@
             (home-dotfiles-configuration
              (directories '("./files"))))
    )))
-

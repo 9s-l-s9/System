@@ -1,3 +1,5 @@
+(define-module (manifests manifest.codex))
+
 (specifications->manifest
  '("bash"
    "coreutils"

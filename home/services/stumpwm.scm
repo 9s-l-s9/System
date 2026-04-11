@@ -158,4 +158,4 @@
                (stumpwm-keybinding (key "s") (command "browser-search"))
                ;;(stumpwm-keybinding (key "i") (command "internet-10-min"))
                ;;(stumpwm-keybinding (key "t") (run-shell-command "date "+%Y-%m-%d" | xsel --clipboard --input"))
-               )))))))))
+               ))))))))

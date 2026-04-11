@@ -1,3 +1,5 @@
+(define-module (manifests manifest.claude))
+
 (specifications->manifest
  '("bash"
    "coreutils"
