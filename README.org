@@ -1,11 +1,12 @@
 My personal system configuration.
 
-Long term goal is to create a lisp machine
-
 * Installation
-1. Install Guix System.
-2. Clone this repo as "$HOME/Projects/System/" 
 
+1. Install Guix System. 
+2. Clone this repo as "$HOME/Projects/System/".
+3. Create an adapted version of the system files in /systems. Especially make sure to update the uuids for your partition.
+4. "Update" channels, system and home:   
+   
 ** Update channels
 #+begin_src sh
 guix pull --channels=$HOME/Projects/System/channels.scm
@@ -17,6 +18,8 @@ sudo guix system --load-path=$HOME/Projects/System/systems reconfigure $HOME/Pro
 #+end_src
 
 ** Update home
+
 #+begin_src sh
 guix home --load-path=$HOME/Projects/System/home reconfigure $HOME/Projects/System/home/$USER-home-configuration.scm
 #+end_src
+

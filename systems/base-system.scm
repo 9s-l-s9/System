@@ -2,7 +2,6 @@
   #:use-module (gnu)
   #:use-module (srfi srfi-1)
   #:use-module (gnu system nss)
-  #:use-module (gnu services)
   #:use-module (gnu services pm)
   #:use-module (gnu services xorg)
   #:use-module (gnu services desktop)
@@ -32,9 +31,11 @@
   #:export (base-system)
 )
 (use-service-modules desktop xorg)
+(use-service-modules desktop)
 (use-package-modules certs)
 (use-package-modules shells)
 (use-service-modules desktop networking ssh xorg cups)
+
 
 (define-public base-system
   (operating-system
@@ -66,11 +67,10 @@
                      (check? #f))
                    %base-file-systems))
 
-(users (append (list (user-account
+    (users (cons (user-account
                   (name "samuel")
                   (comment "Samuel")
                   (group "users")
-		  (shell (file-append fish "/bin/fish"))
                   (home-directory "/home/samuel")
                   (supplementary-groups '(
                                           "wheel"     ;; sudo
@@ -82,29 +82,16 @@
                                           "realtime"  ;; Enable realtime scheduling
                                           "lp"        ;; control bluetooth devices
                                           "audio"     ;; control audio devices
-                                          "video")))
-                 (user-account
-                  (name "levi")
-                  (comment "My Work Profile")
-                  (group "users")
-                  (home-directory "/home/levi")
-                  (supplementary-groups '(
-                                          "wheel"     ;; sudo
-                                          "netdev"    ;; network devices
-                                          "kvm"
-                                          "tty"
-                                          "input"
-                                          "docker"
-                                          "realtime"  ;; Enable realtime scheduling
-                                          "lp"        ;; control bluetooth devices
-                                          "audio"     ;; control audio devices
-                                          "video"))))
-                %base-user-accounts))
+                                          "video")))  ;; control video devices
+
+                 %base-user-accounts))
+
     ;; Add the 'realtime' group
     (groups (cons (user-group (system? #t) (name "realtime"))
                   %base-groups))
 
 
+    ;; Install bare-minimum system packages
     (packages (append (list
                         git
                         ntfs-3g
@@ -113,6 +100,7 @@
 			
 			;; Stumpwm
 			sbcl
+			stumpish
 			stumpwm
 			sbcl-stumpwm-swm-gaps
 
@@ -121,7 +109,7 @@
                         ;; swaybg
                         ;; swayidle
                         ;; swaylock
-			fish
+
 			xterm
                         bluez
                         bluez-alsa
@@ -133,56 +121,49 @@
                       %base-packages))
 
     (services
- (append
-  (list
-   (service containerd-service-type)
-   (service docker-service-type)
-   (service bluetooth-service-type
-            (bluetooth-configuration
-             (auto-enable? #t)))
-   (service cups-service-type
-            (cups-configuration
-             (web-interface? #t)
-             (extensions
-              (list cups-filters epson-inkjet-printer-escpr hplip-minimal))))
+     (append
+      (list
+       (service containerd-service-type)
+       (service docker-service-type)
+       (service bluetooth-service-type
+		(bluetooth-configuration
+		 (auto-enable? #t)))
 
-   
-   ;; (service slim-service-type
-   ;;          (slim-configuration
-   ;;            (xorg-configuration
-   ;;             (modules (cons* (specification->package "xf86-input-wacom")
-   ;;                            %default-xorg-modules))
-   ;;             (extra-config '("Section \"InputClass\"
-   ;;                              Identifier \"Wacom Tablet\"
-   ;;                              MatchDevicePath \"/dev/input/event*\"
-   ;;                              MatchIsTablet \"on\"
-   ;;                              Driver \"wacom\"
-   ;;                            EndSection")))))
-   ;; (modify-services %desktop-services
-   ;;                  (delete gdm-service-type))
-   ;; (simple-service 'add-nonguix-substitutes
-   ;;                 guix-service-type
-   ;;                 (guix-extension
-   ;;                  (substitute-urls
-   ;;                   (append (list "https://substitutes.nonguix.org")
-   ;;                           %default-substitute-urls))
-   ;;                  (authorized-keys
-   ;;                   (append (list (plain-file "nonguix.pub"
-   ;;                                             "(public-key (ecc (curve Ed25519) (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))"))
-   ;;                           %default-authorized-guix-keys))))
-    ;; Allow resolution of '.local' host names with mDNS.
-    ;;(name-service-switch %mdns-host-lookup-nss)
+       (service cups-service-type
+         (cups-configuration
+           (web-interface? #t)
+           (extensions
+             (list cups-filters epson-inkjet-printer-escpr hplip-minimal))))
+       (service plasma-desktop-service-type)
 
-   )
-(modify-services %desktop-services
-             (guix-service-type config => (guix-configuration
-               (inherit config)
-               (substitute-urls
-                (append (list "https://substitutes.nonguix.org")
-                  %default-substitute-urls))
-               (authorized-keys
-                (append (list (local-file "./signing-key.pub"))
-                  %default-authorized-guix-keys)))))
-)))
+       ;(bluetooth-service #:auto-enable? #t)
+       )
+      (modify-services %desktop-services
+       (gdm-service-type config =>
+			 (gdm-configuration
+			  (inherit config)
+			  (xorg-configuration
+			   (xorg-configuration
+			    (modules (cons* (specification->package "xf86-input-wacom")
+					    %default-xorg-modules))
+			    (extra-config '("Section \"InputClass\"
+                           Identifier \"Wacom Tablet\"
+                           MatchDevicePath \"/dev/input/event*\"
+                           MatchIsTablet \"on\"
+                           Driver \"wacom\"
+                         EndSection"))))))
 
+      (guix-service-type config => (guix-configuration
+                                                     (inherit config)
+                                                     (substitute-urls
+                                                      (append (list "https://substitutes.nonguix.org")
+                                                              %default-substitute-urls))
+                                                     (authorized-keys
+                                                      (append (list (plain-file "non-guix.pub"
+										"(public-key (ecc (curve Ed25519) (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))"))
+                                                              %default-authorized-guix-keys)))))
 
+      ))
+
+    ;; Allow resolution of '.local' host names with mDNS
+    (name-service-switch %mdns-host-lookup-nss)))

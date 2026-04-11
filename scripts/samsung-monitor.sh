@@ -1,0 +1,7 @@
+xrdb -merge <<EOF
+Xft.dpi: 192
+Xft.antialias: true
+Xft.rgba: rgb
+Xft.hinting: true
+Xft.hintstyle: hintslight
+EOF
