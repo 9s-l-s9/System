@@ -1,6 +1,5 @@
-(define-module (T450s)
-  #:use-module (base-system)
-  #:use-module (gnu))
+(use-modules (base-system)
+             (gnu))
 
 (operating-system
  (inherit base-system)
@@ -24,4 +23,3 @@
    ) ; Specifies the installation target for the bootloader.
 
     )
-

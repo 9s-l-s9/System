@@ -1,7 +1,5 @@
-(define-module (X1)
-  #:use-module (gnu)
-  #:use-module (base-system)
-  )
+(use-modules (gnu)
+             (base-system))
 
 
 (operating-system
