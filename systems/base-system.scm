@@ -12,6 +12,7 @@
   #:use-module (gnu packages cups)
   #:use-module (gnu packages gtk)
   #:use-module (gnu packages xorg)
+  #:use-module (gnu packages xdisorg)
   #:use-module (gnu packages emacs)
   #:use-module (gnu packages file-systems)
   #:use-module (gnu packages gnome)
@@ -24,12 +25,10 @@
   #:use-module (gnu packages pulseaudio)
   #:use-module (gnu packages web-browsers)
   #:use-module (gnu packages version-control)
-  #:use-module (gnu packages package-management)
   #:use-module (nongnu packages linux)
   #:use-module (nongnu system linux-initrd)
 
-  #:export (base-system)
-)
+  #:export (base-system))
 (use-service-modules desktop xorg)
 (use-service-modules desktop)
 (use-package-modules certs)
@@ -116,7 +115,7 @@
 			pipewire
                         tlp
                         xf86-input-libinput
-			(specification->package "xf86-input-wacom")
+			xf86-input-wacom
                         gvfs)         ;; for user mounts
                       %base-packages))
 
@@ -144,7 +143,7 @@
 			  (inherit config)
 			  (xorg-configuration
 			   (xorg-configuration
-			    (modules (cons* (specification->package "xf86-input-wacom")
+			    (modules (cons* xf86-input-wacom
 					    %default-xorg-modules))
 			    (extra-config '("Section \"InputClass\"
                            Identifier \"Wacom Tablet\"
