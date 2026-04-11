@@ -1,4 +1,4 @@
-(define-module (my packages font )
+(define-module (packages font-inter)
   #:use-module (ice-9 regex)
   #:use-module (guix utils)
   #:use-module ((guix licenses) #:prefix license:)
@@ -39,6 +39,3 @@
     (synopsis "The Inter font")
     (description "Inter is a typeface carefully crafted & designed for computer screens.")
     (license license:silofl1.1)))
-
-
-font-inter

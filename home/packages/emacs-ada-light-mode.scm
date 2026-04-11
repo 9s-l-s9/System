@@ -1,4 +1,4 @@
-(define-module (emacs-ada-light-mode)
+(define-module (packages emacs-ada-light-mode)
   #:use-module (guix packages)
   #:use-module (guix git-download)
   #:use-module (guix build-system emacs)
@@ -26,6 +26,3 @@
     (synopsis "Lightweight Ada mode for Emacs")
     (description "ada-light-mode is a very light alternative to ada-mode. It provides syntax highlighting, comment handling, Imenu support, and integration with the Ada language server via Eglot.")
     (license gpl3+)))
-
-
-emacs-ada-light-mode

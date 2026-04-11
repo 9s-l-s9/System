@@ -1,20 +1,27 @@
+(define-module (packages emacs-typst-ts-mode)
+  #:use-module (guix packages)
+  #:use-module (guix git-download)
+  #:use-module (guix build-system emacs)
+  #:use-module ((guix licenses) #:prefix license:)
+  #:use-module (gnu packages emacs))
+
 (define-public emacs-typst-ts-mode
   (package
     (name "emacs-typst-ts-mode")
-    (version "1.0") ; Adjust the version based on the commit or release you are packaging
-    (source (origin
-              (method git-fetch)
-              (uri (git-reference
-                    (url "https://git.sr.ht/~meow_king/typst-ts-mode")
-                    ; Replace "commit-hash" with the actual commit hash you wish to use
-                    (commit "commit-hash")))
-              (file-name (string-append name "-" version "-checkout"))
-              (sha256
-               (base32 "0")))) ; Use the actual hash of the commit for verification
+    (version "1.0")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://git.sr.ht/~meow_king/typst-ts-mode")
+             (commit "commit-hash")))
+       (file-name (string-append name "-" version "-checkout"))
+       (sha256
+        (base32 "0000000000000000000000000000000000000000000000000000"))))
     (build-system emacs-build-system)
     (propagated-inputs
-     `(("emacs" ,emacs))) ; Ensure you have the correct version of Emacs as a dependency
+     (list emacs))
     (home-page "https://git.sr.ht/~meow_king/typst-ts-mode")
     (synopsis "Typst mode for Emacs")
     (description "This package provides an Emacs mode for editing Typst files.")
-    (license license:gpl3+))) ; Adjust the license according to the project's license
+    (license license:gpl3+)))

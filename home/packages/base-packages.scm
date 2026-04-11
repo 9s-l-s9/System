@@ -20,8 +20,6 @@
 
 (define web-packages
   (list ;;"nyxt"
-        "zen-browser-bin"
-	"bitwarden-desktop"
 	;;"google-chrome-beta"
         "openssh"
         "network-manager"
@@ -30,7 +28,7 @@
 (define utilities-packages
   (list "tree" "curl" "adb"
 	"rsync" "wireplumber" "zip" "unzip" "dnsmasq" "hostapd"
-        "glibc-locales" "mpv" "ark" "unrar" "flatpak" "ripgrep" "git-lfs"))
+        "glibc-locales" "mpv" "ark" "flatpak" "ripgrep" "git-lfs"))
 
 (define wayland-packages
   (list "gammastep" "mako" "fuzzel"))
