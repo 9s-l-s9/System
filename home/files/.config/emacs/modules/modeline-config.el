@@ -43,9 +43,13 @@
   "Header-line format: buffer name, major mode, git branch.")
 
 (setq-default header-line-format sls-header-line-format)
-(setq-default mode-line-format '(""))   ; hide bottom bar
+;; The bottom mode-line is reduced to a single separator line.
+;; Technique from elegant-emacs: shrink the bar to ~1pt, set fg=bg so the
+;; text area is empty/same colour as the buffer, but keep the underline
+;; drawn in the default foreground — that underline IS the visible line.
+(setq-default mode-line-format '(""))
 
-;; ── Window divider ────────────────────────────────────────────────────────────
+;; ── Window divider (vertical separator for side-by-side splits) ───────────────
 
 (setq window-divider-default-right-width 3
       window-divider-default-places      'right-only)
@@ -54,18 +58,19 @@
 ;; ── Face styling ──────────────────────────────────────────────────────────────
 
 (defun sls-set-modeline-faces (&rest _)
-  "Apply elegant-emacs-style face settings for modus-operandi."
-  ;; Header-line: same background as buffer, underline acts as the separator
+  "Apply elegant-emacs-style faces: header-line info bar + thin bottom line."
+  ;; Header-line: blends with buffer background; underline separates it from text
   (set-face-attribute 'header-line nil
                       :underline  (face-foreground 'default)
                       :foreground (face-foreground 'default)
                       :background (face-background 'default)
                       :box        nil
                       :inherit    nil)
-  ;; Bottom mode-line: height 10, foreground = background = invisible
+  ;; Bottom mode-line: shrunk to ~1pt so only its underline remains visible —
+  ;; that single pixel IS the bottom separator line, same as elegant-emacs.
   (dolist (face '(mode-line mode-line-inactive))
     (set-face-attribute face nil
-                        :height     10
+                        :height     10          ; ~1pt: bar is a single line
                         :underline  (face-foreground 'default)
                         :overline   nil
                         :box        nil
