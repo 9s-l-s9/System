@@ -40,6 +40,9 @@
 ;; ── Programming ───────────────────────────────────────────────────────────────
 (require 'highlight-indent-guides)
 (require 'magit)
+(require 'eglot-conf)
+(require 'python-conf)
+(require 'dap-config)
 
 ;; ── Apps ──────────────────────────────────────────────────────────────────────
 (require 'dired-config)

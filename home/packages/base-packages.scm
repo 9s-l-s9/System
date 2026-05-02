@@ -9,9 +9,16 @@
 
 (define programming-packages
   (list "python"
-	"guile-ts"
-	"guile-lsp-server"
-	"make"
+        ;; Python dev toolchain
+        "python-lsp-server"   ; pylsp — LSP server (eglot backend)
+        "python-debugpy"      ; debugpy — DAP debug adapter
+        "ruff"                ; linter + formatter (replaces black/flake8/isort)
+        "python-pytest"       ; test runner
+        "python-mypy"         ; static type checker
+        ;; Guile / Scheme
+        "guile-ts"
+        "guile-lsp-server"
+        "make"
         ;"r"
         ;"sqlite"
         ;"duckdb"
@@ -86,6 +93,7 @@
    ;;"emacs-org-present"
    ;;"emacs-org-transclusion"
    ;;"emacs-pdf-tools"
+   "emacs-dap-mode"
    "emacs-popper"
    "emacs-rg"
    "emacs-sudo-edit"
