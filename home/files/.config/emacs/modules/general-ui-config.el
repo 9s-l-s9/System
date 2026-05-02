@@ -1,10 +1,6 @@
-;;; general-ui-config.el --- Contains just some general UI improvements of emacs.
-;;; Commentary:
+;;; general-ui-config.el --- General UI improvements -*- lexical-binding: t -*-
 ;; Author: Samuel Schmidt <samuel@schmidt-contact.com>
-;;;; Code:
-
-(provide 'general-ui-config)
-
+;;; Code:
 
 ;; No fringe but nice glyphs for truncated and wrapped lines
 (fringe-mode '(0 . 0))
@@ -60,3 +56,6 @@
       display-line-numbers-width            4
       display-line-numbers-width-start      t)
 (global-display-line-numbers-mode)
+
+(provide 'general-ui-config)
+;;; general-ui-config.el ends here
