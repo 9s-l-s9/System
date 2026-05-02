@@ -2,9 +2,8 @@
 ;; Author: Samuel Schmidt <samuel@schmidt-contact.com>
 ;;; Code:
 
-;; No fringe but nice glyphs for truncated and wrapped lines
+;; No fringe (line numbers live in text-area margin; margins from modeline-config)
 (fringe-mode '(0 . 0))
-(global-visual-line-mode)
 
 
 ;; General
