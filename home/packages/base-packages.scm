@@ -17,6 +17,7 @@
         "ruff"                 ; fast linter + formatter
         "python-pytest"        ; test runner
         "python-mypy"          ; static type checker
+        "tree-sitter-python"   ; grammar for python-ts-mode
         ;"r"
         ;"sqlite"
         ;"duckdb"
