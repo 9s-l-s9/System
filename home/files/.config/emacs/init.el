@@ -59,7 +59,7 @@
 ;; (require 'org-babel)
 ;; (require 'org-transclusion)
 
-;; (require 'gptel-config)
+(require 'gptel-config)
 ;; (require 'citar-conf)
 
 ;; Load at the end

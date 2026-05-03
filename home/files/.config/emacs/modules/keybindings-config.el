@@ -31,6 +31,9 @@
    '("y" . sls-copy-file-path)
    '("b" . consult-bookmark)
    '("f" . delete-other-windows) ;focus
+   ;; AI
+   '("a" . gptel)
+   '("A" . gptel-menu)
    )
   (meow-normal-define-key
    '("0" . meow-expand-0)
