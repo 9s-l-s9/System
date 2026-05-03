@@ -43,16 +43,29 @@
   "Header-line format: buffer name, major mode, git branch.")
 
 (setq-default header-line-format sls-header-line-format)
-;; The bottom mode-line is reduced to a single separator line.
-;; Technique from elegant-emacs: shrink the bar to ~1pt, set fg=bg so the
-;; text area is empty/same colour as the buffer, but keep the underline
-;; drawn in the default foreground — that underline IS the visible line.
-(setq-default mode-line-format '(""))
+;; Remove the bottom mode-line entirely — `window-divider-mode` draws the
+;; visible bottom separator line instead. Shrinking mode-line via :height
+;; doesn't actually collapse the row, so the theme bg leaks through as a block.
+(setq-default mode-line-format nil)
 
-;; ── Window divider (vertical separator for side-by-side splits) ───────────────
+;; `setq-default` only affects buffers that haven't set the variable locally.
+;; Many modes (imenu-list, dired, ibuffer, magit, …) bind `mode-line-format`
+;; in their own buffers, so wipe it whenever a buffer's major mode is set.
+(defun sls--kill-local-mode-line ()
+  (kill-local-variable 'mode-line-format)
+  (setq mode-line-format nil))
+(add-hook 'after-change-major-mode-hook #'sls--kill-local-mode-line)
+;; Apply to buffers that already exist at load time.
+(dolist (buf (buffer-list))
+  (with-current-buffer buf (sls--kill-local-mode-line)))
 
-(setq window-divider-default-right-width 3
-      window-divider-default-places      'right-only)
+;; ── Window dividers ───────────────────────────────────────────────────────────
+;; Bottom dividers replace the mode-line as the per-window bottom separator.
+;; Right dividers separate side-by-side splits.
+
+(setq window-divider-default-right-width  3
+      window-divider-default-bottom-width 1
+      window-divider-default-places       t)
 (window-divider-mode 1)
 
 ;; ── Face styling ──────────────────────────────────────────────────────────────
@@ -66,19 +79,9 @@
                       :background (face-background 'default)
                       :box        nil
                       :inherit    nil)
-  ;; Bottom mode-line: shrunk to ~1pt so only its underline remains visible —
-  ;; that single pixel IS the bottom separator line, same as elegant-emacs.
-  (dolist (face '(mode-line mode-line-inactive))
-    (set-face-attribute face nil
-                        :height     10          ; ~1pt: bar is a single line
-                        :underline  (face-foreground 'default)
-                        :overline   nil
-                        :box        nil
-                        :foreground (face-background 'default)
-                        :background (face-background 'default)))
-  ;; Window divider colours
+  ;; Window divider provides the visible separator lines (top/right/bottom).
   (set-face-attribute 'window-divider nil
-                      :foreground (face-background 'mode-line))
+                      :foreground (face-foreground 'default))
   (set-face-attribute 'window-divider-first-pixel nil
                       :foreground (face-background 'default))
   (set-face-attribute 'window-divider-last-pixel nil
