@@ -1,3 +1,4 @@
+;;; cape-conf.el --- -*- lexical-binding: t -*-
 (require 'cape)
 
 ;; Enable Corfu completion UI
