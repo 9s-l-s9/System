@@ -1,4 +1,4 @@
-(define-module (shared-settings)
+(define-module (lib identity)
   #:export (e-mail
 	    user-name))
 
