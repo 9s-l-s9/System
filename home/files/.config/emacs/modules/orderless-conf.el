@@ -1,3 +1,4 @@
+;;; orderless-conf.el --- -*- lexical-binding: t -*-
 (require 'orderless) 
 (use-package orderless
   :custom
@@ -10,6 +11,6 @@
 
   (orderless-define-completion-style orderless-fast
     (orderless-style-dispatchers '())
-    (orderless-matching-styles '(orderless-flexg orderless-regexp))))
+    (orderless-matching-styles '(orderless-flex orderless-regexp))))
 
-(provide 'orderless-conf) 
+(provide 'orderless-conf)
