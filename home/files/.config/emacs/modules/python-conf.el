@@ -3,9 +3,17 @@
 
 ;; ── Tree-sitter mode ──────────────────────────────────────────────────────────
 
+;; Tell Emacs where Guix installs grammar shared libraries so it can find
+;; tree-sitter-python (and friends) without prompting to download them.
+(with-eval-after-load 'treesit
+  (dolist (dir '("~/.guix-home/profile/lib/tree-sitter"
+                 "/run/current-system/profile/lib/tree-sitter"))
+    (add-to-list 'treesit-extra-load-path (expand-file-name dir))))
+
 ;; Redirect python-mode → python-ts-mode when tree-sitter is available.
 ;; python-ts-mode gives better syntax highlighting and structural navigation.
-(when (treesit-available-p)
+(when (and (treesit-available-p)
+           (treesit-language-available-p 'python))
   (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 
 ;; ── Indentation ───────────────────────────────────────────────────────────────

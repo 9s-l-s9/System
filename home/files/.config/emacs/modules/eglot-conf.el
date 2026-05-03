@@ -37,8 +37,9 @@
             (setq-local eldoc-documentation-strategy
                         #'eldoc-documentation-compose-eagerly)))
 
-;; Highlight symbol under point via LSP
-(add-hook 'eglot-managed-mode-hook #'eglot-highlight-symbol-mode)
+;; Symbol-under-point highlighting is provided automatically by
+;; `eglot-managed-mode` when the server reports textDocument/documentHighlight,
+;; so no extra hook is needed.
 
 (provide 'eglot-conf)
 ;;; eglot-conf.el ends here
