@@ -1,6 +1,3 @@
-;; Enable rich annotations using the Marginalia package
-(require 'marginalia)
-
 (use-package marginalia
   ;; Bind `marginalia-cycle' locally in the minibuffer.  To make the binding
   ;; available in the *Completions* buffer, add it to the
