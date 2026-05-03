@@ -9,8 +9,8 @@
    '("<escape>" . ignore))
   (meow-leader-define-key
    ;; Navigation panels (all open in right side window)
-   '("d" . dired)
-   '("D" . sls-dired-sidebar-toggle)
+   '("D" . dired)
+   '("d" . sls-dired-sidebar-toggle)
    '("i" . ibuffer)
    '("s" . imenu-list-smart-toggle)
    '("r" . sls-recentf-open)
@@ -21,7 +21,11 @@
    '("t" . eat)
    '("v" . magit-status)
    '("y" . sls-copy-file-path)
-   '("f" . delete-other-windows))
+   '("f" . delete-other-windows) ;focus
+   ;; AI
+   '("a" . gptel)
+   '("A" . gptel-menu))
+
   (meow-normal-define-key
    '("0" . meow-expand-0)
    '("9" . meow-expand-9)

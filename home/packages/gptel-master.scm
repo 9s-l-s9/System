@@ -29,6 +29,7 @@
   #:use-module (gnu packages djvu)
   #:use-module (gnu packages ebook)
   #:use-module (gnu packages emacs)
+  #:use-module (gnu packages emacs-xyz)
   #:use-module (gnu packages enchant)
   #:use-module (gnu packages fonts)
   #:use-module (gnu packages freedesktop)
@@ -127,16 +128,16 @@
 (define-public emacs-gptel
   (package
     (name "emacs-gptel")
-    (version "master-branch")  ; Updated to indicate we are using the master branch
+    (version "0-1.d7c103c")  ; pinned upstream commit
     (source (origin
               (method git-fetch)
               (uri (git-reference
                     (url "https://github.com/karthink/gptel")
-                    (commit "master")))  ; Fetch the latest commit from master branch
+                    (commit "d7c103ce8a66ecaee7c8fc9ecadb681dc4291408")))
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "0000000000000000000000000000000000000000000000000000"))))
+                "103arq51l1jh7ilppvcxlghcxgij2429jdkgahjm2n3lr200f38c"))))
     (build-system emacs-build-system)
     (arguments
      `(#:phases
