@@ -1,6 +1,3 @@
-;; Ensure Corfu is required
-(require 'corfu)
-
 (use-package corfu
   ;; Optional customizations
   :custom
