@@ -14,7 +14,7 @@
    '("i" . ibuffer)
    '("s" . imenu-list-smart-toggle)
    '("r" . sls-recentf-open)
-   '("b" . consult-bookmark)
+   '("b" . bookmark-bmenu-list)
    ;; Actions
    '("p" . sls-new-entry-pkb)
    '("E" . sls-export-org-to-html-and-pdf)

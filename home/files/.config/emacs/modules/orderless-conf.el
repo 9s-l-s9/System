@@ -1,3 +1,4 @@
+;;; orderless-conf.el --- -*- lexical-binding: t -*-
 (require 'orderless) 
 (use-package orderless
   :custom
