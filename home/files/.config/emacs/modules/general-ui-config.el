@@ -4,7 +4,7 @@
 
 ;; No fringe but nice glyphs for truncated and wrapped lines
 (fringe-mode '(0 . 0))
-(global-visual-line-mode)
+;; Note: global-visual-line-mode omitted — conflicts with header-line redisplay
 
 ;; General
 (setq widget-image-enable nil)
