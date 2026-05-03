@@ -55,7 +55,7 @@
 
 (define (guix-args manifest)
   (append
-   '("shell" "--container" "--nesting" "--network")
+   '("shell" "--container" "--emulate-fhs" "--nesting" "--network")
    (maybe-mount "--expose"
                 (string-append home "/.config/git/config")
                 (string-append home "/.config/git/config"))

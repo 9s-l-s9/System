@@ -1,15 +1,10 @@
-;;; general-ui-config.el --- Contains just some general UI improvements of emacs.
-;;; Commentary:
+;;; general-ui-config.el --- General UI improvements -*- lexical-binding: t -*-
 ;; Author: Samuel Schmidt <samuel@schmidt-contact.com>
-;;;; Code:
-
-(provide 'general-ui-config)
-
+;;; Code:
 
 ;; No fringe but nice glyphs for truncated and wrapped lines
 (fringe-mode '(0 . 0))
-(global-visual-line-mode)
-
+;; Note: global-visual-line-mode omitted — conflicts with header-line redisplay
 
 ;; General
 (setq widget-image-enable nil)
@@ -19,18 +14,17 @@
 (setq highlight-indent-guides-method 'character)
 (setq highlight-indent-guides-auto-character-face-perc '70)
 
-
 (global-hl-line-mode +1)
 
-;; Theme 
+;; Theme
 (load-theme 'modus-operandi t)
 (setq custom-safe-themes t)
 
 ;; Emoji font
 (set-fontset-font t 'symbol "all-the-icons" nil 'prepend)
 
-;; add visual pulse when changing focus, like beacon but built-in
-;; from from https://karthinks.com/software/batteries-included-with-emacs/
+;; Visual pulse on focus change (built-in beacon alternative)
+;; https://karthinks.com/software/batteries-included-with-emacs/
 (defun pulse-line (&rest _)
   "Pulse the current line."
   (pulse-momentary-highlight-one-line (point)))
@@ -39,24 +33,24 @@
                                      recenter-top-bottom other-window))
   (advice-add command :after #'pulse-line))
 
-;; Font and frame size
-;; (set-face-font 'default "Courier Prime 16")
-
-;; Line spacing, can be 0 for code and 1 or 2 for text
+;; Line spacing
 (setq-default line-spacing 2)
-;; Underline line at descent position, not baseline position
+;; Underline at descent position, not baseline
 (setq x-underline-at-descent-line t)
 
-;; Line cursor and no blink
-(set-default 'cursor-type  '(bar . 1))
+;; Bar cursor, no blink
+(set-default 'cursor-type '(bar . 1))
 (blink-cursor-mode 0)
 
 (show-paren-mode t)
 
-;; Line Numbers
+;; Relative line numbers
 (setq display-line-numbers-current-absolute t
       display-line-numbers-grow-only        t
       display-line-numbers-type             'relative
       display-line-numbers-width            4
       display-line-numbers-width-start      t)
 (global-display-line-numbers-mode)
+
+(provide 'general-ui-config)
+;;; general-ui-config.el ends here
