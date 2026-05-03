@@ -4,28 +4,15 @@
 (define-module (levi-home-configuration)
   #:use-module (gnu home)
   #:use-module (gnu home services)
-  #:use-module (gnu home services dotfiles)
   #:use-module (gnu packages)
   #:use-module (packages base-packages)
-  #:use-module (services bash)
-  #:use-module (services stumpwm)
-  #:use-module (services lem)
-  #:use-module (services git)
-  #:use-module (services redshift))
+  #:use-module (base-home)
+  #:use-module (services bash))
 
 (home-environment
  (packages
   (specifications->packages
-   (append
-    xorg-packages
-    utilities-packages)))
+   (append xorg-packages
+           utilities-packages)))
  (services
-  (list
-   (bash-service)
-   (stumpwm-service)
-   (git-service)
-   (redshift-service)   
-   (service home-dotfiles-service-type
-            (home-dotfiles-configuration
-             (directories '("./files"))))
-   )))
+  (cons (bash-service) (base-services))))

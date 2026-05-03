@@ -1,6 +1,6 @@
 (define-module (services git)
   #:use-module (gnu)
-  #:use-module (shared-settings)
+  #:use-module (lib identity)
   #:use-module (git-home-service)
   #:export (git-service))
 
