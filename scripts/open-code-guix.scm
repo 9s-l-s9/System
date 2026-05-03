@@ -15,7 +15,7 @@
         (exit 1))))
 
 (define default-manifest
-  (string-append home "/Projects/System/home/manifests/manifest/claude.scm"))
+  (string-append home "/Projects/System/home/manifests/claude.scm"))
 
 (define (expand-user-path path)
   (cond
