@@ -1,3 +1,4 @@
+;;; pdf-tools-conf.el --- -*- lexical-binding: t -*-
 (require 'pdf-tools)
 
 (add-hook 'doc-view-mode-hook (lambda () (require 'pdf-tools)))
@@ -13,4 +14,4 @@
 
 
 
-(provide 'pdf-tools-config)
+(provide 'pdf-tools-conf)

@@ -20,36 +20,62 @@
 
 (setq python-indent-offset 4)
 
-(dolist (hook '(python-mode-hook python-ts-mode-hook))
-  (add-hook hook (lambda ()
-                   (setq-local tab-width        4
-                               indent-tabs-mode nil))))
+(defun sls-python--indent-setup ()
+  "Buffer-local indentation defaults for Python."
+  (setq-local tab-width        4
+              indent-tabs-mode nil))
 
-;; ── Ruff: format buffer in-place on save ──────────────────────────────────────
+;; ── Format on save ────────────────────────────────────────────────────────────
+;;
+;; When eglot is managing the buffer, defer to `eglot-format-buffer' so the LSP
+;; sees the edits and stays in sync. Otherwise, run `ruff format' asynchronously
+;; via stdin/stdout so saving never blocks the UI.
 
-(defun sls-ruff-format-buffer ()
-  "Format current Python buffer with `ruff format' via stdin/stdout."
-  (when (executable-find "ruff")
-    (let* ((source (buffer-substring-no-properties (point-min) (point-max)))
-           (formatted
-            (with-temp-buffer
-              (insert source)
-              (when (zerop
-                     (call-process-region
-                      (point-min) (point-max)
-                      "ruff" t t nil
-                      "format" "--quiet"
-                      "--stdin-filename" (or (buffer-file-name) "buffer.py")
-                      "-"))
-                (buffer-string)))))
-      (when (and formatted (not (string= formatted source)))
-        (save-excursion
-          (delete-region (point-min) (point-max))
-          (insert formatted))))))
+(defun sls-python--ruff-format-async ()
+  "Format the current buffer with `ruff format' asynchronously."
+  (when (and (executable-find "ruff")
+             (not (bound-and-true-p eglot--managed-mode)))
+    (let* ((src-buf (current-buffer))
+           (source  (buffer-substring-no-properties (point-min) (point-max)))
+           (out-buf (generate-new-buffer " *ruff-format*"))
+           (proc
+            (make-process
+             :name    "ruff-format"
+             :noquery t
+             :buffer  out-buf
+             :command `("ruff" "format" "--quiet"
+                        "--stdin-filename"
+                        ,(or (buffer-file-name) "buffer.py")
+                        "-")
+             :sentinel
+             (lambda (proc _event)
+               (when (memq (process-status proc) '(exit signal))
+                 (unwind-protect
+                     (when (and (zerop (process-exit-status proc))
+                                (buffer-live-p src-buf))
+                       (let ((formatted (with-current-buffer out-buf (buffer-string))))
+                         (when (and (> (length formatted) 0)
+                                    (not (string= formatted source)))
+                           (with-current-buffer src-buf
+                             (let ((p (point)))
+                               (save-restriction
+                                 (widen)
+                                 (delete-region (point-min) (point-max))
+                                 (insert formatted))
+                               (goto-char (min p (point-max))))))))
+                   (kill-buffer out-buf)))))))
+      (process-send-string proc source)
+      (process-send-eof    proc))))
 
-(dolist (hook '(python-mode-hook python-ts-mode-hook))
-  (add-hook hook (lambda ()
-                   (add-hook 'before-save-hook #'sls-ruff-format-buffer nil t))))
+(defun sls-python--format-on-save ()
+  "Pick the right formatter for the current buffer."
+  (if (bound-and-true-p eglot--managed-mode)
+      (ignore-errors (eglot-format-buffer))
+    (sls-python--ruff-format-async)))
+
+(defun sls-python--enable-format-on-save ()
+  "Install the buffer-local format-on-save hook."
+  (add-hook 'before-save-hook #'sls-python--format-on-save nil t))
 
 ;; ── Ruff: lint via flymake (independent of eglot diagnostics) ────────────────
 
@@ -98,8 +124,18 @@
     (add-hook 'flymake-diagnostic-functions #'sls-ruff-flymake nil t)
     (flymake-mode 1)))
 
+(defun sls-python--bind-test-keys ()
+  "Buffer-local test keybindings for Python."
+  (local-set-key (kbd "C-c C-p") #'sls-python-repl)
+  (local-set-key (kbd "C-c t t") #'sls-pytest-project)
+  (local-set-key (kbd "C-c t f") #'sls-pytest-file)
+  (local-set-key (kbd "C-c t l") #'sls-pytest-last-failed))
+
 (dolist (hook '(python-mode-hook python-ts-mode-hook))
-  (add-hook hook #'sls-maybe-enable-ruff-flymake))
+  (add-hook hook #'sls-python--indent-setup)
+  (add-hook hook #'sls-python--enable-format-on-save)
+  (add-hook hook #'sls-maybe-enable-ruff-flymake)
+  (add-hook hook #'sls-python--bind-test-keys))
 
 ;; ── REPL ─────────────────────────────────────────────────────────────────────
 
@@ -131,16 +167,6 @@
   "Re-run only tests that failed in the last run."
   (interactive)
   (compile "python3 -m pytest -v --lf" t))
-
-;; ── Keybindings (buffer-local) ────────────────────────────────────────────────
-
-(dolist (hook '(python-mode-hook python-ts-mode-hook))
-  (add-hook hook
-            (lambda ()
-              (local-set-key (kbd "C-c C-p") #'sls-python-repl)
-              (local-set-key (kbd "C-c t t") #'sls-pytest-project)
-              (local-set-key (kbd "C-c t f") #'sls-pytest-file)
-              (local-set-key (kbd "C-c t l") #'sls-pytest-last-failed))))
 
 (provide 'python-conf)
 ;;; python-conf.el ends here

@@ -1,4 +1,4 @@
-;;; modeline-config.el --- Minimal header-line modeline -*- lexical-binding: t -*-
+;;; modeline-conf.el --- Minimal header-line modeline -*- lexical-binding: t -*-
 ;;
 ;; Inspired by elegant-emacs (github.com/rougier/elegant-emacs).
 ;; Modeline moves to the TOP of each window (header-line).
@@ -10,11 +10,13 @@
 ;; ── Render helper ─────────────────────────────────────────────────────────────
 
 (defun sls-mode-line-render (left right)
-  "Render LEFT flush-left and RIGHT flush-right to fill the window width."
-  (concat left
-          (propertize " " 'display
-                      `(space :align-to (- right ,(length right))))
-          right))
+  "Render LEFT flush-left and RIGHT flush-right to fill the window width.
+Uses pixel width so alignment stays correct with icons or wide chars."
+  (let ((right-px (string-pixel-width right)))
+    (concat left
+            (propertize " " 'display
+                        `(space :align-to (- right (,right-px))))
+            right)))
 
 ;; ── Git branch ────────────────────────────────────────────────────────────────
 
@@ -104,5 +106,5 @@
 (sls-set-frame-margins)
 (add-hook 'after-make-frame-functions #'sls-set-frame-margins)
 
-(provide 'modeline-config)
-;;; modeline-config.el ends here
+(provide 'modeline-conf)
+;;; modeline-conf.el ends here

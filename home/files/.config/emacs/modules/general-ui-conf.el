@@ -1,4 +1,4 @@
-;;; general-ui-config.el --- General UI improvements -*- lexical-binding: t -*-
+;;; general-ui-conf.el --- General UI improvements -*- lexical-binding: t -*-
 ;; Author: Samuel Schmidt <samuel@schmidt-contact.com>
 ;;; Code:
 
@@ -20,8 +20,9 @@
 (load-theme 'modus-operandi t)
 (setq custom-safe-themes t)
 
-;; Emoji font
-(set-fontset-font t 'symbol "all-the-icons" nil 'prepend)
+;; Emoji: prefer a real color emoji font when present; fall back silently.
+(when (member "Noto Color Emoji" (font-family-list))
+  (set-fontset-font t 'emoji "Noto Color Emoji" nil 'prepend))
 
 ;; Visual pulse on focus change (built-in beacon alternative)
 ;; https://karthinks.com/software/batteries-included-with-emacs/
@@ -38,8 +39,7 @@
 ;; Underline at descent position, not baseline
 (setq x-underline-at-descent-line t)
 
-;; Bar cursor, no blink
-(set-default 'cursor-type '(bar . 1))
+;; Cursor shape is owned by Meow (per modal state); we only disable blink.
 (blink-cursor-mode 0)
 
 (show-paren-mode t)
@@ -52,5 +52,5 @@
       display-line-numbers-width-start      t)
 (global-display-line-numbers-mode)
 
-(provide 'general-ui-config)
-;;; general-ui-config.el ends here
+(provide 'general-ui-conf)
+;;; general-ui-conf.el ends here
