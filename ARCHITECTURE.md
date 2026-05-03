@@ -152,12 +152,25 @@ This creates a practical workflow architecture:
 
 The scripts are not isolated utilities; they are part of the interactive UX of the system.
 
-## Shared Settings
+## Shared Library
 
-`home/shared-settings.scm` holds cross-cutting personal identity values such as email and username.
-This is used by service modules like Git config and avoids repeating those values in multiple service definitions.
+`home/lib/` holds cross-cutting Scheme helpers reused by service modules and entry points.
+The current member is `home/lib/identity.scm`, which exports personal identity values
+such as email and username (consumed by `services/git.scm`).
 
-Conceptually, this is the smallest shared configuration layer on the home side.
+Conceptually, this is the smallest shared layer on the home side. New helpers that
+need to be reused across `home/services/`, `home/packages/`, or the home entry points
+belong here.
+
+## Base Home
+
+`home/base-home.scm` exports `base-services`, the list of home services every user
+shares (window manager, git, redshift, dotfiles tree).
+
+Per-user entry points (`home/samuel-home-configuration.scm`, `home/levi-home-configuration.scm`)
+compose their final `home-environment` by appending user-specific services on top of
+`(base-services)`. This mirrors the `systems/base-system.scm` → `systems/<host>.scm`
+inheritance on the system side.
 
 ## Process Ideas Behind The Repo
 
