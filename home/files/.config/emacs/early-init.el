@@ -1,3 +1,4 @@
+;;; early-init.el --- -*- lexical-binding: t -*-
 ;; Based on config by prot https://protesilaos.com/
 
 

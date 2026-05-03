@@ -1,3 +1,4 @@
+;;; corfu-conf.el --- -*- lexical-binding: t -*-
 (use-package corfu
   ;; Optional customizations
   :custom

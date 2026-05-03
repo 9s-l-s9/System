@@ -1,3 +1,4 @@
+;;; focus-conf.el --- -*- lexical-binding: t -*-
 (require 'focus)
 
 ;; Set modes on when to start focus mode and what to thing to focus on
