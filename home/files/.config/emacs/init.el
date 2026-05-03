@@ -38,8 +38,16 @@
 (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
 
 ;; ── Programming ───────────────────────────────────────────────────────────────
+(require 'eglot-conf)
+(require 'python-conf)
+(require 'dap-config)
+;(require 'flycheck-config)
 (require 'highlight-indent-guides)
 (require 'magit)
+					; -- Languages / Modes --
+;;(require 'markdown-preview-mode)
+;; (require 'lean4-conf)
+;; (require 'ada-conf)
 
 ;; ── Apps ──────────────────────────────────────────────────────────────────────
 (require 'dired-config)
