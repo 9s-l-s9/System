@@ -19,12 +19,15 @@
   (server-force-delete)
   (load-file user-init-file))
 
-(defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate)
-  "Create parent directory if not exists while visiting file."
-  (unless (file-exists-p filename)
-    (let ((dir (file-name-directory filename)))
-      (unless (file-exists-p dir)
-        (make-directory dir t)))))
+(defun sls--find-file-make-parent-maybe (filename &optional _wildcards)
+  "Offer to create the parent directory of FILENAME when missing."
+  (let ((dir (and (stringp filename) (file-name-directory filename))))
+    (when (and dir
+               (not (file-exists-p dir))
+               (y-or-n-p (format "Create parent directory %s? " dir)))
+      (make-directory dir t))))
+
+(advice-add 'find-file :before #'sls--find-file-make-parent-maybe)
 
 (defun sls-copy-file-path ()
   "Copy the current file path (or dired directory) to the clipboard."
@@ -55,12 +58,9 @@
     (org-latex-export-to-pdf)))
 
 ;; Recent files as a navigable buffer
-(define-derived-mode sls-recentf-mode special-mode "RecentF"
-  "Browse recent files in a dedicated buffer."
-  (setq-local revert-buffer-function #'sls-recentf--refresh)
-  (define-key sls-recentf-mode-map (kbd "RET") #'sls-recentf--open)
-  (define-key sls-recentf-mode-map (kbd "j") #'next-line)
-  (define-key sls-recentf-mode-map (kbd "k") #'previous-line))
+;; Forward declaration so byte-compiling `sls-recentf-mode' is happy.
+(declare-function sls-recentf--refresh "sls-functions")
+(declare-function sls-recentf--open    "sls-functions")
 
 (defun sls-recentf--refresh (&rest _)
   "Populate the *Recent Files* buffer."
@@ -81,6 +81,13 @@
     (if path
         (find-file path)
       (message "No file at point"))))
+
+(define-derived-mode sls-recentf-mode special-mode "RecentF"
+  "Browse recent files in a dedicated buffer."
+  (setq-local revert-buffer-function #'sls-recentf--refresh)
+  (define-key sls-recentf-mode-map (kbd "RET") #'sls-recentf--open)
+  (define-key sls-recentf-mode-map (kbd "j") #'next-line)
+  (define-key sls-recentf-mode-map (kbd "k") #'previous-line))
 
 (defun sls-recentf-open ()
   "Open recent files in a side panel buffer."

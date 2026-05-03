@@ -15,11 +15,9 @@
 
 ;; ── Server programs ───────────────────────────────────────────────────────────
 
-;; Python: pylsp (python-lsp-server)
-(add-to-list 'eglot-server-programs
-             '((python-mode python-ts-mode) . ("pylsp")))
+;; Python: eglot already ships a default entry for pylsp; no override needed.
 
-;; Scheme/Guile: already installed as guile-lsp-server
+;; Scheme/Guile: not in eglot's defaults
 (add-to-list 'eglot-server-programs
              '(scheme-mode . ("guile-lsp-server")))
 
