@@ -6,10 +6,11 @@
 ;; ── Backends ──────────────────────────────────────────────────────────────────
 
 ;; Claude (Anthropic) — primary backend, key read from environment
-(gptel-make-anthropic "Claude"
-  :stream t
-  :key (lambda () (or (getenv "ANTHROPIC_API_KEY")
-                      (auth-source-pick-first-password :host "api.anthropic.com"))))
+(defvar sls-gptel-claude-backend
+  (gptel-make-anthropic "Claude"
+    :stream t
+    :key (lambda () (or (getenv "ANTHROPIC_API_KEY")
+                        (auth-source-pick-first-password :host "api.anthropic.com")))))
 
 ;; Ollama — local fallback (no key needed)
 (gptel-make-ollama "Ollama"
@@ -19,7 +20,7 @@
 
 ;; Default: Claude Sonnet
 (setq gptel-model   'claude-sonnet-4-5
-      gptel-backend (alist-get "Claude" gptel--backends nil nil #'equal))
+      gptel-backend sls-gptel-claude-backend)
 
 ;; ── Behaviour ─────────────────────────────────────────────────────────────────
 
