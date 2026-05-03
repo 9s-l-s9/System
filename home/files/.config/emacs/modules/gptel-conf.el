@@ -1,4 +1,4 @@
-;;; gptel-config.el --- AI assistant via gptel -*- lexical-binding: t -*-
+;;; gptel-conf.el --- AI assistant via gptel -*- lexical-binding: t -*-
 ;;; Code:
 
 (require 'gptel)
@@ -84,5 +84,5 @@
 ;; Rewrite / refactor: mark region, then C-c r
 (global-set-key (kbd "C-c C-r") #'gptel-rewrite)
 
-(provide 'gptel-config)
-;;; gptel-config.el ends here
+(provide 'gptel-conf)
+;;; gptel-conf.el ends here

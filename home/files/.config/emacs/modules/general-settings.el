@@ -8,8 +8,9 @@
                                      user-mail-address))
 
 (setq package-selected-packages nil)
-(setq warning-suppress-log-types '((treesit) (comp)))
-(setq warning-suppress-types '((treesit)))
+;; Suppress only native-comp chatter; keep treesit warnings visible so we
+;; notice when grammar loading actually breaks.
+(setq warning-suppress-log-types '((comp)))
 
 ;; Trash instead of delete
 (setq delete-by-moving-to-trash t)
@@ -21,9 +22,8 @@
 (global-auto-revert-mode 1)
 (setq auto-revert-verbose nil)
 
-;; Keep ~/.config/emacs/ clean — store runtime files in cache
-(setq user-emacs-directory "~/.cache/emacs/")
-(setq url-history-file (expand-file-name "url/history" user-emacs-directory))
+;; `user-emacs-directory' is set in early-init.el so recentf/savehist/url
+;; capture the relocated value at load time.
 
 ;; Backup and auto-save into cache
 (let ((backup-dir (expand-file-name "backups" user-emacs-directory)))
@@ -80,9 +80,6 @@
 
 ;; Single space after sentence end
 (setq sentence-end-double-space nil)
-
-;; Use system trash, don't ask for yes/no on simple questions
-(setq use-short-answers t)
 
 (provide 'general-settings)
 ;;; general-settings.el ends here

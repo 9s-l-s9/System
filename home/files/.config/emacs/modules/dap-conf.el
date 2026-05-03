@@ -1,4 +1,4 @@
-;;; dap-config.el --- Debug Adapter Protocol via dap-mode -*- lexical-binding: t -*-
+;;; dap-conf.el --- Debug Adapter Protocol via dap-mode -*- lexical-binding: t -*-
 ;;; Code:
 
 (require 'dap-mode)
@@ -70,5 +70,5 @@
 (global-set-key (kbd "C-c d s") #'dap-ui-sessions)
 (global-set-key (kbd "C-c d e") #'dap-eval-thing-at-point)
 
-(provide 'dap-config)
-;;; dap-config.el ends here
+(provide 'dap-conf)
+;;; dap-conf.el ends here

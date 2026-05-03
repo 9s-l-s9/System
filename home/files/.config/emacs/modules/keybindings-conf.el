@@ -1,4 +1,4 @@
-;;; keybindings-config.el --- Meow modal keybindings -*- lexical-binding: t -*-
+;;; keybindings-conf.el --- Meow modal keybindings -*- lexical-binding: t -*-
 ;;; Code:
 
 (defun meow-setup ()
@@ -88,9 +88,12 @@
    '("'" . repeat)
    '("<escape>" . ignore)))
 
+;; Defer activation: even if `meow' is loaded later, bindings install once
+;; it appears, so we don't depend on `init.el' load order.
+(with-eval-after-load 'meow
+  (meow-setup)
+  (meow-global-mode 1))
 (require 'meow)
-(meow-setup)
-(meow-global-mode 1)
 
-(provide 'keybindings-config)
-;;; keybindings-config.el ends here
+(provide 'keybindings-conf)
+;;; keybindings-conf.el ends here
