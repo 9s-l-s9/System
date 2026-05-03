@@ -10,6 +10,7 @@
 
 ;; ── UI ────────────────────────────────────────────────────────────────────────
 (require 'general-ui-config)
+(require 'modeline-config)
 
 ;; ── Navigation & editing ──────────────────────────────────────────────────────
 (require 'rg)
