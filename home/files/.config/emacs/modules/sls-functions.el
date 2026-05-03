@@ -91,7 +91,7 @@
       (unless (derived-mode-p 'sls-recentf-mode)
         (sls-recentf-mode))
       (sls-recentf--refresh))
-    (display-buffer buf)))
+    (select-window (display-buffer buf))))
 
 ;; Dired as a right-side panel
 (defun sls-dired-sidebar-toggle ()
@@ -108,7 +108,7 @@
       (let ((buf (dired-noselect dir)))
         (with-current-buffer buf
           (rename-buffer buf-name t))
-        (display-buffer buf)))))
+        (select-window (display-buffer buf))))))
 
 (provide 'sls-functions)
 ;;; sls-functions.el ends here

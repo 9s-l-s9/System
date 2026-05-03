@@ -41,7 +41,7 @@
   (when (string= (buffer-name) "*Bookmark List*")
     (let ((buf (current-buffer)))
       (quit-window)
-      (display-buffer buf))))
+      (select-window (display-buffer buf)))))
 
 (add-hook 'bookmark-bmenu-mode-hook #'sls--bookmark-list-use-display-buffer)
 
