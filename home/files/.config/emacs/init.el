@@ -41,6 +41,7 @@
 (require 'eglot-conf)
 (require 'python-conf)
 (require 'dap-config)
+(require 'gptel-config)
 ;(require 'flycheck-config)
 (require 'highlight-indent-guides)
 (require 'magit)
@@ -58,8 +59,9 @@
 ;; (require 'org-config)
 ;; (require 'org-modern-config)
 ;; (require 'org-babel)
+;; (require 'citar-conf)
 
-;; ── Keybindings (always last) ─────────────────────────────────────────────────
+;; Load at the end
 (require 'keybindings-config)
 
 (server-start)

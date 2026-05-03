@@ -78,7 +78,7 @@
    ;;"emacs-eshell-syntax-highlighting"
    "emacs-flycheck"
    "emacs-focus"
-   ;"emacs-gptel"
+   "emacs-gptel"
    "emacs-helpful"
    "emacs-highlight-indent-guides"
    ;"emacs-htmlize"
