@@ -1,3 +1,4 @@
+;;; helpful-config.el --- -*- lexical-binding: t -*-
 (require 'helpful)
 (define-key helpful-mode-map [remap revert-buffer] #'helpful-update)
 (global-set-key [remap describe-command] #'helpful-command)
