@@ -1,55 +1,48 @@
 (define-module (packages base-packages)
   #:use-module (gnu packages)
   #:export (all-packages)
+  #:export (wsl2-packages)
   #:export (programming-packages)
-  #:export (web-packages)
-  #:export (xorg-packages)
-  #:export (utilities-packages)
-  )
+  #:export (emacs-packages)
+  #:export (fonts-packages))
+
+;; ── Development ───────────────────────────────────────────────────────────────
 
 (define programming-packages
   (list "python"
-	"guile-ts"
-	"guile-lsp-server"
-	"make"
+        "guile-ts"
+        "guile-lsp-server"
+        "make"
         ;"r"
         ;"sqlite"
         ;"duckdb"
         ;"gcc-toolchain"
         ))
 
-(define web-packages
-  (list ;;"nyxt"
-   ;;"google-chrome-beta"
-   "zen-browser-bin"
-   "bitwarden-desktop"
-        "openssh"
-        "network-manager"
-        "network-manager-openvpn"))
+;; ── CLI utilities (portable — work everywhere) ────────────────────────────────
 
-(define utilities-packages
-  (list "tree" "curl" "adb"
-	"rsync" "wireplumber" "zip" "unzip" "dnsmasq" "hostapd"
-        "glibc-locales" "mpv" "ark" "flatpak" "ripgrep" "git-lfs"))
+(define cli-utilities-packages
+  (list "tree" "curl"
+        "rsync" "zip" "unzip"
+        "glibc-locales" "mpv" "ripgrep" "git-lfs" "yt-dlp"))
 
-(define wayland-packages
-  (list "gammastep" "mako" "fuzzel"))
+;; ── System utilities (hardware / desktop daemons) ─────────────────────────────
 
-(define xorg-packages
-  (list
-   ;; "rofi" Just using stumpwm :) 
-   "dunst" "spectacle" "kmix" "xrandr" "arandr" "feh" "picom" "redshift" "xdg-desktop-portal-wlr" "xsel" "xdg-utils"))
+(define system-utilities-packages
+  (list "adb" "wireplumber" "dnsmasq" "hostapd"
+        "ark" "flatpak"))
 
-(define gui-theming-packages
-  (list "breeze-icons" "oxygen-icons" "gtk+"))
+;; ── Fonts (portable — needed for Emacs all-the-icons) ────────────────────────
 
 (define fonts-packages
   (list "font-ipa-ex" "font-fira-code" "font-jetbrains-mono" "font-iosevka"
         "font-google-roboto" "font-lato" "font-inconsolata" "font-victor-mono"
         "font-fantasque-sans"))
 
+;; ── Emacs packages (portable — identical on all machines) ────────────────────
+
 (define emacs-packages
- (list
+  (list
    "emacs-all-the-icons"
    "emacs-all-the-icons-completion"
    "emacs-all-the-icons-dired"
@@ -93,19 +86,98 @@
    "emacs-undo-tree"
    "emacs-vertico"))
 
+;; ── Editors ───────────────────────────────────────────────────────────────────
+
+(define editors-packages
+  (list "emacs-next"
+        "helix"))
+
+;; ── Shell ─────────────────────────────────────────────────────────────────────
+
+(define shell-packages
+  (list "fish"))
+
+;; ── Terminal emulator (desktop only) ─────────────────────────────────────────
+
+(define terminal-packages
+  (list "alacritty"))
+
+;; ── Typesetting ───────────────────────────────────────────────────────────────
+
+(define typesetting-packages
+  (list "typst-bin"
+        "haunt"))
+
+;; ── X11 / display server ──────────────────────────────────────────────────────
+
+(define xorg-packages
+  (list
+   ;; "rofi"
+   "dunst" "spectacle" "kmix" "xrandr" "arandr"
+   "feh" "picom" "redshift"
+   "xdg-desktop-portal-wlr" "xsel" "xdg-utils"))
+
+;; ── Wayland (defined but not assembled by default) ───────────────────────────
+
+(define wayland-packages
+  (list "gammastep" "mako" "fuzzel"))
+
+;; ── KDE desktop ───────────────────────────────────────────────────────────────
+
 (define kde-packages
   (list "dolphin" "kmix" "konsole"))
- 
-(define app-packages
-  (list "steam" "inkscape" "gimp" "yt-dlp" "lem" "fish" "alacritty" "emacs-next" "helix" "typst-bin" "haunt"))
 
+;; ── GUI theming ───────────────────────────────────────────────────────────────
+
+(define gui-theming-packages
+  (list "breeze-icons" "oxygen-icons" "gtk+"))
+
+;; ── GUI apps (desktop only) ───────────────────────────────────────────────────
+
+(define gui-app-packages
+  (list "steam" "inkscape" "gimp"))
+
+;; ── Browser / passwords ───────────────────────────────────────────────────────
+
+(define browser-packages
+  (list "zen-browser-bin"
+        "bitwarden-desktop"))
+
+;; ── Network ───────────────────────────────────────────────────────────────────
+
+(define network-packages
+  (list "openssh"
+        "network-manager"
+        "network-manager-openvpn"))
+
+;; ── Assemblers ────────────────────────────────────────────────────────────────
+
+;; Full desktop configuration
 (define (all-packages)
   (specifications->packages
    (append programming-packages
+           cli-utilities-packages
+           system-utilities-packages
            xorg-packages
-	   kde-packages
-           web-packages
-           utilities-packages
+           kde-packages
+           gui-theming-packages
+           browser-packages
+           network-packages
            fonts-packages
            emacs-packages
-           app-packages)))
+           editors-packages
+           shell-packages
+           terminal-packages
+           gui-app-packages
+           typesetting-packages)))
+
+;; WSL2: portable development environment (no X11, no desktop, no browsers)
+(define (wsl2-packages)
+  (specifications->packages
+   (append programming-packages
+           cli-utilities-packages
+           fonts-packages
+           emacs-packages
+           editors-packages
+           shell-packages
+           typesetting-packages)))
