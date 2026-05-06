@@ -84,7 +84,9 @@
    (list "-m" manifest)
    '("--"
      "bash" "-lc"
-     "export SHELL=$(command -v bash); exec pnpm dlx @mariozechner/pi-coding-agent")))
+     ;; Allow native build scripts (koffi, protobufjs, @google/genai need them).
+     ;; pnpm 11 blocks these by default; dangerouslyAllowAllBuilds opts out.
+     "export SHELL=$(command -v bash); pnpm config set dangerouslyAllowAllBuilds true && exec pnpm dlx @mariozechner/pi-coding-agent")))
 
 (define (main)
   (let* ((args (cdr (command-line)))
