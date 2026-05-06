@@ -1,3 +1,6 @@
+;;; keybindings-conf.el --- Meow modal keybindings -*- lexical-binding: t -*-
+;;; Code:
+
 (defun meow-setup ()
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
   (meow-motion-overwrite-define-key
@@ -5,33 +8,24 @@
    '("p" . meow-prev)
    '("<escape>" . ignore))
   (meow-leader-define-key
-   ;; SPC j/k will run the original command in MOTION state.
-   ;; '("j" . "H-j")
-   ;; '("k" . "H-k")
-   ;; ;; Use SPC (0-9) for digit arguments.
-   ;; ;'("1" . meow-digit-argument)
-   ;; ;'("2" . meow-digit-argument)
-   ;; '("3" . meow-digit-argument)
-   ;; '("4" . meow-digit-argument)
-   ;; '("5" . meow-digit-argument)
-   ;; '("6" . meow-digit-argument)   ;; '("7" . meow-digit-argument)
-   ;; '("8" . meow-digit-argument)
-   ;; '("9" . meow-digit-argument)
-   ;; '("0" . meow-digit-argument)
-   ;'("/" . meow-keypad-describe-key)
-   ;'("?" . meow-cheatsheet)
-   ; NO x, h, g, m or c (already defined as C-x ...
+   ;; Navigation panels (all open in right side window)
+   '("D" . dired)
+   '("d" . sls-dired-sidebar-toggle)
+   '("i" . ibuffer)
+   '("s" . imenu-list-smart-toggle)
+   '("r" . sls-recentf-open)
+   '("b" . bookmark-bmenu-list)
+   ;; Actions
    '("p" . sls-new-entry-pkb)
    '("E" . sls-export-org-to-html-and-pdf)
    '("t" . eat)
    '("v" . magit-status)
-   '("d" . dired)
-   '("i" . ibuffer)
-   '("s" . imenu-list-smart-toggle)
    '("y" . sls-copy-file-path)
-   '("b" . consult-bookmark)
    '("f" . delete-other-windows) ;focus
-   )
+   ;; AI
+   '("a" . gptel)
+   '("A" . gptel-menu))
+
   (meow-normal-define-key
    '("0" . meow-expand-0)
    '("9" . meow-expand-9)
@@ -50,45 +44,34 @@
    '("[" . meow-beginning-of-thing)
    '("]" . meow-end-of-thing)
    '("a" . avy-goto-char-2)
-   ;;'("a" . meow-append)
    '("A" . meow-open-below)
    '("b" . meow-back-word)
    '("B" . meow-back-symbol)
-
    '("c" . copy-region-as-kill)
-   ;'("C" . meow-save )
    '("d" . meow-delete)
    '("D" . meow-backward-delete)
    '("e" . meow-next-word)
    '("E" . meow-next-symbol)
    '("f" . sudo-edit-find-file)
    '("F" . meow-find)
-   ;; F
    '("G" . meow-cancel-selection)
    '("g" . meow-grab)
-   ;; h
-   ;; H
    '("i" . meow-insert)
    '("I" . meow-open-above)
    '("j" . meow-prev)
    '("J" . meow-prev-expand)
    '("k" . meow-next)
    '("K" . meow-next-expand)
-   '("r" . meow-right)
    '("l" . meow-left)
    '("L" . meow-left-expand)
-
+   '("r" . meow-right)
    '("R" . meow-right-expand)
-   '("m" . execute-command)
-   ;'("m" . meow-join)
-   ;'("n" . meow-search)
+   '("m" . execute-extended-command)
    '("o" . meow-block)
    '("O" . meow-to-block)
    '("p" . meow-yank)
    '("q" . meow-quit)
    '("Q" . meow-goto-line)
-   '("" . meow-replace)
-   '("" . meow-swap-grab)
    '("s" . meow-kill)
    '("t" . meow-till)
    '("u" . meow-undo)
@@ -103,13 +86,14 @@
    '("z" . meow-pop-selection)
    '("ß" . comment-or-uncomment-region)
    '("'" . repeat)
-   ;'("TAB" . hs-hide-block)
-   '("<escape>" . ignore)
-   '("." . meow-cancel-selection)))
+   '("<escape>" . ignore)))
 
+;; Defer activation: even if `meow' is loaded later, bindings install once
+;; it appears, so we don't depend on `init.el' load order.
+(with-eval-after-load 'meow
+  (meow-setup)
+  (meow-global-mode 1))
 (require 'meow)
-(meow-setup)
-(meow-global-mode 1)
 
-
-(provide 'keybindings-config)
+(provide 'keybindings-conf)
+;;; keybindings-conf.el ends here
