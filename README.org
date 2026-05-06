@@ -8,7 +8,6 @@ My personal system configuration.
 * QA
 
 - Run =make qa= for the fast repository policy check.
-- Run =make qa-tests= for pure Guile smoke tests.
 - Run =make qa-home-samuel= before changing Samuel's home configuration.
 - Run =make qa-home-levi= before changing Levi's home configuration.
 - Run =make qa-system-x1= or =make qa-system-t450s= when changing system definitions.

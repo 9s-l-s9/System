@@ -34,8 +34,6 @@ Current targets:
   Runs the fast repo-policy check.
 - `make qa-guile-only`
   Enforces the hard rule that files in `scripts/` are Guile or documentation, not shell.
-- `make qa-tests`
-  Runs pure Guile smoke tests that do not require a full home or system evaluation.
 - `make qa-home-samuel`
 - `make qa-home-levi`
 - `make qa-system-x1`
@@ -64,30 +62,7 @@ Primary targets:
 
 This should reduce noisy warnings and make load-path behavior predictable.
 
-## Issue 4: Add Pure Guile Smoke Tests
-
-Status: todo
-
-Goal:
-
-- test repo-local logic that does not need a full system or home build
-
-Best starting point:
-
-- Helix TOML serialization in `home/services/helix-home-services.scm`
-- repo policy checks like the Guile-only scripts rule
-
-Current coverage:
-
-- `tests/helix-home-services.scm` checks top-level config emission, string-key handling, and language table serialization
-
-Suggested shape:
-
-- a small `tests/` directory
-- SRFI-64 tests
-- one target that runs the pure tests without requiring a full reconfigure
-
-## Issue 5: Document The Pre-Commit Flow
+## Issue 4: Document The Pre-Commit Flow
 
 Status: todo
 

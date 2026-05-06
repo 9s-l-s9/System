@@ -10,9 +10,15 @@
 
 (define programming-packages
   (list "python"
-        "guile-ts"
-        "guile-lsp-server"
-        "make"
+      	"guile-ts"
+	      "guile-lsp-server"
+	      "make"
+        "python-lsp-server"    ; pylsp LSP backend for eglot
+        "python-debugpy"       ; DAP debug adapter
+        "ruff"                 ; fast linter + formatter
+        "python-pytest"        ; test runner
+        "python-mypy"          ; static type checker
+        "tree-sitter-python"   ; grammar for python-ts-mode
         ;"r"
         ;"sqlite"
         ;"duckdb"
@@ -52,6 +58,7 @@
    "emacs-corfu"
    ;;"emacs-dashboard"
    ;;"emacs-dired-preview"
+   "emacs-dap-mode"
    "emacs-diredfl"
    ;"emacs-doom-themes"
    "emacs-eat"
@@ -64,7 +71,7 @@
    ;;"emacs-eshell-syntax-highlighting"
    "emacs-flycheck"
    "emacs-focus"
-   ;"emacs-gptel"
+   "emacs-gptel"
    "emacs-helpful"
    "emacs-highlight-indent-guides"
    ;"emacs-htmlize"

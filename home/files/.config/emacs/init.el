@@ -1,69 +1,76 @@
+;;; init.el --- Samuel's Emacs configuration -*- lexical-binding: t -*-
+;;; Code:
+
 (add-to-list 'load-path "~/.config/emacs/modules/")
 (require 'use-package)
+(setq use-package-always-defer t
+      use-package-expand-minimally t)
+
+;; ── Core settings ─────────────────────────────────────────────────────────────
 (require 'sls-functions)
 (require 'general-settings)
-					; -- UI -- ;
-(require 'general-ui-config)
-					; -- General Navigation & Editing --
-(require 'rg)
-(rg-enable-default-bindings)
-(require 'undo-tree)
-(global-undo-tree-mode)
-(setq undo-tree-history-directory-alist '(("." . "~/.cache/emacs")))
-(setq ediff-split-window-function 'split-window-horizontally)
-(setq ediff-window-setup-function 'ediff-setup-windows-plain)
+
+;; ── UI ────────────────────────────────────────────────────────────────────────
+(require 'general-ui-conf)
+(require 'modeline-conf)
+
+(use-package highlight-indent-guides
+  :hook (prog-mode . highlight-indent-guides-mode))
+
+;; ── Navigation & editing ──────────────────────────────────────────────────────
+(use-package rg
+  :commands (rg rg-menu rg-project rg-dwim)
+  :config (rg-enable-default-bindings))
+
+(use-package undo-tree
+  :init (global-undo-tree-mode))
+
+(with-eval-after-load 'ediff
+  (setq ediff-split-window-function 'split-window-horizontally
+        ediff-window-setup-function 'ediff-setup-windows-plain))
 
 (require 'focus-conf)
 (require 'imenu-list-conf)
 (require 'window-conf)
 
-
-					; -- Completion & Snippets --
+;; ── Completion ────────────────────────────────────────────────────────────────
 (require 'corfu-conf)
 (require 'cape-conf)
-(require 'consult)
+(use-package consult
+  :commands (consult-buffer consult-line consult-ripgrep consult-find consult-imenu))
 (require 'orderless-conf)
-(require 'vertico)
-  (setq vertico-resize nil)
-  (vertico-mode 1)
-(require 'marginalia-conf) 
-(all-the-icons-completion-mode)
-(add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
+(require 'vertico-conf)
+(require 'marginalia-conf)
 
-					; -- Programming --
-;;(require 'eglot-conf)
-;;(require 'treesitter-conf)
-;(require 'flycheck-config)
-(require 'highlight-indent-guides)
-(require 'magit)
-;; (require 'dap-config)
-					; -- Languages / Modes --
-;;(require 'markdown-preview-mode)
-;; (require 'lean4-conf)
-;; (require 'ada-conf)
+(use-package all-the-icons-completion
+  :hook ((after-init        . all-the-icons-completion-mode)
+         (marginalia-mode   . all-the-icons-completion-marginalia-setup)))
 
-					; -- Apps --
+;; ── Programming ───────────────────────────────────────────────────────────────
+(require 'eglot-conf)
+(require 'python-conf)
+(require 'dap-conf)
+(require 'gptel-conf)
 
-;;(require 'dashboard-config)
-(require 'dired-config)
-;(require 'eshell-config)
-;;(require 'ebib-config)
-;(require 'pdf-tools-config)
-(require 'helpful-config)
-(require 'eat)
+(use-package magit
+  :commands (magit-status magit-dispatch magit-file-dispatch))
 
-					; -- Org Configurations --
-;; (require 'org-config)
-;; (require 'org-noter-config)
-;; (require 'org-modern-config)
+;; ── Apps ──────────────────────────────────────────────────────────────────────
+(require 'dired-conf)
+(require 'helpful-conf)
+(use-package eat
+  :commands (eat eat-other-window))
+
+;; ── Org ───────────────────────────────────────────────────────────────────────
+;; (require 'org-conf)
+;; (require 'org-modern-conf)
 ;; (require 'org-babel)
-;; (require 'org-transclusion)
-
-;; (require 'gptel-config)
 ;; (require 'citar-conf)
 
 ;; Load at the end
-(require 'keybindings-config)
-(server-start)
+(require 'keybindings-conf)
+
+(unless (and (fboundp 'server-running-p) (server-running-p))
+  (server-start))
 
 ;;; init.el ends here
