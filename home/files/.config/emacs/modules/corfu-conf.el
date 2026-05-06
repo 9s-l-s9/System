@@ -1,6 +1,4 @@
-;; Ensure Corfu is required
-(require 'corfu)
-
+;;; corfu-conf.el --- -*- lexical-binding: t -*-
 (use-package corfu
   ;; Optional customizations
   :custom

@@ -1,4 +1,5 @@
-(provide 'dired-config)
+;;; dired-conf.el --- -*- lexical-binding: t -*-
+(provide 'dired-conf)
 (require 'all-the-icons-dired)
 (add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
 (setq all-the-icons-dired-monochrome nil)

@@ -1,3 +1,4 @@
+;;; early-init.el --- -*- lexical-binding: t -*-
 ;; Based on config by prot https://protesilaos.com/
 
 
@@ -7,14 +8,21 @@
       frame-inhibit-implied-resize t
       frame-title-format '("%b")
       ring-bell-function 'ignore
-      use-dialog-box t ; only for mouse events, which I seldom use
+      use-dialog-box nil
       use-file-dialog nil
       use-short-answers t
       inhibit-splash-screen t
       inhibit-startup-screen t
       inhibit-x-resources t
-      inhibit-startup-echo-area-message user-login-name ; read the docstring
       inhibit-startup-buffer-menu t)
+
+;; Must be a literal in early-init for Emacs to honor it.
+(setq inhibit-startup-echo-area-message "samuel")
+
+;; Relocate runtime files out of ~/.config/emacs/ early, before recentf,
+;; savehist, url, etc. capture the original `user-emacs-directory'.
+(setq user-emacs-directory "~/.cache/emacs/")
+(setq url-history-file (expand-file-name "url/history" user-emacs-directory))
 
 ;; I do not use those graphical elements by default, but I do enable
 ;; them from time-to-time for testing purposes or to demonstrate
