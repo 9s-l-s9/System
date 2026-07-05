@@ -634,7 +634,7 @@ When imagery is genuinely warranted, four primary treatments:
 
 ### Blueprint / technical illustration (white-on-black)
 
-Reference: `21872ef5…` (engine cross-section).
+Treatment intent: an engine cross-section or similar technical plate.
 
 - Pure black background.
 - Hairline white linework (subject and outlines).
@@ -648,7 +648,7 @@ Use for: mechanical, architectural, electrical, or system illustrations where st
 
 ### Dot-matrix / one-bit halftone (monochrome)
 
-Reference: `601e5f34…` (Doric columns on a login page).
+Treatment intent: a Doric column, statue, or other subject rendered as one-bit dots.
 
 - Subject rendered as a field of single-color dots whose density encodes value.
 - Monochrome: white dots on black, or black dots on white.
@@ -660,7 +660,7 @@ Use for: hero imagery on archive nodes, cover images on dossiers, accompanying i
 
 ### Duotone halftone (orange/red on dark)
 
-Reference: `e5d6a8c9…` (Aetheron triptych).
+Treatment intent: a figurative subject rendered as a warm duotone halftone.
 
 - Two-color halftone: warm orange/red dot field on a near-black background, sometimes a yellow highlight as third color.
 - Used at large scale — a full image field, not an icon.
@@ -679,7 +679,7 @@ The orange/red is **only** allowed inside imagery treatments. Never as button pa
 
 ### Monochrome photography
 
-Reference: `88c9f491…` (museum exhibition page) — for the imagery treatment, not the layout.
+Treatment intent: documentary monochrome photography; this informs image treatment, not layout.
 
 - Grayscale photography, regular continuous tone (not halftoned).
 - Cropped tight, no caption overlay, optional small caption text below.
@@ -853,17 +853,11 @@ When writing HTML/CSS:
 
 ## Visual references
 
-The skill directory contains five reference images. They inform imagery treatment, not layout — the layout is always the research-paper convention described above.
-
-| File             | Purpose in this skill                                                                                |
-|------------------|------------------------------------------------------------------------------------------------------|
-| `034c1eeb…jpg`   | Density and typography discipline: italic variables, bold key terms, packed information per inch.    |
-| `21872ef5…jpg`   | Blueprint imagery treatment: white-on-black hairline drawings with monospace dimension annotations.  |
-| `601e5f34…jpg`   | Dot-matrix imagery treatment: one-bit halftone of classical / architectural subjects.                |
-| `88c9f491…jpg`   | Monochrome photography reference and hairline-rule discipline.                                       |
-| `e5d6a8c9…jpg`   | Orange/red duotone halftone imagery, classical / figurative subjects in computational treatment.     |
-
-When designing imagery for a new page, pick the closest reference and lean toward it.
+No raster reference images are stored in this skill. The imagery rules above are
+the canonical references: blueprint technical illustration, one-bit dot-matrix
+subjects, orange/red duotone halftones, and documentary monochrome photography.
+When designing imagery for a new page, choose the closest treatment and make the
+image carry real subject matter.
 
 ## Final quality checklist
 
