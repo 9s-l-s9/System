@@ -55,3 +55,31 @@ Notes:
     Use Windows Terminal as your terminal.
   - All Emacs packages are installed by Guix, identical to the desktop setup.
     No MELPA or package.el bootstrapping needed.
+draw.io exports
+---------------
+
+The `drawio-render` agent skill bundles the canonical renderer wrapper. The
+dotfiles install `~/.local/bin/drawio-render`, with shell aliases for
+`drawio-render` and `drawio-export`; that command delegates to the skill script.
+
+Examples:
+
+  drawio-render process-diagram.drawio
+  drawio-render -f pdf process-diagram.drawio -o process-diagram.pdf
+  drawio-render -f png --scale 2 --transparent --embed-diagram process.drawio
+  drawio-render --headless -f svg -d build/diagrams diagrams/*.drawio
+
+The helper uses the official draw.io renderer, but Guix does not currently
+provide a `drawio` package in this environment. On Guix, prefer the Docker or
+Podman backend from the `drawio-render` skill; it builds a Debian image from the
+official draw.io desktop `.deb` and runs the CLI under `xvfb-run`. The helper
+also auto-detects a native `drawio` executable first, then Flatpak
+`com.jgraph.drawio.desktop`.
+
+Overrides:
+
+  DRAWIO_BIN=/path/to/drawio drawio-render diagram.drawio
+  DRAWIO_CONTAINER=1 drawio-render diagram.drawio
+  DRAWIO_CONTAINER_ENGINE=podman drawio-render diagram.drawio
+  DRAWIO_COMMAND="flatpak run com.jgraph.drawio.desktop" drawio-render diagram.drawio
+  DRAWIO_HEADLESS=1 drawio-render diagram.drawio

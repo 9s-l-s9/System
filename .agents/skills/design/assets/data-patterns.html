@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Presentation Patterns — Research-Paper Design Skill</title>
+  <meta name="description" content="Proposed patterns for metadata, ordered lists, unordered lists, and tables in the research-paper design skill." />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #0a0a0a;
+      --ink-2: #1d1d1d;
+      --muted: #565656;
+      --faint: #8a8a8a;
+      --rule: #0a0a0a;
+      --rule-soft: #d4d4d4;
+      --term-bg: #000000;
+      --term-fg: #ededed;
+      --term-muted: #9a9a9a;
+
+      --accent-red:  #d83a2f;
+      --accent-blue: #2e62c4;
+
+      --serif: "Courier Prime", "Courier Screenplay", "Courier New", "Nimbus Mono PS", Courier, ui-monospace, monospace;
+      --mono:  ui-monospace, "JetBrains Mono", "IBM Plex Mono", "Berkeley Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { background: var(--bg); }
+    body {
+      margin: 0; color: var(--ink);
+      font-family: var(--serif); font-size: 13.25px; line-height: 1.46;
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+      font-variant-numeric: tabular-nums oldstyle-nums;
+    }
+    code, .mono { font-family: var(--mono); font-size: .88em; font-variant-numeric: tabular-nums; }
+    em { font-style: italic; } strong { font-weight: 600; }
+    h1, h2, h3 { font-family: var(--serif); font-weight: 600; margin: 0; letter-spacing: -0.005em; }
+    h1 { font-size: 28px; line-height: 1.18; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 14px; }
+    p  { margin: 0 0 .55em; }
+
+    .page { max-width: 880px; margin: 0; padding: 22px 28px 56px; }
+
+    /* ── three label registers (same as html-skeleton.html) ────── */
+    .eyebrow, .masthead .left, .byline, .section-head .marker, .sub, .variant-head .id {
+      font-family: var(--serif); letter-spacing: .14em; text-transform: uppercase; font-weight: 500;
+    }
+    .descriptive, figcaption, table.tbl thead th, table.tbl caption, table.matrix caption,
+    table.tbl-compact thead th, table.tbl-compact caption,
+    dl.dict-hanging dt,
+    section.steckbrief figure.steckbrief-image figcaption,
+    .variant-desc, .variant-note {
+      font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none;
+    }
+
+    /* ── masthead ──────────────────────────────────────────────── */
+    .masthead {
+      display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px;
+      padding-bottom: 6px; border-bottom: 2px solid var(--rule);
+    }
+    .masthead .left  { font-size: 10.5px; color: var(--muted); }
+    .masthead .left .id { color: var(--ink); font-weight: 600; }
+    .masthead .right { font-family: var(--mono); font-size: 10.5px; letter-spacing: .03em; color: var(--muted); text-align: right; }
+
+    .title-block { padding: 18px 0 6px; }
+    .abstract {
+      font-family: var(--serif); font-style: italic; font-size: 14px; line-height: 1.5;
+      margin: 12px 0 14px;
+    }
+    .abstract::before { content: "Abstract.\00a0"; font-weight: 600; }
+
+    /* ── section heads ─────────────────────────────────────────── */
+    .section-head {
+      display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 14px;
+      padding: 6px 0 10px; border-bottom: 1px solid var(--rule);
+      margin: 30px 0 16px;
+    }
+    .section-head .marker { font-size: 10.5px; color: var(--muted); letter-spacing: .16em; }
+    .section-head .marker .n { color: var(--ink); font-weight: 600; }
+    .section-head .ref { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+
+    /* ── variant wrapper ───────────────────────────────────────── */
+    .variant { margin: 22px 0 0; padding-top: 16px; border-top: .5px dotted var(--rule-soft); }
+    .variant:first-of-type { border-top: 0; padding-top: 0; margin-top: 8px; }
+    .variant-head {
+      display: grid; grid-template-columns: auto 1fr; gap: 14px;
+      align-items: baseline; margin-bottom: 6px;
+    }
+    .variant-head .id   { font-size: 10.5px; color: var(--muted); }
+    .variant-head .id .n { color: var(--ink); font-weight: 600; }
+    .variant-head .name {
+      font-family: var(--serif); font-weight: 600; font-size: 14px; color: var(--ink);
+    }
+    .variant-desc { font-size: 12.5px; color: var(--muted); margin: 0 0 10px; }
+    .variant-note { font-size: 11.5px; color: var(--faint); margin: 8px 0 0; padding-top: 6px; border-top: .5px solid var(--rule-soft); }
+    .variant-note::before {
+      content: "Use when: "; font-weight: 600; font-style: italic; color: var(--muted);
+    }
+
+    /* ──────────────────────────────────────────────────────────── */
+    /* DICTIONARY VARIANTS                                          */
+    /* All render the same underlying structure (a key→value map).  */
+    /* The choice is presentational: visual weight, field count,    */
+    /* value length, formality.                                     */
+    /* ──────────────────────────────────────────────────────────── */
+
+    /* K1 — inline strip (smallest footprint, ≤4 short fields) */
+    .dict-strip {
+      padding: 6px 0;
+      border-top: .5px solid var(--rule-soft); border-bottom: .5px solid var(--rule-soft);
+      display: flex; flex-wrap: wrap; gap: 0 22px;
+      font-family: var(--mono); font-size: 11.5px; color: var(--ink);
+    }
+    .dict-strip .lbl {
+      font-family: var(--serif); letter-spacing: .14em; text-transform: uppercase;
+      font-size: 10px; color: var(--muted); margin-right: 5px; font-weight: 500;
+    }
+
+    /* K2 — hairline grid (multi-column, 6+ short fields with parallel structure) */
+    dl.dict-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      background: var(--bg); color: var(--ink); font-family: var(--mono);
+      margin: 0;
+      border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    }
+    dl.dict-grid > div {
+      padding: 10px 14px;
+      border-right: .5px solid var(--rule-soft); border-top: .5px solid var(--rule-soft);
+      display: grid; gap: 3px;
+    }
+    dl.dict-grid > div:nth-child(3n)   { border-right: 0; }
+    dl.dict-grid > div:nth-child(-n+3) { border-top: 0; }
+    dl.dict-grid dt { font-size: 9.5px; color: var(--muted); margin: 0;
+      font-family: var(--serif); letter-spacing: .14em; text-transform: uppercase; font-weight: 500; }
+    dl.dict-grid dd { margin: 0; color: var(--ink); font-size: 12px; }
+
+    /* K3 — column-aligned vertical (formal specification, keys right-aligned) */
+    dl.dict-aligned {
+      display: grid; grid-template-columns: max-content 1fr;
+      gap: 4px 22px;
+      margin: 0;
+      padding: 4px 0;
+      border-top: .5px solid var(--rule-soft); border-bottom: .5px solid var(--rule-soft);
+    }
+    dl.dict-aligned dt {
+      text-align: right;
+      font-family: var(--serif); letter-spacing: .14em; text-transform: uppercase; font-weight: 500;
+      font-size: 10.5px; color: var(--muted); padding-top: 1px;
+    }
+    dl.dict-aligned dd {
+      margin: 0; font-family: var(--mono); font-size: 12px; color: var(--ink);
+    }
+
+    /* K4 — hanging-key definition (italic-serif key + prose value, for longer values) */
+    dl.dict-hanging {
+      display: grid; grid-template-columns: max-content 1fr;
+      gap: 6px 22px; margin: 0;
+    }
+    dl.dict-hanging dt {
+      font-size: 12.5px; color: var(--ink);
+      /* italic via global .descriptive selector list */
+    }
+    dl.dict-hanging dd {
+      margin: 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.5;
+    }
+
+
+    /* ──────────────────────────────────────────────────────────── */
+    /* ORDERED LIST VARIANTS                                        */
+    /* ──────────────────────────────────────────────────────────── */
+
+    /* O1 — plain numbered */
+    ol.l-plain { padding-left: 1.8em; margin: 0; }
+    ol.l-plain li { margin: 0 0 4px; }
+
+    /* O2 — hairline-separated procedure */
+    ol.l-proc { list-style: decimal; padding-left: 2.2em; margin: 0; }
+    ol.l-proc li { padding: 9px 0; border-top: .5px solid var(--rule-soft); }
+    ol.l-proc li:first-child { border-top: 0; padding-top: 2px; }
+    ol.l-proc li:last-child { padding-bottom: 2px; }
+    ol.l-proc li::marker { font-family: var(--mono); color: var(--muted); font-size: .9em; }
+
+    /* O3 — bracketed references */
+    ol.l-ref { counter-reset: ref; list-style: none; padding-left: 0; margin: 0; }
+    ol.l-ref li { counter-increment: ref; padding-left: 2.6em; position: relative; margin: 0 0 4px; }
+    ol.l-ref li::before {
+      content: "[" counter(ref) "]"; position: absolute; left: 0; top: 0;
+      font-family: var(--mono); color: var(--muted); font-size: .9em;
+    }
+
+    /* ──────────────────────────────────────────────────────────── */
+    /* UNORDERED LIST VARIANTS                                      */
+    /* ──────────────────────────────────────────────────────────── */
+
+    /* U1 — plain bulleted */
+    ul.l-bullet { padding-left: 1.4em; margin: 0; }
+    ul.l-bullet li { margin: 0 0 2px; }
+
+    /* U2 — em-dash markers (academic / understated) */
+    ul.l-dash { list-style: none; padding-left: 0; margin: 0; }
+    ul.l-dash li {
+      padding-left: 1.4em; text-indent: -1.4em; margin: 0 0 2px;
+    }
+    ul.l-dash li::before { content: "— "; color: var(--muted); }
+
+    /* U3 — indented, no marker (minimal) */
+    ul.l-flat { list-style: none; padding-left: 1em; margin: 0; }
+    ul.l-flat li { margin: 0 0 2px; }
+
+    /* U4 — hairline-separated changelog */
+    ul.l-log { list-style: none; padding-left: 0; margin: 0; }
+    ul.l-log li { padding: 8px 0; border-top: .5px solid var(--rule-soft); }
+    ul.l-log li:first-child { border-top: 0; padding-top: 2px; }
+    ul.l-log li:last-child { padding-bottom: 2px; }
+    ul.l-log li .date {
+      font-family: var(--mono); font-size: 11px; color: var(--muted); margin-right: 10px;
+    }
+
+    /* ──────────────────────────────────────────────────────────── */
+    /* STECKBRIEF — image + dict as a subject-identification card    */
+    /* ──────────────────────────────────────────────────────────── */
+
+    /* S1 — dict left, image right, wrapped in a unified card frame.
+       The outer hairline border is the visual anchor; the internal divider
+       separates the two compartments. Asymmetric block heights become
+       invisible because the card carries the visual unity. */
+    section.steckbrief {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 0;
+      align-items: stretch;
+      border: .5px solid var(--rule);
+      margin: 0;
+    }
+    /* dict compartment — suppress K3's own hairlines + margin; add right-side divider */
+    section.steckbrief dl.dict-grid,
+    section.steckbrief dl.dict-aligned,
+    section.steckbrief dl.dict-hanging {
+      margin: 0;
+      padding: 14px 22px;
+      border: 0;
+      border-right: .5px solid var(--rule);
+    }
+    /* image compartment — image fills the inner column edge-to-edge of its padding;
+       no individual image border (the card frame replaces it). */
+    section.steckbrief figure.steckbrief-image {
+      margin: 0;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+    }
+    section.steckbrief figure.steckbrief-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 0;
+    }
+    section.steckbrief figure.steckbrief-image figcaption {
+      padding-top: 8px;
+      margin: 0;
+      /* italic-serif via the global .descriptive selector list */
+      font-size: 9.5px;
+      color: var(--muted);
+    }
+
+    /* responsive: stack image above dict on narrow viewports.
+       Internal divider flips from right to bottom of the dict compartment. */
+    @media (max-width: 600px) {
+      section.steckbrief { grid-template-columns: 1fr; }
+      section.steckbrief dl.dict-grid,
+      section.steckbrief dl.dict-aligned,
+      section.steckbrief dl.dict-hanging {
+        border-right: 0;
+        border-bottom: .5px solid var(--rule);
+      }
+      section.steckbrief figure.steckbrief-image {
+        align-self: center;
+        max-width: 280px;
+      }
+    }
+
+    /* ──────────────────────────────────────────────────────────── */
+    /* TABLE VARIANTS                                               */
+    /* ──────────────────────────────────────────────────────────── */
+
+    /* T1 — booktabs (the default; matches html-skeleton.html) */
+    table.tbl {
+      width: 100%; border-collapse: collapse;
+      border-top: 1.5px solid var(--rule); border-bottom: 1.5px solid var(--rule);
+      margin: 0;
+    }
+    table.tbl thead th {
+      font-size: 11.5px; color: var(--ink); text-align: left;
+      border-bottom: .5px solid var(--rule); padding: 5px 12px 5px 0;
+    }
+    table.tbl tbody td {
+      padding: 5px 12px 5px 0; vertical-align: top;
+      font-family: var(--serif); font-size: 12.5px;
+    }
+    table.tbl tbody td.mono { font-family: var(--mono); font-size: 11.5px; }
+    table.tbl tbody tr + tr td { border-top: .5px dotted var(--rule-soft); }
+    table.tbl caption {
+      caption-side: bottom; text-align: left;
+      font-size: 11px; color: var(--muted); padding-top: 8px;
+    }
+
+    /* T2 — matrix (2D adjacency / dependency) */
+    table.matrix {
+      border-collapse: collapse;
+      border-top: 1.5px solid var(--rule); border-bottom: 1.5px solid var(--rule);
+      margin: 0;
+    }
+    table.matrix thead th {
+      font-size: 11.5px; color: var(--ink); font-weight: 400;
+      border-bottom: .5px solid var(--rule);
+      padding: 4px 8px; text-align: center; min-width: 2.4em;
+    }
+    table.matrix thead th:first-child {
+      text-align: left; padding-right: 18px; min-width: 0;
+    }
+    table.matrix tbody th {
+      font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 11.5px;
+      text-align: left; padding: 3px 18px 3px 0; color: var(--ink);
+    }
+    table.matrix tbody td {
+      font-family: var(--mono); font-size: 12px;
+      padding: 3px 8px; text-align: center; vertical-align: middle;
+    }
+    table.matrix .self { color: var(--faint); }    /* diagonal: — */
+    table.matrix .yes  { color: var(--ink); }      /* present: • */
+    table.matrix .no   { color: var(--rule-soft); }/* absent:  · */
+    table.matrix tbody tr + tr td,
+    table.matrix tbody tr + tr th { border-top: .5px dotted var(--rule-soft); }
+    table.matrix caption {
+      caption-side: bottom; text-align: left;
+      font-size: 11px; color: var(--muted); padding-top: 8px;
+    }
+
+    /* T3 — compact reference (dense, no row separators) */
+    table.tbl-compact {
+      width: 100%; border-collapse: collapse;
+      border-top: 1.5px solid var(--rule); border-bottom: 1.5px solid var(--rule);
+      margin: 0; font-size: 11.5px;
+    }
+    table.tbl-compact thead th {
+      font-size: 10.5px; color: var(--ink);
+      border-bottom: .5px solid var(--rule); padding: 3px 10px 3px 0; text-align: left;
+    }
+    table.tbl-compact tbody td {
+      padding: 2.5px 10px 2.5px 0; vertical-align: top;
+    }
+    table.tbl-compact tbody td.mono { font-family: var(--mono); font-size: 10.5px; }
+    table.tbl-compact caption {
+      caption-side: bottom; text-align: left;
+      font-size: 11px; color: var(--muted); padding-top: 6px;
+    }
+
+    /* ── colophon ─────────────────────────────────────────────── */
+    footer.colophon {
+      margin-top: 36px; padding-top: 8px; border-top: 1px solid var(--rule);
+      font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+      display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+    }
+    footer.colophon .eof::before { content: "❑ "; }
+
+    @media print {
+      .variant-note { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="masthead">
+      <div class="left">
+        <span class="id">Design Skill / Pattern Index</span> · proposals
+      </div>
+      <div class="right">2026.05.17 · branch main</div>
+    </header>
+
+    <section class="title-block">
+      <h1>Common data presentations</h1>
+      <p class="abstract">
+        Proposed patterns for the four content surfaces the research-paper skill
+        most often needs to render: <em>dictionaries</em> (any key→value structure
+        — document metadata, glossaries, parameter sheets, term definitions),
+        <em>Steckbriefe</em> (image + dict composites for subject identification),
+        ordered and unordered lists, and tables. Each variant carries a short
+        description and a suggested use-when. Pick the patterns to keep, drop the
+        rest, fold the keepers into <span class="mono">SKILL.md</span> and
+        <span class="mono">style-tokens.css</span>.
+      </p>
+    </section>
+
+    <!-- ═══════════════════════ § 1 — DICTIONARIES ═══════════════════════ -->
+    <header class="section-head">
+      <div class="marker"><span class="n">§ 1</span> · DICTIONARIES</div>
+      <div></div>
+      <div class="ref">4 variants</div>
+    </header>
+
+    <p style="font-family: var(--serif); font-style: italic; font-size: 12.5px; color: var(--muted); margin: 0 0 18px;">
+      All four variants render the same underlying structure — a key→value map —
+      and differ only presentationally. The choice depends on field count,
+      value length, and how much visual weight the dict deserves. Document
+      metadata, parameter sheets, glossaries, and term definitions are all
+      dict renderings.
+    </p>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">K1</span> · INLINE STRIP</span>
+        <span class="name">— smallest footprint</span>
+      </div>
+      <p class="variant-desc">
+        A single horizontal mono row bracketed by hairlines.
+        <span class="mono">LABEL value · LABEL value · …</span> across the page.
+        Three or four fields fit comfortably; more becomes cramped.
+      </p>
+      <div class="dict-strip" aria-label="Document specifications">
+        <span><span class="lbl">Rev.</span>0.1 · YYYY.MM.DD</span>
+        <span><span class="lbl">Scope</span>Architecture overview</span>
+        <span><span class="lbl">Status</span>Draft</span>
+        <span><span class="lbl">Source</span>repo/path</span>
+      </div>
+      <p class="variant-note">
+        the dict is supporting rather than central — short notes, status pages,
+        masthead metadata strips, individual concept entries.
+      </p>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">K2</span> · HAIRLINE GRID</span>
+        <span class="name">— dense, parallel structure</span>
+      </div>
+      <p class="variant-desc">
+        Multi-column grid on a white surface, hairline borders, mono values
+        under uppercase-letterspaced eyebrows. Fits many short fields in a small
+        area; reads as a punch-card or compact data sheet.
+      </p>
+      <dl class="dict-grid" aria-label="Document specifications">
+        <div><dt>Revision</dt> <dd>0.1 · YYYY.MM.DD</dd></div>
+        <div><dt>Scope</dt>    <dd>Architecture overview</dd></div>
+        <div><dt>Status</dt>   <dd>Draft</dd></div>
+        <div><dt>Source</dt>   <dd>repo/path</dd></div>
+        <div><dt>Format</dt>   <dd>Single-file HTML</dd></div>
+        <div><dt>Generated</dt><dd>YYYY.MM.DD</dd></div>
+      </dl>
+      <p class="variant-note">
+        you have 6+ short fields with parallel structure and want a compact
+        title-page block — architecture overviews, knowledge-base pages,
+        concept notes with substantive metadata.
+      </p>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">K3</span> · COLUMN-ALIGNED VERTICAL</span>
+        <span class="name">— formal specification sheet</span>
+      </div>
+      <p class="variant-desc">
+        Two-column layout: uppercase keys right-aligned, mono values
+        left-aligned, vertical scan. The classic specification-sheet pattern
+        used in technical manuals, product spec pages, library catalogue cards.
+      </p>
+      <dl class="dict-aligned" aria-label="Document specifications">
+        <dt>Revision</dt>  <dd>0.1 · YYYY.MM.DD</dd>
+        <dt>Scope</dt>     <dd>Architecture overview</dd>
+        <dt>Status</dt>    <dd>Draft</dd>
+        <dt>Source</dt>    <dd>repo/path</dd>
+        <dt>Format</dt>    <dd>Single-file HTML</dd>
+        <dt>Generated</dt> <dd>YYYY.MM.DD</dd>
+      </dl>
+      <p class="variant-note">
+        the dict reads top-to-bottom rather than left-to-right — formal
+        specifications, product data sheets, instrument readouts, anywhere the
+        reader scans a vertical column of key/value pairs.
+      </p>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">K4</span> · HANGING-KEY DEFINITION</span>
+        <span class="name">— for prose values</span>
+      </div>
+      <p class="variant-desc">
+        Italic-serif key in the left column, prose value in the right. Values
+        can be long and wrap freely. The glossary / parameter-list / bibliography
+        pattern; the only dict variant where values are themselves sentences.
+      </p>
+      <dl class="dict-hanging" aria-label="Colour modes">
+        <dt>Mode 1</dt><dd>Black only — the default for most documents. No accent ink at all; body type, hairline rules, booktabs tables, terminal blocks, and (when imagery is warranted) duotone or blueprint treatments.</dd>
+        <dt>Mode 2</dt><dd>Single ink (red <em>or</em> blue) — when the artifact carries a data layer worth distinguishing from structure. One ink per artifact; the ink is the data.</dd>
+        <dt>Mode 3</dt><dd>Asymmetric dual ink (red leads, blue supports) — when the data has an asymmetric relationship: signal vs context, active vs baseline, overlay vs substrate.</dd>
+        <dt>Editorial</dt><dd>Narrow typographic ink register for state cells, revision markers, footnote numerals, drop-cap initials. Never chrome.</dd>
+      </dl>
+      <p class="variant-note">
+        values are sentences rather than tokens — glossaries, parameter
+        documentation, configuration key explanations, term definitions,
+        bibliography entries.
+      </p>
+    </div>
+
+    <!-- ═══════════════════════ § 2 — STECKBRIEF ═══════════════════════ -->
+    <header class="section-head">
+      <div class="marker"><span class="n">§ 2</span> · STECKBRIEF</div>
+      <div></div>
+      <div class="ref">image + dict</div>
+    </header>
+
+    <p style="font-family: var(--serif); font-style: italic; font-size: 12.5px; color: var(--muted); margin: 0 0 18px;">
+      A composite block: a subject image bound to a dict that identifies it.
+      Long print tradition — wanted posters, library catalogue cards, museum
+      specimen sheets, botanical / zoological survey forms, archaeological find
+      sheets. The image earns its place by being <em>the subject</em> of the
+      identifying metadata, not decoration on top of it. Pair with any of
+      K1–K4; <span class="mono">dl.dict-grid</span> is the most common choice.
+    </p>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">S1</span> · DICT + IMAGE RIGHT</span>
+        <span class="name">— canonical Steckbrief</span>
+      </div>
+      <p class="variant-desc">
+        Dict on the left in column-aligned form (K3), image fixed at a 220 px
+        column on the right, both compartments wrapped in a unified hairline
+        card frame with an internal divider. The card carries the visual unity,
+        so asymmetric block heights become invisible. Right-aligned uppercase
+        keys point typographically toward the image — KEY · value · subject.
+        Reads as a library catalogue card: identifying text on one side, the
+        subject on the other, one frame around both.
+      </p>
+      <section class="steckbrief" aria-labelledby="sb-subject">
+        <dl class="dict-aligned" id="sb-subject" aria-label="Subject identification">
+          <dt>Subject</dt>  <dd>Doric column · type A</dd>
+          <dt>Origin</dt>   <dd>Temple of Hephaestus</dd>
+          <dt>Order</dt>    <dd>Greek classical</dd>
+          <dt>Height</dt>   <dd>8.43 m</dd>
+          <dt>Diameter</dt> <dd>1.05 m at base</dd>
+          <dt>Period</dt>   <dd>c. 5th century BCE</dd>
+        </dl>
+        <figure class="steckbrief-image">
+          <img src="../601e5f34e2badeb90324506dc6a8a1e9.jpg"
+               alt="Dot-matrix rendering of a Doric column — survey image for subject identification." />
+          <figcaption>Fig. — Subject survey, dot-matrix rendering.</figcaption>
+        </figure>
+      </section>
+      <p class="variant-note">
+        the document identifies a subject — an object, a specimen, a person, a
+        location — and the image is the subject itself. Common cases: archive
+        node title pages, specimen / artifact catalogue entries, system or
+        machine identification, archaeological find sheets, profile / portfolio
+        author cards.
+      </p>
+    </div>
+
+    <!-- ═══════════════════════ § 3 — ORDERED LISTS ═══════════════════════ -->
+    <header class="section-head">
+      <div class="marker"><span class="n">§ 3</span> · ORDERED LISTS</div>
+      <div></div>
+      <div class="ref">3 variants</div>
+    </header>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">O1</span> · PLAIN NUMBERED</span>
+        <span class="name">— browser default</span>
+      </div>
+      <p class="variant-desc">
+        Standard <span class="mono">&lt;ol&gt;</span> with default numerals and indent.
+        The lowest-decoration option; trust the prose to do the work.
+      </p>
+      <ol class="l-plain">
+        <li>Validate module boundaries against the current dependency graph.</li>
+        <li>Trace the highest-risk data flow end-to-end.</li>
+        <li>Turn unresolved assumptions into investigation tasks.</li>
+      </ol>
+      <p class="variant-note">
+        you need a sequence but it isn't a procedure — most enumerated reasoning
+        and inline lists inside prose.
+      </p>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">O2</span> · HAIRLINE-SEPARATED PROCEDURE</span>
+        <span class="name">— stepped runbook</span>
+      </div>
+      <p class="variant-desc">
+        Each step gets a horizontal hairline above it and extra breathing room.
+        Numerals in monospace via <span class="mono">::marker</span>. Reads as a
+        runbook: each step is its own moment.
+      </p>
+      <ol class="l-proc">
+        <li>Refresh the channel set with <span class="mono">guix pull --channels=channels.scm</span>.</li>
+        <li>Build the new system generation in dry-run mode and verify the diff.</li>
+        <li>Activate the generation. Reboot if the kernel changed; otherwise re-login.</li>
+        <li>Reconfigure the home environment with <span class="mono">guix home reconfigure …</span>.</li>
+      </ol>
+      <p class="variant-note">
+        the order matters and each step is an action — runbooks, installation
+        procedures, sequential workflows, recipe-like instructions.
+      </p>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">O3</span> · BRACKETED REFERENCES</span>
+        <span class="name">— academic citation style</span>
+      </div>
+      <p class="variant-desc">
+        Numerals rendered as <span class="mono">[1]</span> <span class="mono">[2]</span> in monospace,
+        hanging in the left margin. Mirrors the citation list convention in
+        academic papers.
+      </p>
+      <ol class="l-ref">
+        <li>Tufte, E. R. <em>The Visual Display of Quantitative Information.</em> Graphics Press, 1983.</li>
+        <li>Knuth, D. E. <em>The TeXbook.</em> Addison-Wesley, 1984.</li>
+        <li>Rodchenko, A. <em>Books! In All Branches of Knowledge.</em> Poster, 1925.</li>
+      </ol>
+      <p class="variant-note">
+        the list is a reference / bibliography / footnote roster and items need
+        addressable identifiers.
+      </p>
+    </div>
+
+    <!-- ═══════════════════════ § 4 — UNORDERED LISTS ═══════════════════════ -->
+    <header class="section-head">
+      <div class="marker"><span class="n">§ 4</span> · UNORDERED LISTS</div>
+      <div></div>
+      <div class="ref">4 variants</div>
+    </header>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">U1</span> · PLAIN BULLETED</span>
+        <span class="name">— browser default</span>
+      </div>
+      <p class="variant-desc">
+        Standard <span class="mono">&lt;ul&gt;</span> with bullet markers.
+        The lowest-decoration option for an unordered enumeration.
+      </p>
+      <ul class="l-bullet">
+        <li>Inheritance for machines; composition for user behaviour.</li>
+        <li>Keep operational commands simple — no wrappers.</li>
+        <li>One implementation language per surface; no shell helpers.</li>
+      </ul>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">U2</span> · EM-DASH MARKERS</span>
+        <span class="name">— understated, literary</span>
+      </div>
+      <p class="variant-desc">
+        Each item prefixed with an em dash in muted gray. Less ornament than a
+        bullet; reads as essay prose rather than spec list.
+      </p>
+      <ul class="l-dash">
+        <li>The home side mixes generated configuration and checked-in dotfiles.</li>
+        <li>Some aliases reference older entry-point filenames.</li>
+        <li>The base system is broadening from a StumpWM-only minimum toward a general desktop base.</li>
+      </ul>
+      <p class="variant-note">
+        the list belongs inside flowing prose and a bulleted register would
+        intrude — essay-like documents, footnoted commentary, soft enumerations.
+      </p>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">U3</span> · INDENTED, NO MARKER</span>
+        <span class="name">— minimal</span>
+      </div>
+      <p class="variant-desc">
+        Indented lines without any leading mark. Reads as a sequence of related
+        statements rather than an enumeration.
+      </p>
+      <ul class="l-flat">
+        <li>channels.scm selects the ecosystem.</li>
+        <li>base-system.scm defines shared machine policy.</li>
+        <li>systems/&lt;host&gt;.scm defines hardware identity.</li>
+        <li>home/ defines user software, behaviour, dotfiles.</li>
+      </ul>
+      <p class="variant-note">
+        the items are parallel statements rather than independent options —
+        recommended mental-model summaries, layered descriptions.
+      </p>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">U4</span> · HAIRLINE-SEPARATED CHANGELOG</span>
+        <span class="name">— event log register</span>
+      </div>
+      <p class="variant-desc">
+        Each item separated by a horizontal hairline, optional monospace date or
+        identifier on the left. The change-log / feed pattern.
+      </p>
+      <ul class="l-log">
+        <li><span class="date">2026.05.17</span>Added Mode 3 dual-ink colour rules and seven data-viz patterns to the skill.</li>
+        <li><span class="date">2026.05.13</span>Rebuilt the skill around the typeset-document aesthetic.</li>
+        <li><span class="date">2026.05.10</span>Initial cyber-archival draft; later retired.</li>
+      </ul>
+      <p class="variant-note">
+        the items are independent events with timestamps or identifiers —
+        change logs, status timelines, decision records, activity feeds.
+      </p>
+    </div>
+
+    <!-- ═══════════════════════ § 5 — TABLES ═══════════════════════ -->
+    <header class="section-head">
+      <div class="marker"><span class="n">§ 5</span> · TABLES</div>
+      <div></div>
+      <div class="ref">3 variants</div>
+    </header>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">T1</span> · BOOKTABS</span>
+        <span class="name">— the default</span>
+      </div>
+      <p class="variant-desc">
+        Heavy top/bottom rules, thin header rule, no verticals, dotted hairline
+        between rows, numbered caption below. The canonical research-paper table.
+      </p>
+      <table class="tbl">
+        <caption>Table T1 — Modules under <span class="mono">systems/</span>.</caption>
+        <thead>
+          <tr>
+            <th style="width: 32%">Module</th>
+            <th style="width: 22%">Role</th>
+            <th style="width: 30%">Owns</th>
+            <th style="width: 16%">State</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">systems/base-system.scm</td><td>Policy</td><td>Shared baseline</td><td>Stable</td></tr>
+          <tr><td class="mono">systems/T450s.scm</td>      <td>Host</td>  <td>Hardware identity</td><td>Stable</td></tr>
+          <tr><td class="mono">systems/X1.scm</td>         <td>Host</td>  <td>Hardware identity</td><td>Stable</td></tr>
+        </tbody>
+      </table>
+      <p class="variant-note">
+        the data has labelled columns and prose-leaning cells — module maps,
+        inventories, comparison rosters, reference tables of every kind.
+      </p>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">T2</span> · MATRIX</span>
+        <span class="name">— 2D adjacency / dependency</span>
+      </div>
+      <p class="variant-desc">
+        Row and column labels in italic serif; cells contain marks
+        (<span class="mono">—</span> diagonal, <span class="mono">•</span> present,
+        <span class="mono">·</span> absent) in monospace. The adjacency-matrix
+        / compatibility-chart pattern.
+      </p>
+      <table class="matrix">
+        <caption>Table T2 — Layer dependencies (rows depend on columns).</caption>
+        <thead>
+          <tr>
+            <th></th>
+            <th>channels</th><th>system</th><th>host</th><th>home</th><th>scripts</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">channels</th><td class="self">—</td><td class="no">·</td><td class="no">·</td><td class="no">·</td><td class="no">·</td></tr>
+          <tr><th scope="row">system</th>  <td class="yes">•</td> <td class="self">—</td><td class="no">·</td><td class="no">·</td><td class="no">·</td></tr>
+          <tr><th scope="row">host</th>    <td class="yes">•</td> <td class="yes">•</td> <td class="self">—</td><td class="no">·</td><td class="no">·</td></tr>
+          <tr><th scope="row">home</th>    <td class="yes">•</td> <td class="no">·</td>  <td class="no">·</td> <td class="self">—</td><td class="no">·</td></tr>
+          <tr><th scope="row">scripts</th> <td class="no">·</td>  <td class="no">·</td>  <td class="no">·</td> <td class="yes">•</td><td class="self">—</td></tr>
+        </tbody>
+      </table>
+      <p class="variant-note">
+        you're showing relationships between two indexed sets — dependency
+        graphs, compatibility charts, feature-by-product matrices, adjacency
+        between layers / modules / hosts.
+      </p>
+    </div>
+
+    <div class="variant">
+      <div class="variant-head">
+        <span class="id"><span class="n">T3</span> · COMPACT REFERENCE</span>
+        <span class="name">— dense roster</span>
+      </div>
+      <p class="variant-desc">
+        Same booktabs frame but tighter padding and no row separators. Fits
+        more rows on a page; reads as a roster or index rather than a discussion.
+      </p>
+      <table class="tbl-compact">
+        <caption>Table T3 — Scripts under <span class="mono">scripts/</span>.</caption>
+        <thead>
+          <tr>
+            <th style="width: 38%">Script</th>
+            <th style="width: 46%">Purpose</th>
+            <th style="width: 16%">Surface</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">terminal-dashboard.scm</td>        <td>Terminal task dashboard</td>           <td>StumpWM</td></tr>
+          <tr><td class="mono">dashboard.scm</td>                 <td>Desktop dashboard</td>                  <td>StumpWM</td></tr>
+          <tr><td class="mono">add-todo.scm</td>                  <td>Append a todo from anywhere</td>       <td>StumpWM</td></tr>
+          <tr><td class="mono">setup-devices.scm</td>             <td>Device bring-up routine</td>           <td>Manual</td></tr>
+          <tr><td class="mono">samsung-monitor.scm</td>           <td>External monitor toggle</td>           <td>StumpWM</td></tr>
+          <tr><td class="mono">internet-toggle.scm</td>           <td>Network on/off shortcut</td>           <td>StumpWM</td></tr>
+          <tr><td class="mono">git-sync.scm</td>                  <td>Sync personal repos</td>                <td>Manual</td></tr>
+          <tr><td class="mono">git-contribution-extractor.scm</td><td>Extract contribution stats</td>        <td>Manual</td></tr>
+          <tr><td class="mono">claude-guix.scm</td>               <td>Guix-launched Claude agent</td>        <td>Manual</td></tr>
+          <tr><td class="mono">pi-guix.scm</td>                   <td>Guix-launched pi (pi.dev) agent</td>   <td>Manual</td></tr>
+          <tr><td class="mono">check-guile-only.scm</td>          <td>Policy check (no shell scripts)</td>  <td>QA</td></tr>
+        </tbody>
+      </table>
+      <p class="variant-note">
+        rows outnumber visual breathing room — script indices, file inventories,
+        registry listings, anything that's more catalogue than discussion.
+      </p>
+    </div>
+
+    <footer class="colophon">
+      <div>Design Skill / Pattern Index · single file · 2026.05.17</div>
+      <div class="eof">END OF DOCUMENT</div>
+    </footer>
+
+  </div>
+</body>
+</html>

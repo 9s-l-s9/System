@@ -1,0 +1,90 @@
+[
+  {
+    "query": "Explore this codebase and create an architecture overview in a standalone HTML file.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make a tiny project knowledge base in HTML from these notes.",
+    "should_trigger": true
+  },
+  {
+    "query": "Create a mini concept page for this AI feature.",
+    "should_trigger": true
+  },
+  {
+    "query": "Generate a personal portfolio website for my research projects.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make a dashboard UI for a local-first knowledge management app.",
+    "should_trigger": true
+  },
+  {
+    "query": "Turn this README into a nicer web-based project overview.",
+    "should_trigger": true
+  },
+  {
+    "query": "Can you create a visual architecture map page for this repo?",
+    "should_trigger": true
+  },
+  {
+    "query": "Build a single-file HTML report for this system audit.",
+    "should_trigger": true
+  },
+  {
+    "query": "I need a web page that explains the modules, data flow, risks, and next steps.",
+    "should_trigger": true
+  },
+  {
+    "query": "Create a concept note with some design polish, like a small internal microsite.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make my docs look like a virtual library / wiki with logs and indexes.",
+    "should_trigger": true
+  },
+  {
+    "query": "Design an HTML index page for a folder of experiments.",
+    "should_trigger": true
+  },
+  {
+    "query": "Debug this Python import error.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write backend API routes for authentication.",
+    "should_trigger": false
+  },
+  {
+    "query": "Summarize this article in plain text.",
+    "should_trigger": false
+  },
+  {
+    "query": "Clean this CSV and compute summary statistics.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write a bash script to back up my dotfiles.",
+    "should_trigger": false
+  },
+  {
+    "query": "Explain this regex.",
+    "should_trigger": false
+  },
+  {
+    "query": "Refactor this React hook but don't change the UI.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write a formal email to my professor.",
+    "should_trigger": false
+  },
+  {
+    "query": "Translate this paragraph into German.",
+    "should_trigger": false
+  },
+  {
+    "query": "Create a pastel wellness brand landing page.",
+    "should_trigger": false
+  }
+]

@@ -13,6 +13,7 @@
   #:use-module (gnu packages gtk)
   #:use-module (gnu packages xorg)
   #:use-module (gnu packages xdisorg)
+  #:use-module (gnu packages suckless)
   #:use-module (gnu packages emacs)
   #:use-module (gnu packages file-systems)
   #:use-module (gnu packages gnome)
@@ -46,6 +47,13 @@
     (kernel linux)
     (firmware (list linux-firmware))
     (initrd microcode-initrd)
+
+    ;; Suspend/resume reliability on the T450s (Broadwell + i915).
+    ;; mem_sleep_default=deep forces real S3 suspend (not the lighter s2idle
+    ;; that leaves the machine warm), and i915.enable_psr=0 disables panel
+    ;; self-refresh, which is the usual cause of the display wedging on resume.
+    (kernel-arguments (append '("mem_sleep_default=deep" "i915.enable_psr=0")
+                              %default-kernel-arguments))
 
     ;; Special german keyboard layout
     ;; No longer really needed because of external corne keyboard
@@ -116,12 +124,23 @@
                         tlp
                         xf86-input-libinput
 			xf86-input-wacom
+                        i3lock         ;; X locker with image background
+                        xss-lock       ;; bridges elogind Lock signal -> i3lock
                         gvfs)         ;; for user mounts
                       %base-packages))
 
     (services
      (append
       (list
+       ;; Registers /etc/pam.d/i3lock so i3lock can authenticate. Without
+       ;; this service, i3lock rejects every password (red ring) regardless
+       ;; of correctness. setuid lets pam_unix read /etc/shadow; i3lock
+       ;; drops privileges after auth.
+       (service screen-locker-service-type
+                (screen-locker-configuration
+                 (name "i3lock")
+                 (program (file-append i3lock "/bin/i3lock"))
+                 (using-setuid? #t)))
        (service containerd-service-type)
        (service docker-service-type)
        (service bluetooth-service-type
@@ -151,6 +170,19 @@
                            MatchIsTablet \"on\"
                            Driver \"wacom\"
                          EndSection"))))))
+
+      (elogind-service-type config =>
+                            (elogind-configuration
+                             (inherit config)
+                             ;; Lid close suspends (real S3) to actually save
+                             ;; power. Resume reliability is handled via the
+                             ;; mem_sleep_default=deep + i915.enable_psr=0
+                             ;; kernel-arguments above. xss-lock still locks the
+                             ;; session around the suspend so it comes back
+                             ;; locked. Docked: stay awake.
+                             (handle-lid-switch 'suspend)
+                             (handle-lid-switch-external-power 'suspend)
+                             (handle-lid-switch-docked 'ignore)))
 
       (guix-service-type config => (guix-configuration
                                                      (inherit config)

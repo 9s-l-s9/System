@@ -1,0 +1,158 @@
+/* design skill — data visualisation patterns
+ *
+ * Companion stylesheet for SKILL.md § Data visualisation patterns.
+ * Requires assets/style-tokens.css for:
+ *   --ink, --ink-2, --muted, --rule, --rule-soft, --bg,
+ *   --accent-red, --accent-blue, --serif, --mono.
+ *
+ * Pair with assets/data-viz-defs.svg, which provides the shared
+ * stratigraphic hatch patterns and the Clifford attractor cloud.
+ * Drop that <svg> element near the top of <body> in any document
+ * that uses .strat, .strat-dual, or .scatter.
+ *
+ * Colour modes (see SKILL.md):
+ *   Mode 2 — single ink. The figure's parent class (.contour, .strat,
+ *   .anno, .bars, .scatter) sets `color: var(--accent)`; the figure's
+ *   own definition picks the active ink by binding `--accent` on the
+ *   wrapping element (e.g. `style="--accent: var(--accent-red)"`).
+ *
+ *   Mode 3 — dual ink, asymmetric. Wrap SVG fragments in
+ *   <g class="ink-red"> and <g class="ink-blue">; currentColor in
+ *   hatch patterns and overlay strokes resolves at the point of use.
+ */
+
+/* ── ink-binding helpers ─────────────────────────────────── */
+.ink-red  { color: var(--accent-red); }
+.ink-blue { color: var(--accent-blue); }
+
+/* ── shared figure plumbing ─────────────────────────────── */
+figure.viz       { margin: 14px 0 4px; padding: 0; }
+figure.viz svg   { display: block; width: 100%; height: auto; background: var(--bg); }
+figure.viz figcaption,
+.viz-caption {
+  font-family: var(--serif);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 6px;
+  margin: 0;
+}
+
+/* ──────────────────────────────────────────────────────────
+ * .scatter — Tufte-style scatter / attractor
+ * Whole-cloud data marks; italic serif x/y labels; mono title.
+ * Use with `style="--accent: var(--accent-red)"` etc. on the figure.
+ * ────────────────────────────────────────────────────────── */
+.scatter .axis      { stroke: var(--ink); stroke-width: .75; fill: none; vector-effect: non-scaling-stroke; }
+.scatter .tick      { stroke: var(--ink); stroke-width: .5;  vector-effect: non-scaling-stroke; }
+.scatter .frame     { stroke: var(--ink); stroke-width: .5;  fill: none; vector-effect: non-scaling-stroke; }
+.scatter .tick-lbl  { font-family: var(--serif); font-style: italic; font-size: 8px;  fill: var(--ink); }
+.scatter .axis-lbl  { font-family: var(--serif); font-style: italic; font-size: 10px; fill: var(--ink); }
+.scatter .title     { font-family: var(--mono);  font-size: 9.5px; letter-spacing: .04em; fill: var(--ink); }
+.scatter .cloud     { fill: var(--accent, var(--accent-red)); }
+
+/* ──────────────────────────────────────────────────────────
+ * .contour — topographic isolines (single ink)
+ * Hairline isolines, no fills. Cartographic chrome in black.
+ * ────────────────────────────────────────────────────────── */
+.contour            { color: var(--accent, var(--accent-blue)); }
+.contour .frame     { stroke: var(--ink); stroke-width: .5; fill: none; vector-effect: non-scaling-stroke; }
+.contour .tick      { stroke: var(--ink); stroke-width: .5; vector-effect: non-scaling-stroke; }
+.contour .iso       { stroke: currentColor; stroke-width: .5; fill: none; vector-effect: non-scaling-stroke; }
+.contour .iso-index { stroke: currentColor; stroke-width: .9; fill: none; vector-effect: non-scaling-stroke; }
+.contour .peak      { stroke: var(--ink); stroke-width: .9; fill: none; vector-effect: non-scaling-stroke; }
+.contour .lbl-iso   { font-family: var(--mono); font-size: 7.5px; fill: currentColor; }
+.contour .lbl       { font-family: var(--mono); font-size: 8px;   fill: var(--ink); }
+.contour .lbl-mute  { font-family: var(--serif); font-size: 7.5px; letter-spacing: .12em; text-transform: uppercase; fill: var(--muted); }
+.contour .title     { font-family: var(--mono); font-size: 9px;   letter-spacing: .04em; fill: var(--ink); }
+.contour .arrow     { fill: var(--ink); }
+
+/* ──────────────────────────────────────────────────────────
+ * .strat — stratigraphic section (single ink)
+ * Field-scale hatched fills via the patterns in data-viz-defs.svg.
+ * Optional ink bracket annotation on the left.
+ * ────────────────────────────────────────────────────────── */
+.strat              { color: var(--accent, var(--accent-blue)); }
+.strat .frame       { stroke: var(--ink); stroke-width: .6; fill: none; vector-effect: non-scaling-stroke; }
+.strat .layer-sep   { stroke: var(--ink); stroke-width: .4; vector-effect: non-scaling-stroke; }
+.strat .tick        { stroke: var(--ink); stroke-width: .5; vector-effect: non-scaling-stroke; }
+.strat .anno        { stroke: currentColor; stroke-width: 1; fill: none; stroke-linecap: square; vector-effect: non-scaling-stroke; }
+.strat .lbl         { font-family: var(--mono); font-size: 8px;   fill: var(--ink); }
+.strat .lbl-name    { font-family: var(--serif); font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; fill: var(--ink); }
+.strat .lbl-acc     { font-family: var(--mono); font-size: 8.5px; fill: currentColor; font-weight: 600; letter-spacing: .04em; }
+.strat .lbl-mute    { font-family: var(--serif); font-size: 7.5px; letter-spacing: .12em; text-transform: uppercase; fill: var(--muted); }
+.strat .title       { font-family: var(--mono); font-size: 9px;   letter-spacing: .04em; fill: var(--ink); }
+
+/* ──────────────────────────────────────────────────────────
+ * .anno — Risograph annotation overlay
+ * Monochrome base figure (black hairlines + one ink-filled element)
+ * with ink brackets, dashed boxes, callouts, and small mono labels.
+ * ────────────────────────────────────────────────────────── */
+.anno .base         { fill: none;       stroke: var(--ink); stroke-width: .6; vector-effect: non-scaling-stroke; }
+.anno .base-fill    { fill: var(--ink); }
+.anno .overlay      { stroke: var(--accent, var(--accent-red)); stroke-width: 1;  fill: none; vector-effect: non-scaling-stroke; }
+.anno .overlay-dash { stroke: var(--accent, var(--accent-red)); stroke-width: .8; fill: none; stroke-dasharray: 3 2; vector-effect: non-scaling-stroke; }
+.anno .bracket      { stroke: var(--accent, var(--accent-red)); stroke-width: 1.2; fill: none; stroke-linecap: square; vector-effect: non-scaling-stroke; }
+.anno .lbl-acc      { font-family: var(--mono); font-size: 8.5px; fill: var(--accent, var(--accent-red)); font-weight: 600; letter-spacing: .04em; }
+.anno .lbl-mute     { font-family: var(--serif); font-size: 7.5px; letter-spacing: .14em; text-transform: uppercase; fill: var(--muted); }
+
+/* ──────────────────────────────────────────────────────────
+ * .bars — hatched bar chart
+ * Solid black bars + one diagonal-hatch ink bar for the focus value.
+ * The hatch pattern is inlined per bar-chart figure (see SKILL.md).
+ * ────────────────────────────────────────────────────────── */
+.bars .axis     { stroke: var(--ink); stroke-width: .75; vector-effect: non-scaling-stroke; }
+.bars .bar-blk  { fill: var(--ink-2); }
+.bars .hatch-st { stroke: var(--accent, var(--accent-red)); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.bars .bar-out  { fill: none; stroke: var(--accent, var(--accent-red)); stroke-width: .7; vector-effect: non-scaling-stroke; }
+.bars .lbl      { font-family: var(--mono); font-size: 9px;   fill: var(--muted); }
+.bars .val      { font-family: var(--mono); font-size: 9px;   fill: var(--ink-2); }
+.bars .val-acc  { font-family: var(--mono); font-size: 9.5px; fill: var(--accent, var(--accent-red)); font-weight: 600; }
+
+/* ──────────────────────────────────────────────────────────
+ * .strat-dual — Risograph register (Mode 3)
+ * Wrap hatched substrate rects in <g class="ink-blue"> and the
+ * annotation block in <g class="ink-red">. The CSS rules below
+ * use currentColor so each group binds to its ink.
+ * ────────────────────────────────────────────────────────── */
+.strat-dual .frame      { stroke: var(--ink); stroke-width: .6; fill: none; vector-effect: non-scaling-stroke; }
+.strat-dual .layer-sep  { stroke: var(--ink); stroke-width: .4; vector-effect: non-scaling-stroke; }
+.strat-dual .tick       { stroke: var(--ink); stroke-width: .5; vector-effect: non-scaling-stroke; }
+.strat-dual .anno       { stroke: currentColor; stroke-width: 1;   fill: none; stroke-linecap: square; vector-effect: non-scaling-stroke; }
+.strat-dual .anno-mark  { stroke: currentColor; stroke-width: 1.2; fill: none; vector-effect: non-scaling-stroke; }
+.strat-dual .lbl        { font-family: var(--mono); font-size: 8.5px; fill: var(--ink); }
+.strat-dual .lbl-name   { font-family: var(--serif); font-size: 9px;   letter-spacing: .14em; text-transform: uppercase; fill: var(--ink); }
+.strat-dual .lbl-acc    { font-family: var(--mono); font-size: 9px;   fill: currentColor; font-weight: 600; letter-spacing: .04em; }
+.strat-dual .lbl-mute   { font-family: var(--serif); font-size: 8px;   letter-spacing: .12em; text-transform: uppercase; fill: var(--muted); }
+.strat-dual .title      { font-family: var(--mono); font-size: 9.5px; letter-spacing: .04em; fill: var(--ink); }
+
+/* ──────────────────────────────────────────────────────────
+ * .contour-dual — topographic with active layer (Mode 3)
+ * Blue contour substrate (.iso / .iso-index) + red active overlay
+ * (.route / .waypoint / .peak / .lbl-red). Colours are bound directly
+ * (not via currentColor) so wrapping <g> elements are not required.
+ * ────────────────────────────────────────────────────────── */
+.contour-dual .frame    { stroke: var(--ink); stroke-width: .5; fill: none; vector-effect: non-scaling-stroke; }
+.contour-dual .tick     { stroke: var(--ink); stroke-width: .5; vector-effect: non-scaling-stroke; }
+.contour-dual .iso      { stroke: var(--accent-blue); stroke-width: .5; fill: none; vector-effect: non-scaling-stroke; }
+.contour-dual .iso-index{ stroke: var(--accent-blue); stroke-width: .9; fill: none; vector-effect: non-scaling-stroke; }
+.contour-dual .lbl-iso  { font-family: var(--mono); font-size: 8px;   fill: var(--accent-blue); }
+.contour-dual .route    { stroke: var(--accent-red);  stroke-width: 1.2; fill: none; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+.contour-dual .waypoint { stroke: var(--accent-red);  stroke-width: 1;   fill: none; vector-effect: non-scaling-stroke; }
+.contour-dual .peak     { stroke: var(--accent-red);  stroke-width: 1;   fill: none; vector-effect: non-scaling-stroke; }
+.contour-dual .lbl-red  { font-family: var(--mono); font-size: 8.5px; font-weight: 600; fill: var(--accent-red); }
+.contour-dual .lbl      { font-family: var(--mono); font-size: 8.5px; fill: var(--ink); }
+.contour-dual .lbl-mute { font-family: var(--serif); font-size: 8px;   letter-spacing: .12em; text-transform: uppercase; fill: var(--muted); }
+.contour-dual .title    { font-family: var(--mono); font-size: 9.5px; letter-spacing: .04em; fill: var(--ink); }
+.contour-dual .arrow    { fill: var(--ink); }
+
+/* ──────────────────────────────────────────────────────────
+ * Print — preserve legibility when colour is gone.
+ * Accent inks fall back to grey; the structure of each figure
+ * (hatch pattern, hairlines, isoline weights) still carries
+ * meaning, so the figure remains readable on B&W output.
+ * ────────────────────────────────────────────────────────── */
+@media print {
+  figure.viz svg { background: #fff; }
+}

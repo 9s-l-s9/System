@@ -1,51 +1,59 @@
 (define-module (packages base-packages)
   #:use-module (gnu packages)
+  #:use-module (packages eca)
+  #:use-module (packages font-space-mono)
+  #:use-module (packages whisper)
   #:export (all-packages)
   #:export (wsl2-packages)
   #:export (programming-packages)
   #:export (emacs-packages)
   #:export (fonts-packages))
 
-;; ── Development ───────────────────────────────────────────────────────────────
+;; Development
 
 (define programming-packages
   (list "python"
-      	"guile-ts"
-	      "guile-lsp-server"
-	      "make"
+        "guile-ts"
+        "guile-lsp-server"
+        "make"
         "python-lsp-server"    ; pylsp LSP backend for eglot
         "python-debugpy"       ; DAP debug adapter
         "ruff"                 ; fast linter + formatter
         "python-pytest"        ; test runner
         "python-mypy"          ; static type checker
         "tree-sitter-python"   ; grammar for python-ts-mode
+        "openjdk"              ; ECA server runtime (JVM)
         ;"r"
         ;"sqlite"
         ;"duckdb"
         ;"gcc-toolchain"
         ))
 
-;; ── CLI utilities (portable — work everywhere) ────────────────────────────────
+;; CLI utilities (portable: work everywhere)
 
 (define cli-utilities-packages
   (list "tree" "curl"
         "rsync" "zip" "unzip"
-        "glibc-locales" "mpv" "ripgrep" "git-lfs" "yt-dlp"))
+        "glibc-locales" "mpv" "ripgrep" "git-lfs" "yt-dlp"
+        "guile-json"                 ; scripts/ask-ai.scm
+        "whisper-cpp" "ffmpeg"))   ; local speech-to-text (whisper.el)
 
-;; ── System utilities (hardware / desktop daemons) ─────────────────────────────
+;; System utilities (hardware / desktop daemons)
 
 (define system-utilities-packages
   (list "adb" "wireplumber" "dnsmasq" "hostapd"
         "ark" "flatpak"))
 
-;; ── Fonts (portable — needed for Emacs all-the-icons) ────────────────────────
+;; Fonts (portable: needed for Emacs all-the-icons)
 
 (define fonts-packages
   (list "font-ipa-ex" "font-fira-code" "font-jetbrains-mono" "font-iosevka"
         "font-google-roboto" "font-lato" "font-inconsolata" "font-victor-mono"
-        "font-fantasque-sans"))
+        "font-fantasque-sans"
+        ;; design-skill manual aesthetic: Plex Mono body; Space Mono is custom.
+        "font-ibm-plex"))
 
-;; ── Emacs packages (portable — identical on all machines) ────────────────────
+;; Emacs packages (portable: identical on all machines)
 
 (define emacs-packages
   (list
@@ -80,6 +88,8 @@
    "emacs-marginalia"
    ;"emacs-markdown-preview-mode"
    "emacs-meow"
+   ;; "emacs-minuet"       ; AI inline completion; disabled until an API key exists
+
    ;; "emacs-nano-modeline"
    "emacs-orderless"
    ;;"emacs-org-modern"
@@ -93,98 +103,109 @@
    "emacs-undo-tree"
    "emacs-vertico"))
 
-;; ── Editors ───────────────────────────────────────────────────────────────────
+;; Custom packages missing from upstream Guix (package objects, not specs).
+(define custom-home-packages
+  (list emacs-eca
+        emacs-whisper
+        font-space-mono))
+
+;; Editors
 
 (define editors-packages
   (list "emacs-next"
         "helix"))
 
-;; ── Shell ─────────────────────────────────────────────────────────────────────
+;; Shell
 
 (define shell-packages
   (list "fish"))
 
-;; ── Terminal emulator (desktop only) ─────────────────────────────────────────
+;; Terminal emulator (desktop only)
 
 (define terminal-packages
   (list "alacritty"))
 
-;; ── Typesetting ───────────────────────────────────────────────────────────────
+;; Typesetting
 
 (define typesetting-packages
   (list "typst-bin"
         "haunt"))
 
-;; ── X11 / display server ──────────────────────────────────────────────────────
+;; X11 / display server
 
 (define xorg-packages
   (list
    ;; "rofi"
    "dunst" "spectacle" "kmix" "xrandr" "arandr"
    "feh" "picom" "redshift"
+   "xdotool"                          ; type transcription into focused window
    "xdg-desktop-portal-wlr" "xsel" "xdg-utils"))
 
-;; ── Wayland (defined but not assembled by default) ───────────────────────────
+;; Wayland (defined but not assembled by default)
 
 (define wayland-packages
   (list "gammastep" "mako" "fuzzel"))
 
-;; ── KDE desktop ───────────────────────────────────────────────────────────────
+;; KDE desktop
 
 (define kde-packages
   (list "dolphin" "kmix" "konsole"))
 
-;; ── GUI theming ───────────────────────────────────────────────────────────────
+;; GUI theming
 
 (define gui-theming-packages
   (list "breeze-icons" "oxygen-icons" "gtk+"))
 
-;; ── GUI apps (desktop only) ───────────────────────────────────────────────────
+;; GUI apps (desktop only)
 
 (define gui-app-packages
   (list "steam" "inkscape" "gimp"))
 
-;; ── Browser / passwords ───────────────────────────────────────────────────────
+;; Browser / passwords
 
 (define browser-packages
   (list "zen-browser-bin"
         "bitwarden-desktop"))
 
-;; ── Network ───────────────────────────────────────────────────────────────────
+;; Network
 
 (define network-packages
   (list "openssh"
         "network-manager"
         "network-manager-openvpn"))
 
-;; ── Assemblers ────────────────────────────────────────────────────────────────
+;; Assemblers
 
 ;; Full desktop configuration
 (define (all-packages)
-  (specifications->packages
-   (append programming-packages
-           cli-utilities-packages
-           system-utilities-packages
-           xorg-packages
-           kde-packages
-           gui-theming-packages
-           browser-packages
-           network-packages
-           fonts-packages
-           emacs-packages
-           editors-packages
-           shell-packages
-           terminal-packages
-           gui-app-packages
-           typesetting-packages)))
+  (append
+   (specifications->packages
+    (append programming-packages
+            cli-utilities-packages
+            system-utilities-packages
+            xorg-packages
+            kde-packages
+            gui-theming-packages
+            browser-packages
+            network-packages
+            fonts-packages
+            emacs-packages
+            editors-packages
+            shell-packages
+            terminal-packages
+            gui-app-packages
+            typesetting-packages))
+   custom-home-packages))
 
 ;; WSL2: portable development environment (no X11, no desktop, no browsers)
 (define (wsl2-packages)
-  (specifications->packages
-   (append programming-packages
-           cli-utilities-packages
-           fonts-packages
-           emacs-packages
-           editors-packages
-           shell-packages
-           typesetting-packages)))
+  (append
+   (specifications->packages
+    (append programming-packages
+            cli-utilities-packages
+            fonts-packages
+            emacs-packages
+            editors-packages
+            shell-packages
+            typesetting-packages))
+   custom-home-packages))
