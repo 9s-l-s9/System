@@ -77,7 +77,7 @@ Demo file: `assets/data-patterns.html`. Currently fourteen variants across three
 - **Tables (3):** T1 booktabs (current default) · T2 matrix (2D adjacency/dependency) · T3 compact reference
 
 #### Steckbrief — added 2026.05.17
-Composite block: image + dict as a subject-identification card. Long print tradition (wanted posters, library catalogue cards, museum specimen sheets, archaeological find sheets). Lives as `section.steckbrief` with `figure.steckbrief-image` left and any dict variant right (default pairing: `dl.dict-grid`). Image takes 180px on wide viewports, stacks above the dict under 600px. Currently one variant (S1 — image left); could grow to S2 (image right mirror) or S3 (image above) if the need arises. The image rule from SKILL.md § Imagery applies: monochrome, blueprint hairline, dot-matrix halftone, or duotone — never decorative stock photography. Demonstrated in `data-patterns.html` § 2 using the dot-matrix Doric column reference image (`../601e5f34e2badeb90324506dc6a8a1e9.jpg`) as a stand-in subject. Pending SKILL.md fold.
+Composite block: image + dict as a subject-identification card. Long print tradition (wanted posters, library catalogue cards, museum specimen sheets, archaeological find sheets). Lives as `section.steckbrief` with `figure.steckbrief-image` left and any dict variant right (default pairing: `dl.dict-grid`). Image takes 180px on wide viewports, stacks above the dict under 600px. Currently one variant (S1 — image left); could grow to S2 (image right mirror) or S3 (image above) if the need arises. The image rule from SKILL.md § Imagery applies: monochrome, blueprint hairline, dot-matrix halftone, or duotone — never decorative stock photography. Include this pattern only when the page has a real subject image. Pending SKILL.md fold.
 
 CSS classes for the dict variants are named `.dict-strip`, `dl.dict-grid`, `dl.dict-aligned`, `dl.dict-hanging` — reflecting the CS-correct framing.
 
@@ -134,7 +134,6 @@ Linked to Q2. Solving Q2 (install Source Serif Pro) also resolves this.
 - `README.md` — short orientation pointer for installing this folder as an Agent Skill.
 - `LEARNINGS.md` — this file. Staging area before SKILL.md updates.
 - `eval_queries.json` — trigger test queries.
-- `034c1eeb…jpg`, `21872ef5…jpg`, `601e5f34…jpg`, `88c9f491…jpg`, `e5d6a8c9…jpg` — reference imagery (density, blueprint, dot-matrix, monochrome photography, orange duotone).
 - `assets/style-tokens.css` — page palette + utility classes. `--paper` removed (2026.05.17); `--sans` removed (2026.06.21) — serif + mono only.
 - `assets/html-skeleton.html` — single-file research-paper starter. Currently the three-register typography mock; `--paper` removed; TOC bug fixed.
 - `assets/data-viz.css` — companion stylesheet for the seven data-viz pattern classes.

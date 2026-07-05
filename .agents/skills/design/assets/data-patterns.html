@@ -50,7 +50,6 @@
     .descriptive, figcaption, table.tbl thead th, table.tbl caption, table.matrix caption,
     table.tbl-compact thead th, table.tbl-compact caption,
     dl.dict-hanging dt,
-    section.steckbrief figure.steckbrief-image figcaption,
     .variant-desc, .variant-note {
       font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none;
     }
@@ -219,69 +218,6 @@
     }
 
     /* ──────────────────────────────────────────────────────────── */
-    /* STECKBRIEF — image + dict as a subject-identification card    */
-    /* ──────────────────────────────────────────────────────────── */
-
-    /* S1 — dict left, image right, wrapped in a unified card frame.
-       The outer hairline border is the visual anchor; the internal divider
-       separates the two compartments. Asymmetric block heights become
-       invisible because the card carries the visual unity. */
-    section.steckbrief {
-      display: grid;
-      grid-template-columns: 1fr 220px;
-      gap: 0;
-      align-items: stretch;
-      border: .5px solid var(--rule);
-      margin: 0;
-    }
-    /* dict compartment — suppress K3's own hairlines + margin; add right-side divider */
-    section.steckbrief dl.dict-grid,
-    section.steckbrief dl.dict-aligned,
-    section.steckbrief dl.dict-hanging {
-      margin: 0;
-      padding: 14px 22px;
-      border: 0;
-      border-right: .5px solid var(--rule);
-    }
-    /* image compartment — image fills the inner column edge-to-edge of its padding;
-       no individual image border (the card frame replaces it). */
-    section.steckbrief figure.steckbrief-image {
-      margin: 0;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-    }
-    section.steckbrief figure.steckbrief-image img {
-      width: 100%;
-      height: auto;
-      display: block;
-      border: 0;
-    }
-    section.steckbrief figure.steckbrief-image figcaption {
-      padding-top: 8px;
-      margin: 0;
-      /* italic-serif via the global .descriptive selector list */
-      font-size: 9.5px;
-      color: var(--muted);
-    }
-
-    /* responsive: stack image above dict on narrow viewports.
-       Internal divider flips from right to bottom of the dict compartment. */
-    @media (max-width: 600px) {
-      section.steckbrief { grid-template-columns: 1fr; }
-      section.steckbrief dl.dict-grid,
-      section.steckbrief dl.dict-aligned,
-      section.steckbrief dl.dict-hanging {
-        border-right: 0;
-        border-bottom: .5px solid var(--rule);
-      }
-      section.steckbrief figure.steckbrief-image {
-        align-self: center;
-        max-width: 280px;
-      }
-    }
-
-    /* ──────────────────────────────────────────────────────────── */
     /* TABLE VARIANTS                                               */
     /* ──────────────────────────────────────────────────────────── */
 
@@ -383,13 +319,12 @@
     <section class="title-block">
       <h1>Common data presentations</h1>
       <p class="abstract">
-        Proposed patterns for the four content surfaces the research-paper skill
+        Proposed patterns for the three content surfaces the research-paper skill
         most often needs to render: <em>dictionaries</em> (any key→value structure
         — document metadata, glossaries, parameter sheets, term definitions),
-        <em>Steckbriefe</em> (image + dict composites for subject identification),
-        ordered and unordered lists, and tables. Each variant carries a short
-        description and a suggested use-when. Pick the patterns to keep, drop the
-        rest, fold the keepers into <span class="mono">SKILL.md</span> and
+        ordered and unordered lists, and <em>tables</em>. Each variant carries a
+        short description and a suggested use-when. Pick the patterns to keep,
+        drop the rest, fold the keepers into <span class="mono">SKILL.md</span> and
         <span class="mono">style-tokens.css</span>.
       </p>
     </section>
@@ -504,63 +439,9 @@
       </p>
     </div>
 
-    <!-- ═══════════════════════ § 2 — STECKBRIEF ═══════════════════════ -->
+    <!-- ═══════════════════════ § 2 — ORDERED LISTS ═══════════════════════ -->
     <header class="section-head">
-      <div class="marker"><span class="n">§ 2</span> · STECKBRIEF</div>
-      <div></div>
-      <div class="ref">image + dict</div>
-    </header>
-
-    <p style="font-family: var(--serif); font-style: italic; font-size: 12.5px; color: var(--muted); margin: 0 0 18px;">
-      A composite block: a subject image bound to a dict that identifies it.
-      Long print tradition — wanted posters, library catalogue cards, museum
-      specimen sheets, botanical / zoological survey forms, archaeological find
-      sheets. The image earns its place by being <em>the subject</em> of the
-      identifying metadata, not decoration on top of it. Pair with any of
-      K1–K4; <span class="mono">dl.dict-grid</span> is the most common choice.
-    </p>
-
-    <div class="variant">
-      <div class="variant-head">
-        <span class="id"><span class="n">S1</span> · DICT + IMAGE RIGHT</span>
-        <span class="name">— canonical Steckbrief</span>
-      </div>
-      <p class="variant-desc">
-        Dict on the left in column-aligned form (K3), image fixed at a 220 px
-        column on the right, both compartments wrapped in a unified hairline
-        card frame with an internal divider. The card carries the visual unity,
-        so asymmetric block heights become invisible. Right-aligned uppercase
-        keys point typographically toward the image — KEY · value · subject.
-        Reads as a library catalogue card: identifying text on one side, the
-        subject on the other, one frame around both.
-      </p>
-      <section class="steckbrief" aria-labelledby="sb-subject">
-        <dl class="dict-aligned" id="sb-subject" aria-label="Subject identification">
-          <dt>Subject</dt>  <dd>Doric column · type A</dd>
-          <dt>Origin</dt>   <dd>Temple of Hephaestus</dd>
-          <dt>Order</dt>    <dd>Greek classical</dd>
-          <dt>Height</dt>   <dd>8.43 m</dd>
-          <dt>Diameter</dt> <dd>1.05 m at base</dd>
-          <dt>Period</dt>   <dd>c. 5th century BCE</dd>
-        </dl>
-        <figure class="steckbrief-image">
-          <img src="../601e5f34e2badeb90324506dc6a8a1e9.jpg"
-               alt="Dot-matrix rendering of a Doric column — survey image for subject identification." />
-          <figcaption>Fig. — Subject survey, dot-matrix rendering.</figcaption>
-        </figure>
-      </section>
-      <p class="variant-note">
-        the document identifies a subject — an object, a specimen, a person, a
-        location — and the image is the subject itself. Common cases: archive
-        node title pages, specimen / artifact catalogue entries, system or
-        machine identification, archaeological find sheets, profile / portfolio
-        author cards.
-      </p>
-    </div>
-
-    <!-- ═══════════════════════ § 3 — ORDERED LISTS ═══════════════════════ -->
-    <header class="section-head">
-      <div class="marker"><span class="n">§ 3</span> · ORDERED LISTS</div>
+      <div class="marker"><span class="n">§ 2</span> · ORDERED LISTS</div>
       <div></div>
       <div class="ref">3 variants</div>
     </header>
@@ -628,9 +509,9 @@
       </p>
     </div>
 
-    <!-- ═══════════════════════ § 4 — UNORDERED LISTS ═══════════════════════ -->
+    <!-- ═══════════════════════ § 3 — UNORDERED LISTS ═══════════════════════ -->
     <header class="section-head">
-      <div class="marker"><span class="n">§ 4</span> · UNORDERED LISTS</div>
+      <div class="marker"><span class="n">§ 3</span> · UNORDERED LISTS</div>
       <div></div>
       <div class="ref">4 variants</div>
     </header>
@@ -712,9 +593,9 @@
       </p>
     </div>
 
-    <!-- ═══════════════════════ § 5 — TABLES ═══════════════════════ -->
+    <!-- ═══════════════════════ § 4 — TABLES ═══════════════════════ -->
     <header class="section-head">
-      <div class="marker"><span class="n">§ 5</span> · TABLES</div>
+      <div class="marker"><span class="n">§ 4</span> · TABLES</div>
       <div></div>
       <div class="ref">3 variants</div>
     </header>
