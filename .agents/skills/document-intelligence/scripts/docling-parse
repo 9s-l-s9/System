@@ -1,0 +1,571 @@
+#!/bin/sh
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+skill_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+python_script="$script_dir/docling_skill_parse.py"
+manifest="$skill_dir/manifest.scm"
+cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/codex-document-intelligence"
+venv_dir="${DOCLING_PARSE_VENV:-$cache_root/docling-venv}"
+docling_package="${DOCLING_PARSE_PACKAGE:-docling}"
+torch_cpu_index="${DOCLING_PARSE_TORCH_INDEX:-https://download.pytorch.org/whl/cpu}"
+container_image="${DOCLING_CONTAINER_IMAGE:-local/document-intelligence-docling:v11}"
+container_engine="${DOCLING_CONTAINER_ENGINE:-docker}"
+container_build="${DOCLING_CONTAINER_BUILD:-1}"
+use_container="${DOCLING_CONTAINER:-1}"
+default_batch_pages="${DOCLING_DEFAULT_BATCH_PAGES:-1}"
+layout_artifacts_override="${DOCLING_LAYOUT_ARTIFACTS:-$HOME/.cache/huggingface/hub/models--docling-project--docling-layout-heron/snapshots/8f39ad3c0b4c58e9c2d2c84a38465abf757272d8}"
+layout_artifacts_cache="${DOCLING_LAYOUT_ARTIFACT_CACHE:-$cache_root/docling-layout-heron-artifacts}"
+layout_artifacts_fallback_cache="${DOCLING_LAYOUT_ARTIFACT_FALLBACK_CACHE:-${TMPDIR:-/tmp}/codex-document-intelligence-$(id -u)/docling-layout-heron-artifacts}"
+hf_layout_root="${DOCLING_LAYOUT_HF_ROOT:-${HF_HOME:-$HOME/.cache/huggingface}/hub/models--docling-project--docling-layout-heron}"
+container_config_home="${DOCLING_CONTAINER_CONFIG_HOME:-$HOME/.config}"
+
+if [ -n "${GUIX_ENVIRONMENT:-}" ]; then
+  export LD_LIBRARY_PATH="$GUIX_ENVIRONMENT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+
+if [ -z "${XDG_RUNTIME_DIR:-}" ] || [ ! -w "${XDG_RUNTIME_DIR:-}" ]; then
+  export XDG_RUNTIME_DIR="${TMPDIR:-/tmp}/xdg-runtime-${UID:-$(id -u)}"
+  mkdir -p "$XDG_RUNTIME_DIR"
+fi
+chmod 700 "$XDG_RUNTIME_DIR" >/dev/null 2>&1 || true
+
+find_python() {
+  if command -v python3 >/dev/null 2>&1; then
+    command -v python3
+    return 0
+  fi
+  if command -v python >/dev/null 2>&1; then
+    command -v python
+    return 0
+  fi
+  return 1
+}
+
+has_docling() {
+  "$1" -c 'import docling.document_converter' >/dev/null 2>&1
+}
+
+create_venv() {
+  if "$1" -m venv "$venv_dir" >/dev/null 2>&1; then
+    return 0
+  fi
+  if command -v virtualenv >/dev/null 2>&1; then
+    virtualenv -p "$1" "$venv_dir"
+    return 0
+  fi
+  return 1
+}
+
+wants_help() {
+  for arg in "$@"; do
+    case "$arg" in
+      -h|--help)
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
+arg_value() {
+  name=$1
+  shift
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      "$name")
+        if [ "$#" -gt 1 ]; then
+          printf '%s\n' "$2"
+          return 0
+        fi
+        return 1
+        ;;
+      "$name"=*)
+        printf '%s\n' "${1#*=}"
+        return 0
+        ;;
+    esac
+    shift
+  done
+  return 1
+}
+
+has_arg() {
+  name=$1
+  shift
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      "$name"|"$name"=*)
+        return 0
+        ;;
+    esac
+    shift
+  done
+  return 1
+}
+
+run_with_python() {
+  python_bin=$1
+  shift
+  exec "$python_bin" "$python_script" "$@"
+}
+
+is_podman() {
+  case "$(basename -- "$1")" in
+    podman)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+find_container_engine() {
+  if [ "$container_engine" = "auto" ]; then
+    if command -v docker >/dev/null 2>&1; then
+      candidate=$(command -v docker)
+      if "$candidate" info >/dev/null 2>&1; then
+        printf '%s\n' "$candidate"
+        return 0
+      fi
+    fi
+    if command -v podman >/dev/null 2>&1; then
+      candidate=$(command -v podman)
+      if "$candidate" info >/dev/null 2>&1; then
+        printf '%s\n' "$candidate"
+        return 0
+      fi
+    fi
+    return 1
+  fi
+
+  if [ -n "$container_engine" ]; then
+    if command -v "$container_engine" >/dev/null 2>&1; then
+      candidate=$(command -v "$container_engine")
+      if "$candidate" info >/dev/null 2>&1; then
+        printf '%s\n' "$candidate"
+        return 0
+      fi
+    fi
+    return 1
+  fi
+  return 1
+}
+
+container_image_exists() {
+  "$1" image inspect "$container_image" >/dev/null 2>&1
+}
+
+exit_with_container_status() {
+  status=$1
+  if [ "$status" -eq 0 ]; then
+    exit 0
+  fi
+  if [ "$status" -eq 137 ]; then
+    echo "docling-parse: container exited with status 137; likely killed by OOM or SIGKILL." >&2
+  elif [ "$status" -eq 143 ]; then
+    echo "docling-parse: container exited with status 143; terminated by SIGTERM." >&2
+  else
+    echo "docling-parse: container exited with status $status." >&2
+  fi
+  exit "$status"
+}
+
+pdf_page_count() {
+  source=$1
+  engine=$2
+  if [ -f "$source" ]; then
+    source_dir=$(CDPATH= cd -- "$(dirname -- "$source")" && pwd)
+    source="$source_dir/$(basename -- "$source")"
+  fi
+  if command -v pdfinfo >/dev/null 2>&1; then
+    pages=$(pdfinfo "$source" 2>/dev/null | awk '/^Pages:/ {print $2; exit}')
+    if [ -n "${pages:-}" ]; then
+      printf '%s\n' "$pages"
+      return 0
+    fi
+  fi
+
+  "$engine" run --rm \
+    -v "$source:/input.pdf:ro" \
+    --entrypoint python \
+    "$container_image" \
+    -c 'import pypdfium2 as pdfium; print(len(pdfium.PdfDocument("/input.pdf")))' 2>/dev/null
+}
+
+run_batched() {
+  batch_pages=$1
+  engine=$2
+  shift 2
+  source_path=$1
+
+  case "$batch_pages" in
+    ''|*[!0-9]*|0)
+      echo "docling-parse: --batch-pages must be a positive integer." >&2
+      exit 2
+      ;;
+  esac
+  if has_arg --page-range "$@"; then
+    echo "docling-parse: --batch-pages cannot be combined with --page-range." >&2
+    exit 2
+  fi
+
+  if ! page_count=$(pdf_page_count "$source_path" "$engine"); then
+    echo "docling-parse: could not determine PDF page count for batching." >&2
+    exit 2
+  fi
+  case "$page_count" in
+    ''|*[!0-9]*|0)
+      echo "docling-parse: invalid PDF page count: ${page_count:-empty}" >&2
+      exit 2
+      ;;
+  esac
+
+  echo "docling-parse: batching $page_count pages in batches of $batch_pages." >&2
+  start=1
+  while [ "$start" -le "$page_count" ]; do
+    end=$((start + batch_pages - 1))
+    if [ "$end" -gt "$page_count" ]; then
+      end=$page_count
+    fi
+    echo "docling-parse: converting page range $start:$end" >&2
+    DOCLING_BATCH_ACTIVE=1 "$0" "$@" --page-range "$start:$end"
+    start=$((end + 1))
+  done
+}
+
+build_container_image() {
+  engine=$1
+  tmpdir=$(mktemp -d "${TMPDIR:-/tmp}/docling-image.XXXXXX")
+  trap 'rm -rf "$tmpdir"' EXIT HUP INT TERM
+  mkdir -p "$tmpdir/scripts"
+  cp "$skill_dir/docker/Dockerfile" "$tmpdir/Dockerfile"
+  cp "$python_script" "$tmpdir/scripts/docling_skill_parse.py"
+  if is_podman "$engine"; then
+    ensure_podman_policy "$container_config_home" >/dev/null
+    "$engine" build --userns=host -t "$container_image" "$tmpdir"
+  else
+    "$engine" build -t "$container_image" "$tmpdir"
+  fi
+  rm -rf "$tmpdir"
+  trap - EXIT HUP INT TERM
+}
+
+validate_layout_artifacts() {
+  artifacts_dir=$1
+  if [ -s "$artifacts_dir/model.safetensors" ] && [ -s "$artifacts_dir/config.json" ] && [ -s "$artifacts_dir/preprocessor_config.json" ]; then
+    return 0
+  fi
+  return 1
+}
+
+find_layout_artifacts_source() {
+  for candidate in "$layout_artifacts_override" "$layout_artifacts_cache" "$layout_artifacts_fallback_cache"; do
+    [ -n "$candidate" ] || continue
+    if validate_layout_artifacts "$candidate"; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  for snapshot_dir in "$hf_layout_root"/snapshots/*; do
+    [ -d "$snapshot_dir" ] || continue
+    if validate_layout_artifacts "$snapshot_dir"; then
+      printf '%s\n' "$snapshot_dir"
+      return 0
+    fi
+  done
+  return 1
+}
+
+select_layout_artifacts_cache() {
+  if mkdir -p "$layout_artifacts_cache" 2>/dev/null && [ -w "$layout_artifacts_cache" ]; then
+    printf '%s\n' "$layout_artifacts_cache"
+    return 0
+  fi
+
+  if mkdir -p "$layout_artifacts_fallback_cache" 2>/dev/null && [ -w "$layout_artifacts_fallback_cache" ]; then
+    printf '%s\n' "$layout_artifacts_fallback_cache"
+    return 0
+  fi
+
+  return 1
+}
+
+copy_layout_artifact() {
+  source_dir=$1
+  target_dir=$2
+  name=$3
+  target_path="$target_dir/$name"
+
+  if [ -s "$target_path" ]; then
+    return 0
+  fi
+
+  tmp_path="$target_dir/.$name.tmp.$$"
+  rm -f "$tmp_path" 2>/dev/null || true
+  cp -L "$source_dir/$name" "$tmp_path"
+  mv "$tmp_path" "$target_path"
+  test -s "$target_path"
+}
+
+materialize_layout_artifacts() {
+  if layout_source=$(find_layout_artifacts_source); then
+    if layout_cache=$(select_layout_artifacts_cache); then
+      :
+    else
+      return 1
+    fi
+
+    if [ "$layout_source" != "$layout_cache" ]; then
+      copy_layout_artifact "$layout_source" "$layout_cache" model.safetensors || return 1
+      copy_layout_artifact "$layout_source" "$layout_cache" config.json || return 1
+      copy_layout_artifact "$layout_source" "$layout_cache" preprocessor_config.json || return 1
+    fi
+
+    if validate_layout_artifacts "$layout_cache"; then
+      printf '%s\n' "$layout_cache"
+      return 0
+    fi
+  fi
+  return 1
+}
+
+explain_layout_artifacts_failure() {
+  echo "Docling layout artifacts were not found or could not be materialized." >&2
+  echo "Source override: $layout_artifacts_override" >&2
+  echo "Hugging Face root: $hf_layout_root" >&2
+  echo "Cache target: $layout_artifacts_cache" >&2
+  echo "Fallback cache target: $layout_artifacts_fallback_cache" >&2
+  echo "Expected model.safetensors, config.json, and preprocessor_config.json." >&2
+  echo "Source override listing:" >&2
+  ls -la "$layout_artifacts_override" >&2 2>/dev/null || echo "  not readable" >&2
+  echo "Cache target listing:" >&2
+  ls -la "$layout_artifacts_cache" >&2 2>/dev/null || echo "  not readable" >&2
+  echo "Fallback cache listing:" >&2
+  ls -la "$layout_artifacts_fallback_cache" >&2 2>/dev/null || echo "  not readable" >&2
+}
+
+if layout_artifacts=$(materialize_layout_artifacts 2>/dev/null || true); then
+  if [ -n "${layout_artifacts:-}" ]; then
+    export DOCLING_ARTIFACTS_PATH="$layout_artifacts"
+  fi
+fi
+
+ensure_podman_policy() {
+  config_home="$1"
+  policy_dir="$config_home/containers"
+  policy_file="$policy_dir/policy.json"
+  storage_file="$policy_dir/storage.conf"
+  mkdir -p "$policy_dir"
+  cat >"$policy_file" <<'EOF'
+{
+  "default": [
+    { "type": "insecureAcceptAnything" }
+  ]
+}
+EOF
+  cat >"$storage_file" <<EOF
+[storage]
+driver = "vfs"
+
+[storage.options]
+ignore_chown_errors = "true"
+EOF
+  printf '%s\n' "$config_home"
+}
+
+run_container() {
+  engine=$1
+  shift
+  source_path=$1
+  shift
+  workdir=$(pwd)
+  home_cache="${XDG_CACHE_HOME:-$HOME/.cache}/docling"
+  config_home="$container_config_home"
+  container_source_path="$source_path"
+  input_dir="$workdir/.docling-inputs"
+  layout_artifacts=""
+  mkdir -p "$home_cache" "$input_dir" >/dev/null 2>&1 || true
+  if is_podman "$engine"; then
+    ensure_podman_policy "$config_home" >/dev/null
+  fi
+  if [ -f "$source_path" ]; then
+    source_base=$(basename -- "$source_path")
+    container_source_path="$workdir/.docling-inputs/$source_base"
+    cp -- "$source_path" "$container_source_path"
+  fi
+  layout_artifacts=$(materialize_layout_artifacts 2>/dev/null || true)
+  if [ -z "${layout_artifacts:-}" ]; then
+    if [ "${DOCLING_REQUIRE_LOCAL_ARTIFACTS:-0}" = "1" ]; then
+      explain_layout_artifacts_failure
+      exit 2
+    fi
+    echo "Docling layout artifacts were not found locally; running without DOCLING_ARTIFACTS_PATH." >&2
+    echo "Docling may download required model files into: $home_cache" >&2
+  fi
+  if is_podman "$engine"; then
+    if [ -z "${layout_artifacts:-}" ]; then
+      set +e
+      "$engine" run --rm \
+        -u "$(id -u):$(id -g)" \
+        --userns=host \
+        -v "$workdir:$workdir" \
+        -v /tmp:/tmp \
+        -v /etc/passwd:/etc/passwd:ro \
+        -v /etc/group:/etc/group:ro \
+        -v "$home_cache:/home/docling/.cache" \
+        -w "$workdir" \
+        -e XDG_CONFIG_HOME="$config_home" \
+        -e HOME=/home/docling \
+        -e XDG_CACHE_HOME=/home/docling/.cache \
+        -e TORCH_HOME=/home/docling/.cache/torch \
+        -e TORCHINDUCTOR_CACHE_DIR=/home/docling/.cache/torchinductor \
+        -e DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false \
+        --entrypoint sh \
+        "$container_image" \
+        -lc 'unset DOCLING_ARTIFACTS_PATH; exec python /opt/document-intelligence/docling_skill_parse.py "$@"' \
+        sh "$container_source_path" "$@"
+      status=$?
+      set -e
+      exit_with_container_status "$status"
+    fi
+    set +e
+    "$engine" run --rm \
+      -u "$(id -u):$(id -g)" \
+      --userns=host \
+      -v "$workdir:$workdir" \
+      -v /tmp:/tmp \
+      -v /etc/passwd:/etc/passwd:ro \
+      -v /etc/group:/etc/group:ro \
+      -v "$home_cache:/home/docling/.cache" \
+      -v "$layout_artifacts:/opt/docling-models:ro" \
+      -w "$workdir" \
+      -e XDG_CONFIG_HOME="$config_home" \
+      -e HOME=/home/docling \
+      -e XDG_CACHE_HOME=/home/docling/.cache \
+      -e DOCLING_ARTIFACTS_PATH=/opt/docling-models \
+      -e TORCH_HOME=/home/docling/.cache/torch \
+      -e TORCHINDUCTOR_CACHE_DIR=/home/docling/.cache/torchinductor \
+      -e DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false \
+      "$container_image" "$container_source_path" "$@"
+    status=$?
+    set -e
+    exit_with_container_status "$status"
+  fi
+  if [ -z "${layout_artifacts:-}" ]; then
+    set +e
+    "$engine" run --rm \
+      -u "$(id -u):$(id -g)" \
+      -v "$workdir:$workdir" \
+      -v /tmp:/tmp \
+      -v /etc/passwd:/etc/passwd:ro \
+      -v /etc/group:/etc/group:ro \
+      -v "$home_cache:/home/docling/.cache" \
+      -w "$workdir" \
+      -e HOME=/home/docling \
+      -e XDG_CACHE_HOME=/home/docling/.cache \
+      -e TORCH_HOME=/home/docling/.cache/torch \
+      -e TORCHINDUCTOR_CACHE_DIR=/home/docling/.cache/torchinductor \
+      -e DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false \
+      --entrypoint sh \
+      "$container_image" \
+      -lc 'unset DOCLING_ARTIFACTS_PATH; exec python /opt/document-intelligence/docling_skill_parse.py "$@"' \
+      sh "$container_source_path" "$@"
+    status=$?
+    set -e
+    exit_with_container_status "$status"
+  fi
+  set +e
+  "$engine" run --rm \
+    -u "$(id -u):$(id -g)" \
+    -v "$workdir:$workdir" \
+    -v /tmp:/tmp \
+    -v /etc/passwd:/etc/passwd:ro \
+    -v /etc/group:/etc/group:ro \
+    -v "$home_cache:/home/docling/.cache" \
+    -v "$layout_artifacts:/opt/docling-models:ro" \
+    -w "$workdir" \
+    -e HOME=/home/docling \
+    -e XDG_CACHE_HOME=/home/docling/.cache \
+    -e DOCLING_ARTIFACTS_PATH=/opt/docling-models \
+    -e TORCH_HOME=/home/docling/.cache/torch \
+    -e TORCHINDUCTOR_CACHE_DIR=/home/docling/.cache/torchinductor \
+    -e DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false \
+    "$container_image" "$container_source_path" "$@"
+  status=$?
+  set -e
+  exit_with_container_status "$status"
+}
+
+if [ "$use_container" != "0" ]; then
+  if engine=$(find_container_engine); then
+    if ! container_image_exists "$engine"; then
+      if [ "$container_build" = "0" ]; then
+        echo "Docling container image not found: $container_image" >&2
+        echo "Set DOCLING_CONTAINER_BUILD=1 or build it manually." >&2
+        exit 2
+      fi
+      build_container_image "$engine"
+    fi
+    if [ "${DOCLING_BATCH_ACTIVE:-0}" != "1" ]; then
+      if batch_pages=$(arg_value --batch-pages "$@" 2>/dev/null); then
+        run_batched "$batch_pages" "$engine" "$@"
+        exit 0
+      fi
+      if [ "$default_batch_pages" != "0" ] && ! has_arg --page-range "$@"; then
+        echo "docling-parse: no page range provided; defaulting to --batch-pages $default_batch_pages for low memory safety." >&2
+        echo "docling-parse: set DOCLING_DEFAULT_BATCH_PAGES=0 to attempt full-document conversion." >&2
+        run_batched "$default_batch_pages" "$engine" "$@"
+        exit 0
+      fi
+    fi
+    run_container "$engine" "$@"
+  elif [ "${DOCLING_CONTAINER_REQUIRED:-0}" = "1" ]; then
+    echo "No usable container engine found for document-intelligence." >&2
+    echo "Default is Docker. Set DOCLING_CONTAINER_ENGINE=podman or auto only if Podman is configured on this host." >&2
+    exit 2
+  fi
+fi
+
+if python_bin=$(find_python); then
+  if wants_help "$@"; then
+    run_with_python "$python_bin" "$@"
+  fi
+
+  if has_docling "$python_bin"; then
+    run_with_python "$python_bin" "$@"
+  fi
+
+  if [ -x "$venv_dir/bin/python" ] && has_docling "$venv_dir/bin/python"; then
+    run_with_python "$venv_dir/bin/python" "$@"
+  fi
+
+  mkdir -p "$cache_root"
+  create_venv "$python_bin"
+  "$venv_dir/bin/python" -m pip install --no-cache-dir --upgrade pip
+  "$venv_dir/bin/python" -m pip install --no-cache-dir \
+    --extra-index-url "$torch_cpu_index" "$docling_package"
+  run_with_python "$venv_dir/bin/python" "$@"
+fi
+
+if [ "${DOCLING_PARSE_IN_GUIX:-0}" != "1" ]; then
+  if command -v guix >/dev/null 2>&1; then
+    export DOCLING_PARSE_IN_GUIX=1
+    exec guix shell -m "$manifest" -- "$0" "$@"
+  fi
+fi
+
+cat >&2 <<'EOF'
+docling-parse could not find or bootstrap Python with Docling.
+
+Provide one of:
+- python3 with docling installed
+- python3 with venv/pip available so this script can create a cached venv
+- guix, so this script can re-enter with the skill-local manifest.scm
+
+Manual install:
+  python3 -m pip install --extra-index-url https://download.pytorch.org/whl/cpu docling
+EOF
+exit 2

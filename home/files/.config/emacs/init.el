@@ -50,7 +50,10 @@
 (require 'eglot-conf)
 (require 'python-conf)
 (require 'dap-conf)
-(require 'gptel-conf)
+(require 'gptel-conf)   ; chat / rewrite, user-in-the-loop
+(require 'eca-conf)     ; autonomous agent (no-op until emacs-eca is installed)
+;; (require 'minuet-conf)  ; AI inline completion; disabled (needs API key)
+(require 'whisper-conf)  ; local speech-to-text (no-op until emacs-whisper installed)
 
 (use-package magit
   :commands (magit-status magit-dispatch magit-file-dispatch))

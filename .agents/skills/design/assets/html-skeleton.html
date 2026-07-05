@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Document Title - Technical-Manual Skeleton</title>
+  <meta name="description" content="Starter HTML for the technical-manual design skill. IBM Plex Mono body, Space Mono display register, centered dense measure." />
+  <!-- The styles below mirror assets/style-tokens.css inline so this skeleton
+       remains a single self-contained file. If you prefer a linked stylesheet,
+       replace the <style> block with <link rel="stylesheet" href="style-tokens.css">.
+
+       Typography:
+         - IBM Plex Mono (the --serif token) carries body, labels, code, and
+           tabular material. No sans-serif, no proportional serif.
+         - Space Mono (--display) is reserved for chrome and headings.
+       Three label registers (all monospace):
+         - A — uppercase + letterspaced: structural / identifier labels
+           (masthead, sections, eyebrows). Manual-chrome register.
+         - B — italic lowercase: descriptive labels (figcaption, table caption,
+           column headers); same as plot axes.
+         - C — uppercase letterspaced: state tags (Stable / Watch / Transitional).
+  -->
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #0a0a0a;
+      --ink-2: #1d1d1d;
+      --muted: #565656;
+      --faint: #8a8a8a;
+      --rule: #0a0a0a;
+      --rule-soft: #d4d4d4;
+      --term-bg: #000000;
+      --term-fg: #ededed;
+      --term-muted: #9a9a9a;
+
+      --accent-red:  #d83a2f;
+      --accent-blue: #2e62c4;
+
+      --serif:   "IBM Plex Mono", ui-monospace, monospace;
+      --mono:    "IBM Plex Mono", ui-monospace, monospace;
+      --display: "Space Mono", "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { background: var(--bg); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 12.5px;
+      line-height: 1.42;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      font-variant-numeric: tabular-nums oldstyle-nums;
+    }
+
+    a {
+      color: var(--ink);
+      text-decoration: underline;
+      text-decoration-thickness: .5px;
+      text-underline-offset: .2em;
+      text-decoration-color: var(--rule-soft);
+    }
+    a:hover { text-decoration-color: var(--ink); }
+    :focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
+
+    code, .mono { font-family: var(--mono); font-size: .88em; font-variant-numeric: tabular-nums; }
+    em { font-style: italic; }
+    strong { font-weight: 600; }
+
+    h1, h2, h3 {
+      font-family: var(--display);
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: .005em;
+    }
+    h1 { font-size: 22px; line-height: 1.2; }
+    h2 { font-size: 15px; }
+    h3 { font-size: 13px; }
+    p  { margin: 0 0 .55em; }
+    p + p { text-indent: 1.4em; }
+
+    .page { max-width: 1040px; margin: 0 auto; padding: 22px 28px 56px; }
+
+    /* ── label register A: uppercase + letterspaced (structural) ───────────
+       Used for: masthead identity, byline, section markers, sub markers,
+       specs-panel dt eyebrows, note prefix. Manual-chrome register. */
+    .eyebrow,
+    .masthead .left,
+    .byline,
+    .section-head .marker,
+    .sub,
+    dl.meta dt,
+    .note::before {
+      font-family: var(--display);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* ── label register B: italic lowercase (descriptive) ──────────────────
+       Used for: figcaption, table caption, column headers. Same voice as the
+       plot axis font in accent-test.html. */
+    .descriptive,
+    figcaption,
+    table.tbl thead th,
+    table.tbl caption {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    /* ── label register C: state tags ──────────────────────────────────────
+       Used for: state cells in tables. Quasi-tag register.
+       This register is uppercase + letterspaced. */
+    .tag,
+    table.tbl tbody td.state {
+      font-family: var(--serif);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: .85em;
+      font-weight: 500;
+    }
+
+    /* ── masthead ─────────────────────────────────────────── */
+    .masthead {
+      display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px;
+      padding-bottom: 6px; border-bottom: 2px solid var(--rule);
+    }
+    .masthead .left  { font-size: 10.5px; color: var(--muted); }
+    .masthead .left .id { color: var(--ink); font-weight: 600; }
+    .masthead .right {
+      font-family: var(--mono); font-size: 10.5px; letter-spacing: .03em; color: var(--muted); text-align: right;
+    }
+
+    /* ── title block ──────────────────────────────────────── */
+    .title-block { padding: 18px 0 6px; }
+    .byline      { font-size: 10.5px; color: var(--muted); margin: 6px 0 14px; }
+    .abstract {
+      font-family: var(--serif); font-style: italic; font-size: 14px; line-height: 1.5;
+      margin: 12px 0 14px;
+    }
+    .abstract::before { content: "Abstract.\00a0"; font-weight: 600; }
+
+    /* ── specifications panel (earned dark, data plate) ───── */
+    dl.meta {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      background: var(--term-bg); color: var(--term-fg); font-family: var(--mono);
+      margin: 18px 0 4px;
+    }
+    dl.meta > div {
+      padding: 12px 16px;
+      border-right: 1px solid #1f1f1f; border-top: 1px solid #1f1f1f;
+      display: grid; gap: 3px;
+    }
+    dl.meta > div:nth-child(3n)   { border-right: 0; }
+    dl.meta > div:nth-child(-n+3) { border-top: 0; }
+    dl.meta dt { font-size: 9.5px; color: #7a7a7a; margin: 0; }
+    dl.meta dd { margin: 0; color: var(--term-fg); font-size: 12px; }
+    @media (max-width: 720px) {
+      dl.meta { grid-template-columns: repeat(2, 1fr); }
+      dl.meta > div                 { border-top: 1px solid #1f1f1f; }
+      dl.meta > div:nth-child(2n)   { border-right: 0; }
+      dl.meta > div:nth-child(-n+2) { border-top: 0; }
+    }
+
+    /* ── inline TOC ───────────────────────────────────────── */
+    ol.toc {
+      list-style: none; padding: 0; margin: 16px 0 0;
+      display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; row-gap: 4px;
+      font-family: var(--mono); font-size: 11.5px;
+    }
+    ol.toc li {
+      border-bottom: .5px dotted var(--rule-soft); padding: 4px 0;
+    }
+    /* grid goes on the <a> so the spans become grid items
+       (previously on the <li>, which made them inline-collapsed) */
+    ol.toc a {
+      display: grid; grid-template-columns: 1.6em 1fr auto;
+      gap: 0 0.6em; align-items: baseline;
+      text-decoration: none;
+    }
+    ol.toc li .n { color: var(--faint); }
+    ol.toc li .t { color: var(--ink); }
+    ol.toc li .r { color: var(--muted); font-size: 10.5px; letter-spacing: .04em; }
+    @media (max-width: 600px) { ol.toc { grid-template-columns: 1fr; } }
+
+    /* ── numbered sections + § sub ────────────────────────── */
+    .section-head {
+      display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 14px;
+      padding: 6px 0 10px; border-bottom: 1px solid var(--rule); margin-bottom: 16px;
+    }
+    .section-head .marker { font-size: 10.5px; color: var(--muted); letter-spacing: .16em; }
+    .section-head .marker .n { color: var(--ink); font-weight: 600; }
+    .section-head .ref { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+
+    .sub {
+      font-size: 10.5px; color: var(--muted);
+      margin: 22px 0 8px; padding-top: 8px; border-top: .5px solid var(--rule-soft);
+    }
+    .sub::before { content: "§ "; color: var(--faint); }
+    .sub:first-of-type { border-top: 0; padding-top: 0; margin-top: 14px; }
+
+    /* ── booktabs table ───────────────────────────────────── */
+    table.tbl {
+      width: 100%; border-collapse: collapse;
+      border-top: 1.5px solid var(--rule); border-bottom: 1.5px solid var(--rule);
+      margin: 12px 0 4px;
+    }
+    table.tbl thead th {
+      font-size: 11.5px;
+      color: var(--ink);
+      text-align: left; border-bottom: .5px solid var(--rule);
+      padding: 5px 12px 5px 0;
+    }
+    table.tbl tbody td {
+      padding: 5px 12px 5px 0; vertical-align: top;
+      font-family: var(--serif); font-size: 12.5px;
+    }
+    table.tbl tbody td.mono  { font-family: var(--mono); font-size: 11.5px; }
+    table.tbl tbody td.state { font-size: 11.5px; color: var(--muted); }
+    table.tbl tbody td.state.watch { color: var(--accent-red); font-weight: 600; }
+    table.tbl tbody tr + tr td { border-top: .5px dotted var(--rule-soft); }
+    table.tbl caption {
+      caption-side: bottom; text-align: left;
+      font-size: 11px; color: var(--muted);
+      padding-top: 8px;
+    }
+
+    /* ── terminal block (earned dark) ─────────────────────── */
+    pre.term {
+      background: var(--term-bg); color: var(--term-fg);
+      font-family: var(--mono); font-size: 11.5px; line-height: 1.55;
+      padding: 12px 14px; margin: 12px 0 4px; overflow-x: auto; border: 0;
+    }
+    pre.term .c { color: var(--term-muted); }
+    pre.term .p { color: #d4d4d4; }
+    pre.term .a { color: #9a9a9a; }
+
+    /* ── note ─────────────────────────────────────────────── */
+    .note {
+      font-family: var(--serif); font-size: 12.5px; color: var(--ink-2);
+      border-top: .5px solid var(--rule-soft); border-bottom: .5px solid var(--rule-soft);
+      padding: 8px 0; margin: 12px 0;
+    }
+    .note::before {
+      content: "Note. ";
+      font-size: 9.5px; color: var(--muted);
+      margin-right: 4px;
+    }
+
+    ul.list { margin: 6px 0 6px; padding-left: 18px; }
+    ul.list li { margin: 0 0 2px; }
+
+    /* ── colophon ─────────────────────────────────────────── */
+    footer.colophon {
+      margin-top: 36px; padding-top: 8px; border-top: 1px solid var(--rule);
+      font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+      display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+    }
+    footer.colophon .eof::before { content: "❑ "; }
+
+    /* ── print: invert dark surfaces back to white-with-border ─── */
+    @media print {
+      pre.term { background: #fff; color: #000; border: .5px solid #000; }
+      pre.term .c, pre.term .a, pre.term .p { color: #555; }
+      dl.meta { background: #fff; color: #000; }
+      dl.meta > div { border-color: #aaa !important; }
+      dl.meta dt    { color: #555; }
+      dl.meta dd    { color: #000; }
+      body          { font-size: 11px; }
+      a             { color: #000; }
+    }
+
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="masthead">
+      <div class="left">
+        <span class="id">Project / Document</span> · short subtitle
+      </div>
+      <div class="right">Vol. 1 · No. 0 · YYYY.MM.DD · branch main</div>
+    </header>
+
+    <section class="title-block">
+      <h1>Document Title</h1>
+      <div class="byline">Author Name · Source <span class="mono">repo/path</span></div>
+
+      <p class="abstract">
+        One to three sentences. Describe the system boundary, scope, or purpose
+        of the document in precise, grounded language. Plain prose, no marketing
+        voice. The abstract sets expectations for what follows and what is left
+        for a future revision.
+      </p>
+    </section>
+
+    <dl class="meta" aria-label="Document specifications">
+      <div><dt>Revision</dt>      <dd>0.1 · YYYY.MM.DD</dd></div>
+      <div><dt>Scope</dt>         <dd>(what this covers)</dd></div>
+      <div><dt>Status</dt>        <dd>Draft</dd></div>
+      <div><dt>Source</dt>        <dd>(repo or system)</dd></div>
+      <div><dt>Format</dt>        <dd>Single-file HTML</dd></div>
+      <div><dt>Generated</dt>     <dd>YYYY.MM.DD</dd></div>
+    </dl>
+
+    <h2 class="sub">Contents</h2>
+    <ol class="toc">
+      <li><a href="#s1"><span class="n">1</span><span class="t">Summary</span><span class="r">overview</span></a></li>
+      <li><a href="#s2"><span class="n">2</span><span class="t">Module map</span><span class="r">structure</span></a></li>
+      <li><a href="#s3"><span class="n">3</span><span class="t">Operational flow</span><span class="r">commands</span></a></li>
+      <li><a href="#s4"><span class="n">4</span><span class="t">Open questions</span><span class="r">TBD</span></a></li>
+    </ol>
+
+    <!-- 1 ───────────────────────────────────────────────────────── -->
+    <section id="s1">
+      <header class="section-head">
+        <div class="marker"><span class="n">§ 1</span> · SUMMARY</div>
+        <div></div>
+        <div class="ref">YYYY.MM.DD</div>
+      </header>
+
+      <p>
+        Body paragraph in serif. Trim adverbs and meta-narration. Prefer one
+        tight paragraph to two loose ones. State the topic, the boundary, and
+        what is at stake — then stop.
+      </p>
+
+      <div class="note">
+        Inline annotation when a single sentence carries weight that the
+        surrounding prose does not. Use sparingly; it loses force if repeated.
+      </div>
+    </section>
+
+    <!-- 2 ───────────────────────────────────────────────────────── -->
+    <section id="s2">
+      <header class="section-head">
+        <div class="marker"><span class="n">§ 2</span> · MODULE MAP</div>
+        <div></div>
+        <div class="ref">3 modules</div>
+      </header>
+
+      <table class="tbl">
+        <caption>Table 1 — Modules in scope.</caption>
+        <thead>
+          <tr>
+            <th style="width: 30%">Module</th>
+            <th style="width: 22%">Role</th>
+            <th style="width: 32%">Owns</th>
+            <th style="width: 16%">State</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">module/one.ext</td>  <td>Policy</td>      <td>Shared baseline</td>      <td class="state">Stable</td></tr>
+          <tr><td class="mono">module/two.ext</td>  <td>Host</td>        <td>Hardware identity</td>    <td class="state">Stable</td></tr>
+          <tr><td class="mono">module/three.ext</td><td>Transitional</td><td>In-progress overlap</td> <td class="state watch">Watch</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 3 ───────────────────────────────────────────────────────── -->
+    <section id="s3">
+      <header class="section-head">
+        <div class="marker"><span class="n">§ 3</span> · OPERATIONAL FLOW</div>
+        <div></div>
+        <div class="ref">CLI</div>
+      </header>
+
+      <p>One sentence above the block that establishes the context.</p>
+
+      <pre class="term" aria-label="Shell example"><span class="c"># short description</span>
+<span class="p">$</span> command <span class="a">--flag value</span>
+<span class="c"># expected behaviour</span></pre>
+    </section>
+
+    <!-- 4 ───────────────────────────────────────────────────────── -->
+    <section id="s4">
+      <header class="section-head">
+        <div class="marker"><span class="n">§ 4</span> · OPEN QUESTIONS</div>
+        <div></div>
+        <div class="ref">TBD</div>
+      </header>
+
+      <ul class="list">
+        <li>A friction point or unresolved decision, named precisely.</li>
+        <li>A second one, with the consequence of leaving it unresolved.</li>
+        <li>A third one, with a name and an owner if known.</li>
+      </ul>
+    </section>
+
+    <footer class="colophon">
+      <div>Project / Document · single file · YYYY.MM.DD</div>
+      <div class="eof">END OF DOCUMENT</div>
+    </footer>
+
+  </div>
+</body>
+</html>

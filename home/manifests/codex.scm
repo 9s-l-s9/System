@@ -9,6 +9,8 @@
      "nss-certs"
      "curl"
      "bind:utils"
+     "docker-cli"
+     "podman"
      "gh"
      "openssh"
      "guix"

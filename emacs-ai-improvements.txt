@@ -1,0 +1,150 @@
+================================================================================
+IMPROVING AI USAGE IN EMACS — AN OVERVIEW
+================================================================================
+Date: 2026-06-24
+Scope: Options for turning Emacs into a strong AI coding environment, ranging
+       from chat assistants to full agentic harnesses (Claude Code / pi style)
+       plus better AI autocomplete.
+
+How to read this: each section lists the package, what it does, why you'd want
+it, and a rough effort/maturity note. Pick one item per category to start.
+
+--------------------------------------------------------------------------------
+0. THE BIG PICTURE — THREE LAYERS
+--------------------------------------------------------------------------------
+There are three distinct things people mean by "AI in the editor". Improve them
+independently:
+
+  1. CHAT / ASSISTANT     — ask questions, rewrite regions, explain code.
+  2. AGENTIC HARNESS      — a loop that reads files, runs tools, edits the repo,
+                            and iterates (this is what Claude Code / pi are).
+  3. INLINE AUTOCOMPLETE  — ghost-text / completion-as-you-type.
+
+The blog you read almost certainly describes layer 2 implemented natively in
+Emacs, most likely via gptel's tool-use or the new Agent Client Protocol (ACP).
+
+--------------------------------------------------------------------------------
+1. AGENTIC HARNESS IN EMACS (the "Claude Code in Emacs" thing)
+--------------------------------------------------------------------------------
+This is the core of what you're after. Several converging approaches:
+
+  a) gptel + tools (native, recommended starting point)
+     - gptel is THE general LLM client for Emacs. Recent versions support
+       tool-use / function-calling, so the model can call elisp functions you
+       expose (read file, write file, run shell, grep, etc.).
+     - With a small set of tools you reproduce ~80% of a coding harness without
+       leaving Emacs, using your own Claude API key.
+     - Maturity: high. Effort: low-medium. This is the path most blog posts take.
+
+  b) ACP — Agent Client Protocol (the emerging standard)
+     - ACP is to agents what LSP is to language servers: an editor-agnostic
+       protocol so one agent backend can drive many editors.
+     - Emacs clients: `agent-shell` (xenodium) and `acp.el`. These let Emacs act
+       as the front-end for an external agent process.
+     - Why care: future-proof; decouples the harness from the model vendor.
+     - Maturity: young but fast-moving. Effort: medium.
+
+  c) Wrapping the actual Claude Code / pi CLI inside Emacs
+     - `claude-code.el` and `claude-code-ide.el` run the real Claude Code CLI in
+       an Emacs terminal buffer and bridge it to your editor (buffers, diffs,
+       MCP). You get the genuine harness with Emacs as the shell + context.
+     - `eat` or `vterm` is the terminal backend; `claude-code-ide.el` adds an MCP
+       server so Claude can see your open buffers, LSP diagnostics, etc.
+     - Why care: zero re-implementation, full fidelity to the upstream harness.
+     - Maturity: high for claude-code.el. Effort: low. **Likely your best ROI.**
+
+  d) aider via Emacs — `aidermacs` (fork of aider.el)
+     - Drives the `aider` CLI, a mature git-aware pair-programming agent.
+     - Strong auto-commit / diff workflow, model-agnostic.
+     - Maturity: high. Effort: low.
+
+  e) macher / elysium / evedel
+     - `macher`: gptel-based multi-file editing with a review/diff workflow.
+     - `elysium`: apply AI changes as diffs across buffers.
+     - `evedel`: instruction-driven code generation via overlays.
+
+  RECOMMENDATION: Start with (c) claude-code-ide.el for the real harness, and
+  add (a) gptel for lightweight in-buffer chat/tool use. They coexist well.
+
+--------------------------------------------------------------------------------
+2. BETTER AI AUTOCOMPLETE (ghost text / inline)
+--------------------------------------------------------------------------------
+  a) minuet-ai (`minuet.el`) — RECOMMENDED
+     - Vendor-agnostic inline completion: works with Claude, OpenAI, Gemini,
+       Ollama, llama.cpp, Codestral, etc.
+     - Two modes: as-you-type ghost text, or on-demand via completion popup.
+     - Integrates with corfu/company or shows preview overlays.
+     - Maturity: high. Effort: low-medium. Best "modern Copilot alternative".
+
+  b) copilot.el — GitHub Copilot ghost text (needs Copilot subscription/node).
+  c) codeium.el / windsurf — free-tier inline completion.
+  d) Ollama-backed local completion via minuet + a local model (privacy, no API
+     cost; quality depends on model + machine).
+
+  NOTE: Inline completion and a chat/agent assistant are complementary — run
+  minuet for keystroke-level help and a harness for task-level work.
+
+--------------------------------------------------------------------------------
+3. COMPLETION FRAMEWORK (so AI completion feels native)
+--------------------------------------------------------------------------------
+  - corfu  — in-buffer completion popup (modern, lightweight).
+  - cape   — completion-at-point extensions; bridges AI sources into corfu.
+  - company — the older alternative; copilot.el/minuet support both.
+  If you're not already on corfu+cape, adopting it makes AI completion cleaner.
+
+--------------------------------------------------------------------------------
+4. CHAT / ASSISTANT ERGONOMICS
+--------------------------------------------------------------------------------
+  - gptel             — chat in any buffer, region rewrite, directives/presets.
+  - ellama            — task-oriented commands (summarize, refactor, translate),
+                        Ollama-friendly, built on the `llm` library.
+  - org-ai            — AI inside Org mode (blocks, image gen, speech).
+  - gptel-quick       — popup answer for the thing at point.
+  Pick gptel as the backbone; it has the largest ecosystem and tool-use support.
+
+--------------------------------------------------------------------------------
+5. CONTEXT & RETRIEVAL (make the AI actually understand your repo)
+--------------------------------------------------------------------------------
+  - LSP/eglot diagnostics fed to the agent (claude-code-ide.el does this).
+  - Project-wide context via project.el / projectile boundaries.
+  - MCP servers (Model Context Protocol): expose tools/resources the agent can
+    call — filesystem, git, web, your own. `mcp.el` is the Emacs MCP client.
+  - Embeddings/RAG over your codebase is possible but usually overkill; good
+    file-reading tools + grep beat naive RAG for code.
+
+--------------------------------------------------------------------------------
+6. FIT WITH YOUR SETUP (Guix System repo)
+--------------------------------------------------------------------------------
+  - Most of these are ELPA/MELPA packages; on Guix prefer declaring them in your
+    home manifest where packaged, else use a pinned source checkout.
+  - CLIs (claude-code, aider, pi) are external programs — wrap them the same way
+    you already wrap claude-guix.scm / pi-guix.scm launchers, then point the
+    Emacs package at the binary.
+  - Keep API keys out of the store: use auth-source (~/.authinfo.gpg) — gptel and
+    friends read from it natively.
+  - This mirrors your existing pattern: harness CLI managed by Guix, editor layer
+    (Emacs packages) on top.
+
+--------------------------------------------------------------------------------
+7. SUGGESTED STARTER STACK (minimal, high payoff)
+--------------------------------------------------------------------------------
+  [ ] corfu + cape                      (completion UI, if not already)
+  [ ] minuet-ai                         (inline AI completion)
+  [ ] gptel + a few tools               (chat + light agentic in-buffer)
+  [ ] claude-code-ide.el (+ eat/vterm)  (the real Claude Code harness in Emacs)
+  [ ] auth-source for API keys
+  Optional next: aidermacs, ACP/agent-shell, mcp.el for custom tools.
+
+--------------------------------------------------------------------------------
+8. OPEN QUESTIONS TO DECIDE FIRST
+--------------------------------------------------------------------------------
+  - Cloud API (Claude) vs local models (Ollama/llama.cpp)? cost vs privacy.
+  - Re-use the upstream CLI harness (less work, full fidelity) vs build native
+    in elisp (more control, more maintenance)?
+  - One unified key (Claude) across completion + chat + agent, or mix vendors?
+
+================================================================================
+Most links above are MELPA package names; search them directly. If you tell me
+which row you want to try first, I can wire up the Emacs config + Guix manifest
+entry for it.
+================================================================================

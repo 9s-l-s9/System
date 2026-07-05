@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+skill_script="${HOME}/.agents/skills/drawio-render/scripts/drawio-render"
+repo_script="${HOME}/Projects/System/.agents/skills/drawio-render/scripts/drawio-render"
+
+if [ -f "$skill_script" ]; then
+  exec guile -s "$skill_script" "$@"
+fi
+
+if [ -f "$repo_script" ]; then
+  exec guile -s "$repo_script" "$@"
+fi
+
+printf '%s\n' "drawio-render: missing drawio-render skill script." >&2
+printf '%s\n' "Expected: $skill_script" >&2
+printf '%s\n' "Fallback: $repo_script" >&2
+exit 1

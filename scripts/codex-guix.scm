@@ -14,6 +14,9 @@
 (define default-manifest
   (string-append home "/Projects/System/home/manifests/codex.scm"))
 
+(define (mode-name mode)
+  (if (eq? mode 'full) "full" "sandbox"))
+
 (define (expand-user-path path)
   (cond
     ((string=? path "~") home)
@@ -22,8 +25,10 @@
     (else path)))
 
 (define (usage)
-  (format #t "Usage: codex-guix [MANIFEST-PATH]~%")
-  (format #t "Default manifest: ~a~%" default-manifest))
+  (format #t "Usage: codex-guix [--full|--sandbox] [MANIFEST-PATH] [-- CODEX-ARGS...]~%")
+  (format #t "Default mode: full. Pass --sandbox for a contained Guix shell.~%")
+  (format #t "Default manifest: ~a~%" default-manifest)
+  (format #t "Unknown options are passed to Codex. Use -- before Codex args when ambiguous.~%"))
 
 (define (maybe-mount flag source target)
   (if (and source (file-exists? source))
@@ -35,52 +40,81 @@
       (list (string-append "--preserve=^" name "$"))
       '()))
 
-(define (manifest-path-from-args args)
-  (cond
-    ((null? args) default-manifest)
-    ((member (car args) '("-h" "--help"))
-     (usage)
-     (exit 0))
-    ((= (length args) 1)
-     (expand-user-path (car args)))
-    (else
-     (usage)
-     (format (current-error-port)
-             "codex-guix: expected at most one manifest path argument.~%")
-     (exit 1))))
-
-(define (guix-args manifest)
+(define (container-socket-mounts)
   (append
-   '("shell" "--container" "--nesting" "--network")
-   (maybe-mount "--expose"
-                (string-append home "/.config/git/config")
-                (string-append home "/.config/git/config"))
-   ;; Persist Codex auth/config
-   (maybe-mount "--share"
-                (string-append home "/.codex")
-                (string-append home "/.codex"))
-   ;; Persist npm global install location
-   (maybe-mount "--share"
-                (string-append home "/.local")
-                (string-append home "/.local"))
-   ;; Optional: preserve pnpm caches later if you switch back to pnpm
-   ;; (maybe-mount "--share"
-   ;;              (string-append home "/.cache/pnpm")
-   ;;              (string-append home "/.cache/pnpm"))
-   ;; (maybe-mount "--share"
-   ;;              (string-append home "/.local/share/pnpm")
-   ;;              (string-append home "/.local/share/pnpm"))
+   (maybe-mount "--expose" "/var/run/docker.sock" "/var/run/docker.sock")
    (let ((xdg-runtime (getenv "XDG_RUNTIME_DIR")))
-     (if (and xdg-runtime (file-exists? xdg-runtime))
-         (list (string-append "--expose=" xdg-runtime "=" xdg-runtime))
-         '()))
-   (maybe-preserve "DBUS_SESSION_BUS_ADDRESS")
-   (maybe-preserve "COLORTERM")
-   (maybe-preserve "DISPLAY")
-   (maybe-preserve "WAYLAND_DISPLAY")
-   (maybe-preserve "XAUTHORITY")
+     (if xdg-runtime
+         (append
+          (maybe-mount "--expose"
+                       (string-append xdg-runtime "/docker.sock")
+                       (string-append xdg-runtime "/docker.sock"))
+          (maybe-mount "--expose"
+                       (string-append xdg-runtime "/podman/podman.sock")
+                       (string-append xdg-runtime "/podman/podman.sock")))
+         '()))))
+
+(define (parse-args args)
+  (let loop ((rest args) (mode 'full) (manifest #f))
+    (cond
+      ((null? rest)
+       (values mode (or manifest default-manifest) '()))
+      ((member (car rest) '("-h" "--help"))
+       (usage)
+       (exit 0))
+      ((string=? (car rest) "--")
+       (values mode (or manifest default-manifest) (cdr rest)))
+      ((string=? (car rest) "--full")
+       (loop (cdr rest) 'full manifest))
+      ((string=? (car rest) "--sandbox")
+       (loop (cdr rest) 'sandbox manifest))
+      ((string-prefix? "-" (car rest))
+       (values mode (or manifest default-manifest) rest))
+      ((not manifest)
+       (loop (cdr rest) mode (expand-user-path (car rest))))
+      (else
+       (values mode manifest rest)))))
+
+(define (guix-args mode manifest codex-args)
+  (append
+   (if (eq? mode 'sandbox)
+       (append
+        '("shell" "--container" "--nesting" "--network")
+        (maybe-mount "--expose"
+                     (string-append home "/.config/git/config")
+                     (string-append home "/.config/git/config"))
+        ;; Persist Codex auth/config
+        (maybe-mount "--share"
+                     (string-append home "/.codex")
+                     (string-append home "/.codex"))
+        ;; Persist npm global install location
+        (maybe-mount "--share"
+                     (string-append home "/.local")
+                     (string-append home "/.local"))
+        ;; Host Docker/Podman sockets for container-backed tools.
+        (container-socket-mounts)
+        ;; Optional: preserve pnpm caches later if you switch back to pnpm
+        ;; (maybe-mount "--share"
+        ;;              (string-append home "/.cache/pnpm")
+        ;;              (string-append home "/.cache/pnpm"))
+        ;; (maybe-mount "--share"
+        ;;              (string-append home "/.local/share/pnpm")
+        ;;              (string-append home "/.local/share/pnpm"))
+        (let ((xdg-runtime (getenv "XDG_RUNTIME_DIR")))
+          (if (and xdg-runtime (file-exists? xdg-runtime))
+              (list (string-append "--expose=" xdg-runtime "=" xdg-runtime))
+              '()))
+        (maybe-preserve "DBUS_SESSION_BUS_ADDRESS")
+        (maybe-preserve "COLORTERM")
+        (maybe-preserve "CONTAINER_HOST")
+        (maybe-preserve "DISPLAY")
+        (maybe-preserve "DOCKER_HOST")
+        (maybe-preserve "WAYLAND_DISPLAY")
+        (maybe-preserve "XDG_RUNTIME_DIR")
+        (maybe-preserve "XAUTHORITY"))
+       '("shell"))
    (list "-m" manifest)
-   (list "--" "bash" "-lc"
+   (list "--" "bash" "-c"
          (string-append
           "export SHELL=$(command -v bash); "
           "export NPM_CONFIG_PREFIX=\"$HOME/.local\"; "
@@ -88,24 +122,30 @@
           "if [ ! -f \"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\" ]; then "
           "  npm install -g @openai/codex; "
           "fi; "
-          "exec node \"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\""))))
+          "exec node \"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\" \"$@\"")
+         "codex-guix")
+   codex-args))
 
 (define (main)
-  (let* ((args (cdr (command-line)))
-         (manifest (manifest-path-from-args args)))
-    (unless (file-exists? manifest)
-      (format (current-error-port)
-              "codex-guix: manifest not found: ~a~%" manifest)
-      (exit 1))
+  (call-with-values
+    (lambda () (parse-args (cdr (command-line))))
+    (lambda (mode manifest codex-args)
+      (unless (file-exists? manifest)
+        (format (current-error-port)
+                "codex-guix: manifest not found: ~a~%" manifest)
+        (exit 1))
 
-    (format #t "codex-guix: using manifest: ~a~%" manifest)
+      (format #t "codex-guix: mode: ~a~%" (mode-name mode))
+      (format #t "codex-guix: using manifest: ~a~%" manifest)
+      (unless (null? codex-args)
+        (format #t "codex-guix: codex args: ~a~%" (string-join codex-args " ")))
 
-    (let ((status (apply system* "guix" (guix-args manifest))))
-      (if (zero? status)
-          (exit 0)
-          (begin
-            (format (current-error-port)
-                    "codex-guix: guix shell exited with status ~a~%" status)
-            (exit 1))))))
+      (let ((status (apply system* "guix" (guix-args mode manifest codex-args))))
+        (if (zero? status)
+            (exit 0)
+            (begin
+              (format (current-error-port)
+                      "codex-guix: guix shell exited with status ~a~%" status)
+              (exit 1)))))))
 
 (main)
