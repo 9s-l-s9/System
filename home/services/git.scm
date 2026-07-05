@@ -46,30 +46,28 @@
 
 (define git-config-activation
   #~(begin
-      (use-modules (guix build utils)
-                   (srfi srfi-13))
+      (use-modules (srfi srfi-13))
 
-      (define home (getenv "HOME"))
-      (define xdg-config-home
-        (or (getenv "XDG_CONFIG_HOME")
-            (string-append home "/.config")))
-      (define xdg-git-config
-        (string-append xdg-config-home "/git/config"))
-      (define global-git-config
-        (string-append home "/.gitconfig"))
+      (let* ((home (getenv "HOME"))
+             (xdg-config-home
+              (or (getenv "XDG_CONFIG_HOME")
+                  (string-append home "/.config")))
+             (xdg-git-config
+              (string-append xdg-config-home "/git/config"))
+             (global-git-config
+              (string-append home "/.gitconfig")))
+        (define (store-symlink? path)
+          (let ((target (false-if-exception (readlink path))))
+            (and target (string-prefix? "/gnu/store/" target))))
 
-      (define (store-symlink? path)
-        (let ((target (false-if-exception (readlink path))))
-          (and target (string-prefix? "/gnu/store/" target))))
+        ;; The old git-home-service installed .config/git/config as a store
+        ;; symlink, which made `git config --global` and `gh auth setup-git` fail.
+        (when (store-symlink? xdg-git-config)
+          (delete-file xdg-git-config))
 
-      ;; The old git-home-service installed .config/git/config as a store
-      ;; symlink, which made `git config --global` and `gh auth setup-git` fail.
-      (when (store-symlink? xdg-git-config)
-        (delete-file xdg-git-config))
-
-      (unless (file-exists? global-git-config)
-        (copy-file #$git-config-file global-git-config)
-        (chmod global-git-config #o644))))
+        (unless (file-exists? global-git-config)
+          (copy-file #$git-config-file global-git-config)
+          (chmod global-git-config #o644)))))
 
 (define (git-packages _config)
   (list git (list git "send-email")))

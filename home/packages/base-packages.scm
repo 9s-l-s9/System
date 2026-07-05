@@ -6,8 +6,10 @@
   #:export (all-packages)
   #:export (wsl2-packages)
   #:export (programming-packages)
+  #:export (utilities-packages)
   #:export (emacs-packages)
-  #:export (fonts-packages))
+  #:export (fonts-packages)
+  #:export (xorg-packages))
 
 ;; Development
 
@@ -43,6 +45,10 @@
 (define system-utilities-packages
   (list "adb" "wireplumber" "dnsmasq" "hostapd"
         "ark" "flatpak"))
+
+(define utilities-packages
+  (append cli-utilities-packages
+          system-utilities-packages))
 
 ;; Fonts (portable: needed for Emacs all-the-icons)
 

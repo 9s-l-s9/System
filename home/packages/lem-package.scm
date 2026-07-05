@@ -110,7 +110,8 @@ Tested on ABCL, but should work on any implementation.")
           (base32 "13hwx7swlibk9wbix1jfjw23bmwpjq46lh405386w8l95p5ga322"))
          (file-name (git-file-name "micros" version))
          (snippet #~(begin
-                      (use-modules (guix build utils))
+                      (use-modules ((guix build utils)
+                                    #:select (substitute*)))
                       (substitute* "lsp-api.lisp"
                         (("ql:quickload")
                          "asdf:load-systems"))))))
@@ -362,7 +363,8 @@ encoding/end-of-line detection and external-format abstraction for Common Lisp."
         (base32 "1b96yygf2frhy5jh1b0aim4f5vyhxcq4s8qfvd15vlyzhnvd1wf1"))
        (file-name (git-file-name name version))
        (snippet #~(begin
-                    (use-modules (guix build utils))
+                    (use-modules ((guix build utils)
+                                  #:select (delete-file-recursively)))
                     ;; delete roswell-specific files since they aren't needed
                     (delete-file-recursively "roswell")))))
      (build-system asdf-build-system/sbcl)
