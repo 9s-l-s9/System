@@ -1,0 +1,301 @@
+#!/usr/bin/env -S guile -s
+!#
+
+(use-modules (ice-9 format)
+             (ice-9 match)
+             (ice-9 regex)
+             (srfi srfi-1)
+             (srfi srfi-13))
+
+(define (usage)
+  (display "\
+Usage:
+  drawio-render [options] FILE.drawio [FILE.drawio ...]
+
+Options:
+  -f, --format FORMAT       Export format: svg, png, pdf, html, jpg, ...
+                            Defaults to svg.
+  -o, --output FILE         Output file. Only valid with one input file.
+  -d, --out-dir DIRECTORY   Output directory for generated files.
+                            Defaults to the input file's directory.
+  --page-index N            Export one page by index.
+  --all-pages               Export every page.
+  --scale N                 Export scale, useful for PNG/JPG.
+  --width N                 Output width.
+  --height N                Output height.
+  --transparent             Transparent background where supported.
+  --border N                Border in pixels.
+  --crop                    Crop output.
+  --embed-diagram           Embed editable XML in PNG/SVG exports.
+  --headless                Force xvfb-run -a.
+  --no-headless             Never use xvfb-run.
+  --drawio-bin COMMAND      Override draw.io command for this invocation.
+                            For multi-word commands, prefer DRAWIO_COMMAND.
+  --docker                  Force Docker/Podman backend.
+  --no-docker               Disable Docker/Podman backend.
+  -h, --help                Show this help.
+
+Environment:
+  DRAWIO_BIN                Executable path/name to run instead of auto-detect.
+                            Useful for an AppImage or manually installed binary.
+  DRAWIO_COMMAND            Whitespace-separated command, e.g.
+                            \"flatpak run com.jgraph.drawio.desktop\".
+  DRAWIO_CONTAINER          auto, 1, true, yes, 0, false, or no.
+  DRAWIO_CONTAINER_ENGINE   docker or podman. Defaults to auto-detect.
+  DRAWIO_CONTAINER_IMAGE    Image tag. Defaults to
+                            local/drawio-official-cli:30.0.4.
+  DRAWIO_CONTAINER_BUILD    auto, 1, true, yes, 0, false, or no.
+  DRAWIO_HEADLESS           auto, 1, true, yes, 0, false, or no.
+
+Examples:
+  drawio-render process.drawio
+  drawio-render -f pdf process.drawio -o process.pdf
+  drawio-render -f png --scale 2 --transparent --embed-diagram process.drawio
+  drawio-render --headless -f svg -d build/diagrams diagrams/*.drawio
+"))
+
+(define (fail message . args)
+  (apply format (current-error-port) message args)
+  (newline (current-error-port))
+  (exit 1))
+
+(define (command-exists? command)
+  (and (not (string-null? command))
+       (search-path (string-split (or (getenv "PATH") "") #\:) command)))
+
+(define (truthy? value)
+  (member (string-downcase (or value "")) '("1" "true" "yes")))
+
+(define (falsey? value)
+  (member (string-downcase (or value "")) '("0" "false" "no")))
+
+(define (file-directory path)
+  (let ((index (string-rindex path #\/)))
+    (if index
+        (substring path 0 index)
+        ".")))
+
+(define (path-absolute? path)
+  (string-prefix? "/" path))
+
+(define (script-directory)
+  (let ((script (car (command-line))))
+    (if (path-absolute? script)
+        (file-directory script)
+        (string-append (getcwd) "/" (file-directory script)))))
+
+(define (skill-directory)
+  (let* ((suffix "/scripts")
+         (directory (script-directory))
+         (end (- (string-length directory) (string-length suffix))))
+    (if (and (>= end 0)
+             (string-suffix? suffix directory))
+        (substring directory 0 end)
+        (string-append directory "/.."))))
+
+(define (file-base-name path)
+  (let* ((start (or (and=> (string-rindex path #\/) 1+) 0))
+         (name (substring path start)))
+    (let ((dot (string-rindex name #\.)))
+      (if dot
+          (substring name 0 dot)
+          name))))
+
+(define (output-path input output out-dir export-format)
+  (if output
+      output
+      (string-append (or out-dir (file-directory input))
+                     "/"
+                     (file-base-name input)
+                     "."
+                     export-format)))
+
+(define (container-work-path path)
+  (let ((cwd (getcwd)))
+    (cond
+     ((not (path-absolute? path)) path)
+     ((string=? path cwd) ".")
+     ((string-prefix? (string-append cwd "/") path)
+      (substring path (+ 1 (string-length cwd))))
+     (else
+      (fail "Container backend only supports paths under the current directory: ~a" path)))))
+
+(define (parse args)
+  (let loop ((rest args)
+             (format "svg")
+             (output #f)
+             (out-dir #f)
+             (headless 'auto)
+             (container 'auto)
+             (drawio-bin #f)
+             (drawio-options '())
+             (inputs '()))
+    (match rest
+      (() (values format output out-dir headless container drawio-bin
+                  (reverse drawio-options) (reverse inputs)))
+      (("--help" . _) (usage) (exit 0))
+      (("-h" . _) (usage) (exit 0))
+      (("--format" value . tail)
+       (loop tail value output out-dir headless container drawio-bin drawio-options inputs))
+      (("-f" value . tail)
+       (loop tail value output out-dir headless container drawio-bin drawio-options inputs))
+      (("--output" value . tail)
+       (loop tail format value out-dir headless container drawio-bin drawio-options inputs))
+      (("-o" value . tail)
+       (loop tail format value out-dir headless container drawio-bin drawio-options inputs))
+      (("--out-dir" value . tail)
+       (loop tail format output value headless container drawio-bin drawio-options inputs))
+      (("-d" value . tail)
+       (loop tail format output value headless container drawio-bin drawio-options inputs))
+      (("--headless" . tail)
+       (loop tail format output out-dir 'yes container drawio-bin drawio-options inputs))
+      (("--no-headless" . tail)
+       (loop tail format output out-dir 'no container drawio-bin drawio-options inputs))
+      (("--docker" . tail)
+       (loop tail format output out-dir headless 'yes drawio-bin drawio-options inputs))
+      (("--no-docker" . tail)
+       (loop tail format output out-dir headless 'no drawio-bin drawio-options inputs))
+      (("--drawio-bin" value . tail)
+       (loop tail format output out-dir headless container value drawio-options inputs))
+      (((or "--page-index" "--scale" "--width" "--height" "--border") value . tail)
+       (loop tail format output out-dir headless container drawio-bin
+             (append (list value (car rest)) drawio-options)
+             inputs))
+      (((or "--all-pages" "--transparent" "--crop" "--embed-diagram") . tail)
+       (loop tail format output out-dir headless container drawio-bin
+             (cons (car rest) drawio-options)
+             inputs))
+      ((arg . tail)
+       (if (string-prefix? "-" arg)
+           (fail "Unknown option: ~a" arg)
+           (loop tail format output out-dir headless container drawio-bin drawio-options
+                 (cons arg inputs)))))))
+
+(define (container-enabled? configured)
+  (let ((environment (getenv "DRAWIO_CONTAINER")))
+    (cond
+     ((eq? configured 'yes) #t)
+     ((eq? configured 'no) #f)
+     ((truthy? environment) #t)
+     ((falsey? environment) #f)
+     (else
+      (or (command-exists? "docker")
+          (command-exists? "podman"))))))
+
+(define (container-engine)
+  (let ((configured (getenv "DRAWIO_CONTAINER_ENGINE")))
+    (cond
+     ((and configured (command-exists? configured)) configured)
+     ((command-exists? "docker") "docker")
+     ((command-exists? "podman") "podman")
+     (else #f))))
+
+(define (container-image)
+  (or (getenv "DRAWIO_CONTAINER_IMAGE")
+      "local/drawio-official-cli:30.0.4"))
+
+(define (container-build-enabled?)
+  (not (falsey? (getenv "DRAWIO_CONTAINER_BUILD"))))
+
+(define (container-image-exists? engine image)
+  (zero? (system* engine "image" "inspect" image)))
+
+(define (ensure-container-image engine image)
+  (unless (container-image-exists? engine image)
+    (unless (container-build-enabled?)
+      (fail "Container image is missing and DRAWIO_CONTAINER_BUILD disables building: ~a" image))
+    (let ((docker-directory (string-append (skill-directory) "/docker")))
+      (format #t "drawio-render: building container image ~a from ~a~%" image docker-directory)
+      (unless (zero? (system* engine "build" "-t" image docker-directory))
+        (fail "drawio-render: failed to build container image ~a with ~a" image engine)))))
+
+(define (container-backend)
+  (let ((engine (container-engine))
+        (image (container-image)))
+    (unless engine
+      (fail "Container backend requested but neither docker nor podman is available."))
+    (ensure-container-image engine image)
+    `(container ,engine ,image)))
+
+(define (drawio-command override container-configured)
+  (cond
+   (override `(native ,(list override)))
+   ((getenv "DRAWIO_COMMAND")
+    => (lambda (command) `(native ,(string-tokenize command))))
+   ((getenv "DRAWIO_BIN")
+    => (lambda (command) `(native ,(list command))))
+   ((command-exists? "drawio") '(native ("drawio")))
+   ((command-exists? "flatpak")
+    '(native ("flatpak" "run" "com.jgraph.drawio.desktop")))
+   ((container-enabled? container-configured)
+    (container-backend))
+   (else
+    (fail "Could not find draw.io. Install/provide native drawio, Flatpak, Docker, or Podman; or set DRAWIO_BIN/DRAWIO_COMMAND/DRAWIO_CONTAINER=1."))))
+
+(define (headless-mode configured)
+  (let ((environment (or (getenv "DRAWIO_HEADLESS") "")))
+    (cond
+     ((eq? configured 'yes) #t)
+     ((eq? configured 'no) #f)
+     ((member (string-downcase environment) '("1" "true" "yes")) #t)
+     ((member (string-downcase environment) '("0" "false" "no")) #f)
+     (else
+      (and (not (getenv "DISPLAY"))
+           (command-exists? "xvfb-run"))))))
+
+(define (native-args command headless? export-format output options input)
+  (let ((base-args (append command
+                           '("--export")
+                           (list "--format" export-format)
+                           options
+                           (list "--output" output input))))
+    (if headless?
+        (append '("xvfb-run" "-a") base-args)
+        base-args)))
+
+(define (container-args engine image export-format output options input)
+  (append (list engine "run" "--rm"
+                "--user" (string-append (number->string (getuid)) ":"
+                                         (number->string (getgid)))
+                "--volume" (string-append (getcwd) ":/work")
+                "--workdir" "/work"
+                image
+                "--export"
+                "--format" export-format)
+          options
+          (list "--output" (container-work-path output)
+                (container-work-path input))))
+
+(define (export-args backend headless? export-format output options input)
+  (match backend
+    (('native command)
+     (native-args command headless? export-format output options input))
+    (('container engine image)
+     (container-args engine image export-format output options input))))
+
+(define (run-export backend headless? export-format output options input)
+  (let ((full-args (export-args backend headless? export-format output options input)))
+    (format #t "drawio-render: ~a -> ~a~%" input output)
+    (let ((status (apply system* full-args)))
+      (unless (zero? status)
+        (fail "drawio-render: export failed for ~a" input)))))
+
+(define (main args)
+  (call-with-values
+      (lambda () (parse args))
+    (lambda (export-format output out-dir headless container drawio-bin options inputs)
+      (when (null? inputs)
+        (usage)
+        (exit 1))
+      (when (and output (> (length inputs) 1))
+        (fail "--output is only valid with one input file. Use --out-dir for multiple files."))
+      (let ((backend (drawio-command drawio-bin container))
+            (use-headless? (headless-mode headless)))
+        (for-each
+         (lambda (input)
+           (run-export backend use-headless? export-format
+                       (output-path input output out-dir export-format)
+                       options input))
+         inputs)))))
+
+(main (cdr (command-line)))

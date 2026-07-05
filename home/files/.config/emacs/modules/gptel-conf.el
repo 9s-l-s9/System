@@ -44,6 +44,7 @@
      :description "Run a shell command and return its output and exit code."
      :args        '((:name "command" :type string
                      :description "Shell command to execute"))
+     :confirm     t
      :category    "system")
 
     ;; Read file tool
@@ -58,6 +59,26 @@
      :description "Read the contents of a file."
      :args        '((:name "path" :type string
                      :description "Absolute or home-relative file path"))
+     :category    "filesystem")
+
+    ;; Write file tool — lets gptel apply edits, not just read.
+    ;; You stay in control: gptel confirms tool calls before running them.
+    (gptel-make-tool
+     :function (lambda (path content)
+                 (condition-case err
+                     (let ((file (expand-file-name path)))
+                       (with-temp-buffer
+                         (insert content)
+                         (write-region (point-min) (point-max) file))
+                       (format "Wrote %d bytes to %s" (length content) file))
+                   (error (format "Error writing %s: %s" path (error-message-string err)))))
+     :name        "write_file"
+     :description "Write (create or overwrite) a file with the given content."
+     :args        '((:name "path" :type string
+                     :description "Absolute or home-relative file path")
+                    (:name "content" :type string
+                     :description "Full file content to write"))
+     :confirm     t
      :category    "filesystem")
 
     ;; List directory tool

@@ -13,6 +13,7 @@
   #:use-module (services stumpwm)
   #:use-module (services git)
   #:use-module (services redshift)
+  #:use-module (services agent-skills)
   #:export (base-services))
 
 (define (base-services)
@@ -21,6 +22,7 @@
    (stumpwm-service)
    (git-service)
    (redshift-service)
+   (agent-skills-service)
    (service home-dotfiles-service-type
             (home-dotfiles-configuration
              (directories '("./files"))))))

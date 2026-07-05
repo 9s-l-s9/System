@@ -19,12 +19,17 @@
    '("p" . sls-new-entry-pkb)
    '("E" . sls-export-org-to-html-and-pdf)
    '("t" . eat)
+   '("T" . sls-capture-todo)       ; quick-capture to the shared wm.org inbox
+   '("c" . sls-config-jump)        ; jump to any file in ~/Projects/System
    '("v" . magit-status)
    '("y" . sls-copy-file-path)
    '("f" . delete-other-windows) ;focus
    ;; AI
-   '("a" . gptel)
-   '("A" . gptel-menu))
+   '("a" . gptel)              ; chat / rewrite
+   '("A" . gptel-menu)
+   '("e" . eca)                ; autonomous agent
+   ;; '("c" . minuet-show-suggestion) ; inline completion; needs an API key
+   '("w" . whisper-run))       ; voice to text (dictation)
 
   (meow-normal-define-key
    '("0" . meow-expand-0)

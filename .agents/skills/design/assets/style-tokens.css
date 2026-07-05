@@ -1,0 +1,613 @@
+/* design skill — style tokens
+ * Research-paper / typeset technical document.
+ * White page, near-black serif body, monospace identifiers,
+ * black terminal blocks as the only chrome-dark surface,
+ * hairline rules instead of shadows.
+ *
+ * See SKILL.md for the full rule set. This file is the canonical
+ * palette + utility set; copy or @import into any standalone artifact.
+ */
+
+:root {
+  /* ── page palette ─────────────────────────────────────── */
+  --bg:        #ffffff;
+  --ink:       #0a0a0a;
+  --ink-2:     #1d1d1d;
+  --muted:     #565656;
+  --faint:     #8a8a8a;
+  --rule:      #0a0a0a;          /* booktabs heavy rules */
+  --rule-soft: #d4d4d4;          /* row separators, hairlines */
+
+  /* ── earned dark surfaces ─────────────────────────────── */
+  --term-bg:    #000000;
+  --term-fg:    #ededed;
+  --term-muted: #9a9a9a;
+
+  /* ── duotone imagery palette ──────────────────────────── */
+  /* Used only inside imagery treatments — never chrome paint,
+     never buttons, never backgrounds. See SKILL.md § Imagery. */
+  --duotone-bg: #0a0a0a;
+  --duotone-fg: #ff5a1f;         /* warm orange */
+  --duotone-hi: #ffd24a;         /* yellow highlight for two-color halftones */
+
+  /* ── data-visualisation accent inks ───────────────────── */
+  /* Modes 2 (single ink) and 3 (asymmetric dual ink). See
+     SKILL.md § Color modes and § Data visualisation patterns.
+     Allowed only on the data/diagram surface of figures and a
+     narrow editorial register. Never chrome. */
+  --accent-red:       #d83a2f;   /* process red on light substrate */
+  --accent-blue:      #2e62c4;   /* process blue on light substrate */
+  --accent-red-dark:  #ee4d42;   /* lifted for dark substrate */
+  --accent-blue-dark: #5a8de8;   /* lifted for dark substrate */
+
+  /* ── dark-substrate accent inks ──────────────────────────
+     Amber leads, lithographic violet supports. Used in place
+     of red/blue on fully inverted (dark background) pages.
+     See SKILL.md § Dark substrate variant. */
+  --accent-amber:  #c4813e;
+  --accent-violet: #8860b4;
+
+  /* ── type stacks ──────────────────────────────────────── */
+  /* Technical-manual register. IBM Plex Mono carries body prose and all
+     labels — a corporate-technical monospace that reads as systems
+     documentation rather than a typewritten script. The token keeps the
+     name --serif so every existing rule (body, headings, all label
+     registers) inherits the face without edits; --mono is the same family
+     for code, paths, and tabular cells. --display is Space Mono, used only
+     for the chrome/heading register (masthead, title, section numbers,
+     coordinate ruler, colophon) — the NASA-plaque display voice.
+     Both fonts ship via the Guix config (font-ibm-plex, font-space-mono);
+     the stacks fall back to ui-monospace so the file still renders if the
+     fonts are absent. */
+  --serif:   "IBM Plex Mono", ui-monospace, monospace;
+  --mono:    "IBM Plex Mono", ui-monospace, monospace;
+  --display: "Space Mono", "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body { background: var(--bg); }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 12.5px;
+  line-height: 1.42;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums oldstyle-nums;
+}
+
+a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: .5px;
+  text-underline-offset: .2em;
+  text-decoration-color: var(--rule-soft);
+}
+a:hover { text-decoration-color: var(--ink); }
+
+:focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
+
+code, kbd, samp, .mono {
+  font-family: var(--mono);
+  font-size: .88em;
+  font-variant-numeric: tabular-nums;
+}
+
+em     { font-style: italic; }
+strong { font-weight: 600; }
+
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: .005em;
+  margin: 0;
+}
+h1 { font-size: 22px; line-height: 1.2; }
+h2 { font-size: 15px; line-height: 1.25; }
+h3 { font-size: 13px; line-height: 1.3; }
+h4 { font-size: 12px; line-height: 1.3; }
+p  { margin: 0 0 .55em; }
+
+/* ── dense two-column body (manual register) ───────────────
+   The technical-manual aesthetic runs denser than a single wide
+   column. Wrap running prose in .cols to set a hairline-ruled
+   two-column measure; figures/tables stay full-width outside it
+   or use .break-avoid to avoid splitting across columns. */
+.cols { column-count: 2; column-gap: 26px; column-rule: 1px solid var(--rule-soft); }
+.cols > :first-child { margin-top: 0; }
+.break-avoid { break-inside: avoid; }
+@media (max-width: 720px) { .cols { column-count: 1; } }
+
+/* ── page measure ──────────────────────────────────────── */
+/* Centered measure, no frame: the column centers on the viewport with
+   symmetric margins and no side border. The balance reads as a placed
+   plate; a vertical border (either side) is what makes a page look boxed,
+   so it is omitted. Wide enough to hold the dense two-column body. */
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 22px 28px 56px;
+}
+
+/* ── masthead ──────────────────────────────────────────── */
+.masthead {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 24px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--rule);
+}
+.masthead .left {
+  font-family: var(--display);
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.masthead .left .id { color: var(--ink); font-weight: 600; }
+.masthead .right {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .03em;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ── titles, abstract, hairlines ───────────────────────── */
+.title-block { padding: 18px 0 6px; }
+.byline {
+  font-family: var(--serif);
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 6px 0 14px;
+}
+.abstract {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 12px 0 14px;
+}
+.abstract::before {
+  content: "Abstract.\00a0";
+  font-style: italic;
+  font-weight: 400;
+}
+.hairline  { border-top: 1px solid var(--rule-soft); margin: 14px 0; }
+.heavy-rule{ border-top: 1px solid var(--rule);      margin: 18px 0; }
+
+/* ── numbered sections ─────────────────────────────────── */
+.section-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 14px;
+  padding: 6px 0 10px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 16px;
+}
+.section-head .marker {
+  font-family: var(--display);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.section-head .marker .n { color: var(--ink); font-weight: 600; }
+.section-head .ref {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.sub {
+  font-family: var(--serif);
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 22px 0 8px;
+  padding-top: 8px;
+  border-top: .5px solid var(--rule-soft);
+}
+.sub::before { content: "§ "; color: var(--faint); }
+.sub:first-of-type { border-top: 0; padding-top: 0; margin-top: 14px; }
+
+.lede {
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+.note {
+  font-family: var(--serif);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  border-top: .5px solid var(--rule-soft);
+  border-bottom: .5px solid var(--rule-soft);
+  padding: 8px 0;
+  margin: 12px 0;
+}
+.note::before {
+  content: "Note. ";
+  font-family: var(--serif);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 4px;
+}
+
+/* ── booktabs tables ───────────────────────────────────── */
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 1.5px solid var(--rule);
+  border-bottom: 1.5px solid var(--rule);
+  margin: 12px 0 4px;
+}
+table.tbl thead th {
+  font-family: var(--serif);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  border-bottom: .5px solid var(--rule);
+  padding: 5px 12px 5px 0;
+  font-weight: 600;
+}
+table.tbl tbody td {
+  padding: 5px 12px 5px 0;
+  vertical-align: top;
+  font-family: var(--serif);
+  font-size: 12.5px;
+}
+table.tbl tbody td.mono { font-family: var(--mono); font-size: 11.5px; }
+table.tbl tbody td.num  { font-family: var(--mono); text-align: right; }
+table.tbl tbody td.state {
+  font-family: var(--serif);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+/* editorial register — critical state cell, see SKILL.md § Color modes */
+table.tbl tbody td.state.watch    { color: var(--accent-red); font-weight: 700; }
+table.tbl tbody td.state.critical { color: var(--accent-red); font-weight: 700; }
+table.tbl tbody tr + tr td { border-top: .5px dotted var(--rule-soft); }
+table.tbl caption {
+  caption-side: bottom;
+  text-align: left;
+  font-family: var(--serif);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 8px;
+}
+
+/* ── terminal / code blocks (inverted, earned dark) ────── */
+pre.term {
+  background: var(--term-bg);
+  color: var(--term-fg);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  padding: 12px 14px;
+  margin: 12px 0 4px;
+  overflow-x: auto;
+  border: 0;
+}
+pre.term .c { color: var(--term-muted); }       /* comments */
+pre.term .p { color: #d4d4d4; }                  /* shell prompt $ */
+pre.term .a { color: #9a9a9a; }                  /* dimmed arguments */
+pre.term .k { color: var(--term-fg); }           /* command keyword */
+
+/* ── dictionaries (key→value structures) ─────────────────
+ *
+ * Five canonical variants. All render the same underlying structure;
+ * differ only in visual weight and which fields fit comfortably.
+ * Pick the lightest variant that does the job.
+ *
+ *   .dict-strip       — inline strip   (≤4 short fields, supporting)
+ *   dl.dict-grid      — hairline grid  (6+ short fields, default)
+ *   dl.dict-aligned   — column-aligned (formal specification sheet)
+ *   dl.dict-hanging   — hanging key    (prose values: glossary etc.)
+ *   dl.meta           — dark data plate (dossier variant; uses an
+ *                       earned dark surface — not the default)
+ */
+
+/* K1 — inline strip */
+.dict-strip {
+  padding: 6px 0;
+  border-top: .5px solid var(--rule-soft);
+  border-bottom: .5px solid var(--rule-soft);
+  display: flex; flex-wrap: wrap; gap: 0 22px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink);
+}
+.dict-strip .lbl {
+  font-family: var(--serif);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: var(--muted);
+  margin-right: 5px;
+  font-weight: 500;
+}
+
+/* K2 — hairline grid (default for substantive metadata) */
+dl.dict-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  font-family: var(--mono);
+  margin: 18px 0 4px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+dl.dict-grid > div {
+  padding: 10px 14px;
+  border-right: .5px solid var(--rule-soft);
+  border-top: .5px solid var(--rule-soft);
+  display: grid; gap: 3px;
+}
+dl.dict-grid > div:nth-child(3n)    { border-right: 0; }
+dl.dict-grid > div:nth-child(-n+3)  { border-top: 0; }
+dl.dict-grid dt {
+  font-family: var(--serif);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+  font-weight: 500;
+}
+dl.dict-grid dd { margin: 0; color: var(--ink); font-size: 12px; }
+@media (max-width: 720px) {
+  dl.dict-grid { grid-template-columns: repeat(2, 1fr); }
+  dl.dict-grid > div                 { border-top: .5px solid var(--rule-soft); }
+  dl.dict-grid > div:nth-child(2n)   { border-right: 0; }
+  dl.dict-grid > div:nth-child(-n+2) { border-top: 0; }
+}
+
+/* K3 — column-aligned vertical (specification sheet) */
+dl.dict-aligned {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 22px;
+  margin: 18px 0 4px;
+  padding: 4px 0;
+  border-top: .5px solid var(--rule-soft);
+  border-bottom: .5px solid var(--rule-soft);
+}
+dl.dict-aligned dt {
+  text-align: right;
+  font-family: var(--serif);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 10.5px;
+  color: var(--muted);
+  padding-top: 1px;
+}
+dl.dict-aligned dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+}
+
+/* K4 — hanging-key definition (italic-serif key + prose value) */
+dl.dict-hanging {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 22px;
+  margin: 18px 0 4px;
+}
+dl.dict-hanging dt {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+dl.dict-hanging dd {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* dl.meta — dark data plate (dossier variant, earned dark surface)
+ * Use only when the artifact genuinely is a dossier and the metadata
+ * is itself the centerpiece. For everyday metadata, prefer dl.dict-grid. */
+dl.meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--term-bg);
+  color: var(--term-fg);
+  font-family: var(--mono);
+  margin: 18px 0 4px;
+}
+dl.meta > div {
+  padding: 12px 16px;
+  border-right: 1px solid #1f1f1f;
+  border-top: 1px solid #1f1f1f;
+  display: grid;
+  gap: 3px;
+}
+dl.meta > div:nth-child(3n)    { border-right: 0; }
+dl.meta > div:nth-child(-n+3)  { border-top: 0; }
+dl.meta dt {
+  font-family: var(--serif);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8a8a8a;
+  margin: 0;
+  font-weight: 500;
+}
+dl.meta dd { margin: 0; color: var(--term-fg); font-size: 12px; }
+@media (max-width: 720px) {
+  dl.meta { grid-template-columns: repeat(2, 1fr); }
+  dl.meta > div                   { border-top: 1px solid #1f1f1f; }
+  dl.meta > div:nth-child(2n)     { border-right: 0; }
+  dl.meta > div:nth-child(-n+2)   { border-top: 0; }
+}
+
+/* ── inline contents (numbered TOC) ────────────────────── */
+ol.toc {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 28px;
+  row-gap: 4px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+ol.toc li {
+  display: grid;
+  grid-template-columns: 1.6em 1fr auto;
+  border-bottom: .5px dotted var(--rule-soft);
+  padding: 4px 0;
+  align-items: baseline;
+}
+ol.toc li .n { color: var(--faint); }
+ol.toc li .t { color: var(--ink); }
+ol.toc li .r { color: var(--muted); font-size: 10.5px; letter-spacing: .04em; }
+ol.toc a { text-decoration: none; }
+ol.toc a:hover .t { text-decoration: underline; text-decoration-color: var(--ink); }
+@media (max-width: 600px) { ol.toc { grid-template-columns: 1fr; } }
+
+/* ── colophon ──────────────────────────────────────────── */
+footer.colophon {
+  margin-top: 36px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+footer.colophon .eof::before { content: "❑ "; }
+
+/* ── prose helpers ─────────────────────────────────────── */
+p + p { text-indent: 1.4em; }
+
+ul.list { margin: 6px 0 6px; padding-left: 18px; }
+ul.list li { margin: 0 0 2px; }
+
+/* ── dark substrate ────────────────────────────────────── */
+/* Apply to <body> or a container for a fully inverted page.
+   Accent inks switch to amber (lead) and violet (support).
+   See SKILL.md § Dark substrate variant. */
+.dark-substrate {
+  --bg:        #0a0a0a;
+  --ink:       #ededed;
+  --ink-2:     #d4d4d4;
+  --muted:     #9a9a9a;
+  --faint:     #6a6a6a;
+  --rule:      #ededed;
+  --rule-soft: #2a2a2a;
+  --accent-red:  var(--accent-amber);
+  --accent-blue: var(--accent-violet);
+}
+
+/* ── addressability register ───────────────────────────────
+   The manual aesthetic treats the page as an addressable system:
+   every block is typed and carries a stable identifier, and the
+   chrome reinforces that the document is indexed. See SKILL.md
+   § Addressability. These utilities are optional — reach for them
+   when the artifact wants the catalogued / machine-readable read. */
+
+/* coordinate ruler — a thin indexed strip at the page edge */
+.coord-top {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .18em;
+  color: var(--faint);
+  padding: 3px 0;
+  border-bottom: .5px solid var(--rule-soft);
+}
+
+/* section address marker — sits right-aligned in a section head
+   (e.g. "FIG 1 · ADDR 0x02"). Pairs with .section-head. */
+.addr {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* cross-reference chip — a live anchor that looks like a record key.
+   Makes the addressing visible: → P-02, → §3, → F-04. */
+.xref {
+  font-family: var(--mono);
+  font-size: .92em;
+  color: var(--ink);
+  white-space: nowrap;
+  text-decoration: none;
+  border-bottom: .5px solid var(--rule-soft);
+}
+.xref::before { content: "→ "; color: var(--muted); }
+.xref:hover { border-bottom-color: var(--ink); }
+
+/* ── cybernetic block diagram (signal-flow / feedback) ─────
+   Hand-authored control-system schematic: typed blocks, labelled
+   directed edges, an explicit feedback path. NOT auto-layout
+   (graphviz/mermaid). The feedback / active edge is the one place
+   the accent ink may carry a diagram role. See SKILL.md
+   § Cybernetic block diagrams. */
+figure.blockdiag svg { display: block; width: 100%; height: auto; background: var(--bg); }
+.blockdiag .node     { fill: none; stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.blockdiag .node-sum { fill: var(--bg); stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.blockdiag .edge     { stroke: var(--ink); stroke-width: 1; fill: none; vector-effect: non-scaling-stroke; }
+.blockdiag .edge-fb  { stroke: var(--accent-red); stroke-width: 1; fill: none;
+                       stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+.blockdiag .arrow    { fill: var(--ink); }
+.blockdiag .arrow-fb { fill: var(--accent-red); }
+.blockdiag .lbl      { font-family: var(--mono); font-size: 9px;  fill: var(--ink); }
+.blockdiag .lbl-blk  { font-family: var(--display); font-size: 10px; font-weight: 700;
+                       letter-spacing: .04em; fill: var(--ink); }
+.blockdiag .lbl-edge { font-family: var(--mono); font-size: 8px;  fill: var(--muted); font-style: italic; }
+.blockdiag .lbl-id   { font-family: var(--mono); font-size: 7px;  fill: var(--faint); letter-spacing: .1em; }
+.blockdiag .lbl-fb   { font-family: var(--mono); font-size: 8px;  fill: var(--accent-red); }
+
+/* ── print (invert dark surfaces) ──────────────────────── */
+@media print {
+  pre.term {
+    background: #fff;
+    color: #000;
+    border: .5px solid #000;
+  }
+  pre.term .c, pre.term .a, pre.term .p { color: #555; }
+  /* invert the dossier dark plate back to white for print */
+  dl.meta { background: #fff; color: #000; }
+  dl.meta > div     { border-color: #aaa !important; }
+  dl.meta dt        { color: #555; }
+  dl.meta dd        { color: #000; }
+  body              { font-size: 11px; }
+  a                 { color: #000; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+html { scroll-behavior: smooth; }

@@ -117,5 +117,40 @@
           (rename-buffer buf-name t))
         (select-window (display-buffer buf))))))
 
+;; Quick-capture to the shared working-memory inbox.
+;; Lands in the same file and format as the StumpWM `add-todo' command
+;; (scripts/add-todo.scm): "* TODO YYYY-MM-DD text", so captures from the
+;; window manager and from Emacs converge on one inbox.
+(defcustom sls-working-memory-file "~/Projects/WorkingMemory/wm.org"
+  "Org file used as the shared TODO inbox."
+  :type 'file
+  :group 'sls)
+
+(defun sls-capture-todo (text)
+  "Append TEXT as a dated TODO to `sls-working-memory-file'."
+  (interactive "sTODO: ")
+  (let ((file (expand-file-name sls-working-memory-file)))
+    (with-temp-buffer
+      (insert (format "* TODO %s %s\n\n"
+                      (format-time-string "%Y-%m-%d") text))
+      (append-to-file (point-min) (point-max) file))
+    (message "Captured to %s: %s" (file-name-nondirectory file) text)))
+
+;; Command center: jump to any tracked file in the System config repo.
+(defun sls-config-jump ()
+  "Open a tracked file from the System configuration repository."
+  (interactive)
+  (let* ((root (expand-file-name "~/Projects/System/"))
+         (files (and (file-directory-p root)
+                     (split-string
+                      (shell-command-to-string
+                       (format "git -C %s ls-files"
+                               (shell-quote-argument root)))
+                      "\n" t))))
+    (if files
+        (find-file (expand-file-name
+                    (completing-read "Config file: " files nil t) root))
+      (user-error "No git-tracked files under %s" root))))
+
 (provide 'sls-functions)
 ;;; sls-functions.el ends here

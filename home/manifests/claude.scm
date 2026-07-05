@@ -7,6 +7,8 @@
    "git"
    "node"
    "pnpm"
+   "docker-cli"
+   "podman"
    "gh"
    "openssh"
    "guix"

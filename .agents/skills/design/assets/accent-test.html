@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Accent Test v2 — Process-Ink at Field Scale</title>
+  <meta name="description" content="A/B test of a single process-color ink (red or blue) used as a data and diagram layer in the research-paper design system." />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --paper: #fbfbfa;
+      --ink: #0a0a0a;
+      --ink-2: #1d1d1d;
+      --muted: #565656;
+      --faint: #8a8a8a;
+      --rule: #0a0a0a;
+      --rule-soft: #d4d4d4;
+
+      /* process-ink candidates — light-mode (white substrate) */
+      --accent-red:  #d83a2f;   /* process red — slightly coral */
+      --accent-blue: #2e62c4;   /* process cyan-blue — printerly */
+
+      /* dark-substrate hex shown in column headers; activated by toggle below */
+      --accent-red-dark:  #ee4d42;
+      --accent-blue-dark: #5a8de8;
+
+      --serif: "Courier Prime", "Courier Screenplay", "Courier New", "Nimbus Mono PS", Courier, ui-monospace, monospace;
+      --mono:  ui-monospace, "JetBrains Mono", "IBM Plex Mono", "Berkeley Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { background: var(--bg); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 13.25px;
+      line-height: 1.46;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      font-variant-numeric: tabular-nums oldstyle-nums;
+    }
+    a { color: var(--ink); text-decoration: underline; text-decoration-thickness: .5px; text-underline-offset: .2em; text-decoration-color: var(--rule-soft); }
+    a:hover { text-decoration-color: var(--ink); }
+    :focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
+    code, .mono { font-family: var(--mono); font-size: .88em; font-variant-numeric: tabular-nums; }
+    em { font-style: italic; }
+    strong { font-weight: 600; }
+    h1, h2, h3 { font-family: var(--serif); font-weight: 600; margin: 0; letter-spacing: -0.005em; }
+    h1 { font-size: 26px; line-height: 1.2; }
+    h2 { font-size: 16px; }
+    h3 { font-size: 13px; }
+    p  { margin: 0 0 .55em; }
+    .page { max-width: 1100px; margin: 0; padding: 22px 28px 56px; }
+
+    /* ── masthead ─────────────────────────────────────────── */
+    .masthead {
+      display: grid; grid-template-columns: 1fr auto; align-items: end;
+      gap: 24px; padding-bottom: 6px; border-bottom: 2px solid var(--rule);
+    }
+    .masthead .left { font-family: var(--serif); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .masthead .left .id { color: var(--ink); font-weight: 600; }
+    .masthead .right { font-family: var(--mono); font-size: 10.5px; letter-spacing: .03em; color: var(--muted); text-align: right; }
+
+    /* ── intro band ───────────────────────────────────────── */
+    .intro {
+      display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px;
+      padding: 18px 0 16px; border-bottom: 1px solid var(--rule);
+    }
+    .intro h1 { font-size: 24px; margin-bottom: 6px; }
+    .intro .lede { font-family: var(--serif); font-style: italic; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+    .intro .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 8px; }
+    .intro .rules { font-family: var(--mono); font-size: 11px; color: var(--muted); border-left: .5px solid var(--rule-soft); padding-left: 14px; }
+    .intro .rules .rh {
+      display: block; font-family: var(--serif); font-size: 9.5px; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--ink); margin-bottom: 6px;
+    }
+    .intro .rules ul { margin: 0; padding-left: 14px; }
+    .intro .rules li { margin: 0 0 2px; }
+
+    /* ── A/B columns ──────────────────────────────────────── */
+    .ab {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+      margin-top: 22px;
+      border-top: 1.5px solid var(--rule);
+      border-bottom: 1.5px solid var(--rule);
+    }
+    .col { padding: 18px 22px 22px; }
+    .col + .col { border-left: .5px solid var(--rule-soft); }
+    .col.red  { --accent: var(--accent-red);  }
+    .col.blue { --accent: var(--accent-blue); }
+
+    .col-head {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--serif); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted);
+      padding-bottom: 8px; border-bottom: .5px solid var(--rule-soft); margin-bottom: 14px;
+    }
+    .col-head .swatch { width: 14px; height: 14px; background: var(--accent); }
+    .col-head .name { color: var(--ink); font-weight: 600; }
+    /* .col-head .hex is restyled below to support dual light/dark hex display */
+
+    .probe { margin: 22px 0 0; padding-top: 14px; border-top: .5px solid var(--rule-soft); }
+    .probe:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+    .probe .ph {
+      font-family: var(--serif); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .probe .ph .n { color: var(--ink); font-weight: 600; margin-right: 6px; }
+    figcaption {
+      font-family: var(--serif); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); padding-top: 6px; margin: 0;
+    }
+
+    /* ── shared figure plumbing ───────────────────────────── */
+    figure { margin: 0; }
+    figure svg { display: block; width: 100%; height: auto; background: var(--bg); }
+
+    /* ── P1 scatter (Tufte attractor) ─────────────────────── */
+    .scatter .axis      { stroke: var(--ink); stroke-width: .75; fill: none; vector-effect: non-scaling-stroke; }
+    .scatter .tick      { stroke: var(--ink); stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .scatter .frame     { stroke: var(--ink); stroke-width: .5; fill: none; vector-effect: non-scaling-stroke; }
+    .scatter .tick-lbl  { font-family: var(--serif); font-style: italic; font-size: 8px; fill: var(--ink); }
+    .scatter .axis-lbl  { font-family: var(--serif); font-style: italic; font-size: 10px; fill: var(--ink); }
+    .scatter .title     { font-family: var(--mono); font-size: 9.5px; fill: var(--ink); letter-spacing: .04em; }
+    .scatter .cloud     { fill: var(--accent); }
+
+    /* ── P2 topographic contour ───────────────────────────── */
+    .contour { color: var(--accent); }
+    .contour .frame      { stroke: var(--ink); stroke-width: .5; fill: none; vector-effect: non-scaling-stroke; }
+    .contour .tick       { stroke: var(--ink); stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .contour .iso        { stroke: currentColor; stroke-width: .5; fill: none; vector-effect: non-scaling-stroke; }
+    .contour .iso-index  { stroke: currentColor; stroke-width: .9; fill: none; vector-effect: non-scaling-stroke; }
+    .contour .peak       { stroke: var(--ink); stroke-width: .9; fill: none; vector-effect: non-scaling-stroke; }
+    .contour .lbl-iso    { font-family: var(--mono); font-size: 7.5px; fill: currentColor; }
+    .contour .lbl        { font-family: var(--mono); font-size: 8px; fill: var(--ink); }
+    .contour .lbl-mute   { font-family: var(--serif); font-size: 7.5px; letter-spacing: .12em; text-transform: uppercase; fill: var(--muted); }
+    .contour .title      { font-family: var(--mono); font-size: 9px; fill: var(--ink); letter-spacing: .04em; }
+    .contour .arrow      { fill: var(--ink); }
+
+    /* ── P3 stratigraphic section ─────────────────────────── */
+    .strat { color: var(--accent); }
+    .strat .frame      { stroke: var(--ink); stroke-width: .6; fill: none; vector-effect: non-scaling-stroke; }
+    .strat .layer-sep  { stroke: var(--ink); stroke-width: .4; vector-effect: non-scaling-stroke; }
+    .strat .tick       { stroke: var(--ink); stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .strat .anno       { stroke: currentColor; stroke-width: 1; fill: none; stroke-linecap: square; vector-effect: non-scaling-stroke; }
+    .strat .lbl        { font-family: var(--mono); font-size: 8px; fill: var(--ink); }
+    .strat .lbl-name   { font-family: var(--serif); font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; fill: var(--ink); }
+    .strat .lbl-acc    { font-family: var(--mono); font-size: 8.5px; fill: currentColor; font-weight: 600; letter-spacing: .04em; }
+    .strat .lbl-mute   { font-family: var(--serif); font-size: 7.5px; letter-spacing: .12em; text-transform: uppercase; fill: var(--muted); }
+    .strat .title      { font-family: var(--mono); font-size: 9px; fill: var(--ink); letter-spacing: .04em; }
+
+    /* ── P4 annotation overlay (Risograph) ────────────────── */
+    .anno .base         { fill: none; stroke: var(--ink); stroke-width: .6; vector-effect: non-scaling-stroke; }
+    .anno .base-fill    { fill: var(--ink); }
+    .anno .overlay      { stroke: var(--accent); stroke-width: 1; fill: none; vector-effect: non-scaling-stroke; }
+    .anno .overlay-dash { stroke: var(--accent); stroke-width: .8; stroke-dasharray: 3 2; fill: none; vector-effect: non-scaling-stroke; }
+    .anno .bracket      { stroke: var(--accent); stroke-width: 1.2; fill: none; stroke-linecap: square; vector-effect: non-scaling-stroke; }
+    .anno .lbl-acc      { font-family: var(--mono); font-size: 8.5px; fill: var(--accent); font-weight: 600; letter-spacing: .04em; }
+    .anno .lbl-mute     { font-family: var(--serif); font-size: 7.5px; letter-spacing: .14em; text-transform: uppercase; fill: var(--muted); }
+
+    /* ── P5 hatched bars + single ink value ───────────────── */
+    .bars .axis     { stroke: var(--ink); stroke-width: .75; vector-effect: non-scaling-stroke; }
+    .bars .bar-blk  { fill: var(--ink-2); }
+    .bars .hatch-st { stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .bars .bar-out  { fill: none; stroke: var(--accent); stroke-width: .7; vector-effect: non-scaling-stroke; }
+    .bars .lbl      { font-family: var(--mono); font-size: 9px; fill: var(--muted); }
+    .bars .val      { font-family: var(--mono); font-size: 9px; fill: var(--ink-2); }
+    .bars .val-acc  { font-family: var(--mono); font-size: 9.5px; fill: var(--accent); font-weight: 600; }
+
+    /* ── dual-ink demo section (Mode 3) ───────────────────── */
+    .dual-section {
+      margin: 28px 0 0;
+      padding-top: 22px;
+      border-top: 1.5px solid var(--rule);
+    }
+    .dual-head {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: baseline;
+      gap: 18px;
+      padding-bottom: 12px;
+      border-bottom: .5px solid var(--rule);
+      margin-bottom: 18px;
+    }
+    .dual-head h2 {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: -0.005em;
+      margin: 0;
+    }
+    .dual-head .dual-tag {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    .dual-head .swatches {
+      display: flex; gap: 6px; align-items: center;
+      font-family: var(--serif); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+    }
+    .dual-head .swatches .sw { width: 14px; height: 14px; display: inline-block; }
+    .dual-head .swatches .sw-red  { background: var(--accent-red); }
+    .dual-head .swatches .sw-blue { background: var(--accent-blue); }
+    .dual-head .swatches .lab     { margin: 0 12px 0 4px; }
+    .dual-head .swatches .lab:last-child { margin-right: 0; }
+
+    .dual-probe { margin: 24px 0 0; padding-top: 14px; border-top: .5px solid var(--rule-soft); }
+    .dual-probe:first-of-type { border-top: 0; padding-top: 0; margin-top: 8px; }
+    .dual-probe .ph {
+      font-family: var(--serif); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .dual-probe .ph .n { color: var(--ink); font-weight: 600; margin-right: 6px; }
+    .dual-probe figure { margin: 0; }
+    .dual-probe figure svg { display: block; width: 100%; height: auto; background: var(--bg); }
+    .dual-probe figcaption {
+      font-family: var(--serif); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); padding-top: 6px; margin: 0;
+    }
+
+    /* ink-color binding wrappers for SVG groups */
+    .ink-red  { color: var(--accent-red); }
+    .ink-blue { color: var(--accent-blue); }
+
+    /* dual-ink stratigraphic (Risograph register) */
+    .strat-dual .frame      { stroke: var(--ink); stroke-width: .6; fill: none; vector-effect: non-scaling-stroke; }
+    .strat-dual .layer-sep  { stroke: var(--ink); stroke-width: .4; vector-effect: non-scaling-stroke; }
+    .strat-dual .tick       { stroke: var(--ink); stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .strat-dual .anno       { stroke: currentColor; stroke-width: 1; fill: none; stroke-linecap: square; vector-effect: non-scaling-stroke; }
+    .strat-dual .anno-mark  { stroke: currentColor; stroke-width: 1.2; fill: none; vector-effect: non-scaling-stroke; }
+    .strat-dual .lbl        { font-family: var(--mono); font-size: 8.5px; fill: var(--ink); }
+    .strat-dual .lbl-name   { font-family: var(--serif); font-size: 9px;  letter-spacing: .14em; text-transform: uppercase; fill: var(--ink); }
+    .strat-dual .lbl-acc    { font-family: var(--mono); font-size: 9px;  fill: currentColor; font-weight: 600; letter-spacing: .04em; }
+    .strat-dual .lbl-mute   { font-family: var(--serif); font-size: 8px;  letter-spacing: .12em; text-transform: uppercase; fill: var(--muted); }
+    .strat-dual .title      { font-family: var(--mono); font-size: 9.5px; fill: var(--ink); letter-spacing: .04em; }
+
+    /* dual-ink topographic (blue substrate + red active layer) */
+    .contour-dual .frame    { stroke: var(--ink); stroke-width: .5; fill: none; vector-effect: non-scaling-stroke; }
+    .contour-dual .tick     { stroke: var(--ink); stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .contour-dual .iso      { stroke: var(--accent-blue); stroke-width: .5; fill: none; vector-effect: non-scaling-stroke; }
+    .contour-dual .iso-index{ stroke: var(--accent-blue); stroke-width: .9; fill: none; vector-effect: non-scaling-stroke; }
+    .contour-dual .lbl-iso  { font-family: var(--mono); font-size: 8px;  fill: var(--accent-blue); }
+    .contour-dual .route    { stroke: var(--accent-red);  stroke-width: 1.2; fill: none; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+    .contour-dual .waypoint { stroke: var(--accent-red);  stroke-width: 1; fill: none; vector-effect: non-scaling-stroke; }
+    .contour-dual .peak     { stroke: var(--accent-red);  stroke-width: 1; fill: none; vector-effect: non-scaling-stroke; }
+    .contour-dual .lbl-red  { font-family: var(--mono); font-size: 8.5px; fill: var(--accent-red); font-weight: 600; }
+    .contour-dual .lbl      { font-family: var(--mono); font-size: 8.5px; fill: var(--ink); }
+    .contour-dual .lbl-mute { font-family: var(--serif); font-size: 8px;  letter-spacing: .12em; text-transform: uppercase; fill: var(--muted); }
+    .contour-dual .title    { font-family: var(--mono); font-size: 9.5px; fill: var(--ink); letter-spacing: .04em; }
+    .contour-dual .arrow    { fill: var(--ink); }
+
+    /* ── colophon ─────────────────────────────────────────── */
+    footer.colophon {
+      margin-top: 28px; padding-top: 8px;
+      border-top: 1px solid var(--rule);
+      font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+      display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+    }
+    footer.colophon .eof::before { content: "❑ "; }
+
+    /* ── light/dark toggle band ───────────────────────────── */
+    .mode-band {
+      display: flex; align-items: center; gap: 14px;
+      padding: 8px 0 6px;
+      border-bottom: .5px solid var(--rule-soft);
+    }
+    .mode-toggle {
+      display: inline-flex;
+      border: .5px solid var(--rule);
+      margin: 0;
+    }
+    .mode-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+    .mode-toggle label {
+      padding: 3px 10px;
+      cursor: pointer;
+      color: var(--muted);
+      background: var(--bg);
+      font-family: var(--serif);
+      font-size: 9.5px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      user-select: none;
+      transition: none;
+    }
+    .mode-toggle input:checked + label {
+      color: var(--bg);
+      background: var(--ink);
+    }
+    .mode-toggle input:focus-visible + label {
+      outline: 1px solid var(--ink);
+      outline-offset: 1px;
+    }
+    .mode-note {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    /* dual-hex display in column headers — emphasises the active substrate */
+    .hex { font-family: var(--mono); letter-spacing: .04em; color: var(--muted); margin-left: auto; }
+    .hex .hl, .hex .hd { color: var(--muted); }
+    .hex .sep { color: var(--faint); margin: 0 5px; }
+    body:has(#m-light:checked) .hex .hl,
+    body:not(:has(.mode-toggle input:checked)) .hex .hl {
+      color: var(--ink); font-weight: 600;
+    }
+    body:has(#m-dark:checked) .hex .hd { color: var(--ink); font-weight: 600; }
+    body:has(#m-dark:checked) .hex .hl { color: var(--faint); }
+    body:has(#m-light:checked) .hex .hd,
+    body:not(:has(.mode-toggle input:checked)) .hex .hd {
+      color: var(--faint);
+    }
+
+    /* ── DARK MODE ────────────────────────────────────────── */
+    body:has(#m-dark:checked) {
+      --bg:        #0a0a0a;
+      --paper:     #141414;
+      --ink:       #ededed;
+      --ink-2:     #d4d4d4;
+      --muted:     #9a9a9a;
+      --faint:     #6a6a6a;
+      --rule:      #ededed;
+      --rule-soft: #2a2a2a;
+      /* lift inks for the dark substrate (real process inks pair to paper) */
+      --accent-red:  var(--accent-red-dark);
+      --accent-blue: var(--accent-blue-dark);
+    }
+    body:has(#m-dark:checked) .col-head .swatch { box-shadow: 0 0 0 .5px var(--rule-soft); }
+
+    /* ── responsive ───────────────────────────────────────── */
+    @media (max-width: 880px) {
+      .intro { grid-template-columns: 1fr; }
+      .ab { grid-template-columns: 1fr; }
+      .col + .col { border-left: 0; border-top: .5px solid var(--rule-soft); }
+    }
+
+    @media print {
+      .page { max-width: none; padding: 18px; }
+      body { font-size: 11px; }
+      .ab { page-break-inside: avoid; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden defs: shared dot cloud (260-point Clifford attractor) and stratigraphic hatch patterns -->
+  <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+    <defs>
+      <!-- Stratigraphic hatch patterns. stroke/fill use currentColor so each column inherits its own ink. -->
+      <pattern id="hatch-strat-fine" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="6" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>
+      </pattern>
+      <pattern id="hatch-strat-dots" patternUnits="userSpaceOnUse" width="5" height="5">
+        <circle cx="1.5" cy="1.5" r="0.85" fill="currentColor"/>
+      </pattern>
+      <pattern id="hatch-strat-dense" patternUnits="userSpaceOnUse" width="3.5" height="3.5" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="3.5" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>
+      </pattern>
+      <pattern id="hatch-strat-horiz" patternUnits="userSpaceOnUse" width="6" height="5">
+        <line x1="0" y1="2.5" x2="6" y2="2.5" stroke="currentColor" stroke-width=".9" vector-effect="non-scaling-stroke"/>
+      </pattern>
+      <pattern id="hatch-strat-cross" patternUnits="userSpaceOnUse" width="6" height="6">
+        <line x1="0" y1="0" x2="6" y2="6" stroke="currentColor" stroke-width=".8" vector-effect="non-scaling-stroke"/>
+        <line x1="6" y1="0" x2="0" y2="6" stroke="currentColor" stroke-width=".8" vector-effect="non-scaling-stroke"/>
+      </pattern>
+      <g id="attractor-cloud">
+        <circle cx="152.1" cy="77.6" r="0.7"/><circle cx="237.4" cy="49.1" r="0.7"/><circle cx="76.3" cy="35.7" r="0.7"/><circle cx="83.9" cy="104.5" r="0.7"/><circle cx="224.5" cy="105.6" r="0.7"/><circle cx="212.5" cy="47.8" r="0.7"/><circle cx="108.5" cy="32.1" r="0.7"/><circle cx="126.9" cy="104.7" r="0.7"/><circle cx="272.1" cy="91.9" r="0.7"/><circle cx="148.9" cy="57.7" r="0.7"/><circle cx="179.7" cy="54.2" r="0.7"/><circle cx="158.4" cy="36.0" r="0.7"/><circle cx="149.0" cy="68.9" r="0.7"/><circle cx="211.7" cy="49.8" r="0.7"/><circle cx="113.0" cy="30.1" r="0.7"/><circle cx="133.2" cy="104.8" r="0.7"/><circle cx="275.7" cy="88.0" r="0.7"/><circle cx="139.3" cy="56.5" r="0.7"/><circle cx="175.0" cy="62.0" r="0.7"/><circle cx="182.1" cy="33.6" r="0.7"/><circle cx="135.6" cy="56.3" r="0.7"/><circle cx="173.2" cy="64.7" r="0.7"/><circle cx="191.3" cy="33.6" r="0.7"/><circle cx="126.5" cy="52.1" r="0.7"/><circle cx="158.6" cy="74.3" r="0.7"/><circle cx="226.8" cy="43.2" r="0.7"/><circle cx="82.9" cy="38.5" r="0.7"/><circle cx="93.5" cy="102.2" r="0.7"/><circle cx="237.4" cy="102.5" r="0.7"/><circle cx="195.0" cy="48.4" r="0.7"/><circle cx="131.8" cy="34.7" r="0.7"/><circle cx="145.2" cy="89.5" r="0.7"/><circle cx="266.0" cy="62.9" r="0.7"/><circle cx="76.8" cy="42.0" r="0.7"/><circle cx="86.9" cy="97.6" r="0.7"/><circle cx="226.0" cy="97.9" r="0.7"/><circle cx="208.4" cy="39.6" r="0.7"/><circle cx="105.8" cy="41.3" r="0.7"/><circle cx="124.5" cy="95.7" r="0.7"/><circle cx="266.0" cy="83.4" r="0.7"/><circle cx="136.1" cy="45.7" r="0.7"/><circle cx="153.2" cy="74.4" r="0.7"/><circle cx="228.1" cy="47.2" r="0.7"/><circle cx="86.0" cy="34.5" r="0.7"/><circle cx="97.7" cy="106.7" r="0.7"/><circle cx="242.2" cy="106.7" r="0.7"/><circle cx="188.1" cy="55.0" r="0.7"/><circle cx="152.4" cy="31.2" r="0.7"/><circle cx="151.8" cy="78.3" r="0.7"/><circle cx="239.5" cy="49.7" r="0.7"/><circle cx="74.6" cy="35.9" r="0.7"/><circle cx="81.6" cy="103.9" r="0.7"/><circle cx="221.3" cy="104.8" r="0.7"/><circle cx="217.2" cy="46.4" r="0.7"/><circle cx="100.0" cy="33.7" r="0.7"/><circle cx="116.3" cy="105.8" r="0.7"/><circle cx="263.3" cy="99.1" r="0.7"/><circle cx="163.9" cy="59.3" r="0.7"/><circle cx="180.9" cy="42.3" r="0.7"/><circle cx="138.7" cy="47.4" r="0.7"/><circle cx="156.5" cy="70.8" r="0.7"/><circle cx="216.7" cy="44.2" r="0.7"/><circle cx="98.0" cy="36.0" r="0.7"/><circle cx="113.3" cy="103.8" r="0.7"/><circle cx="260.8" cy="98.4" r="0.7"/><circle cx="165.7" cy="56.7" r="0.7"/><circle cx="173.5" cy="42.7" r="0.7"/><circle cx="144.7" cy="51.1" r="0.7"/><circle cx="164.5" cy="62.6" r="0.7"/><circle cx="190.0" cy="40.1" r="0.7"/><circle cx="128.4" cy="45.5" r="0.7"/><circle cx="148.9" cy="79.7" r="0.7"/><circle cx="243.5" cy="52.6" r="0.7"/><circle cx="74.9" cy="35.1" r="0.7"/><circle cx="82.0" cy="104.8" r="0.7"/><circle cx="221.8" cy="105.8" r="0.7"/><circle cx="216.2" cy="47.6" r="0.7"/><circle cx="103.0" cy="32.4" r="0.7"/><circle cx="120.6" cy="106.3" r="0.7"/><circle cx="266.9" cy="97.4" r="0.7"/><circle cx="159.5" cy="59.8" r="0.7"/><circle cx="184.0" cy="45.1" r="0.7"/><circle cx="138.7" cy="42.7" r="0.7"/><circle cx="150.9" cy="75.8" r="0.7"/><circle cx="232.5" cy="49.3" r="0.7"/><circle cx="83.3" cy="33.6" r="0.7"/><circle cx="94.2" cy="107.5" r="0.7"/><circle cx="237.4" cy="108.1" r="0.7"/><circle cx="193.7" cy="54.3" r="0.7"/><circle cx="144.8" cy="29.6" r="0.7"/><circle cx="152.8" cy="85.4" r="0.7"/><circle cx="257.7" cy="53.6" r="0.7"/><circle cx="60.7" cy="42.4" r="0.7"/><circle cx="65.2" cy="92.2" r="0.7"/><circle cx="189.5" cy="88.2" r="0.7"/><circle cx="241.6" cy="33.3" r="0.7"/><circle cx="60.2" cy="54.6" r="0.7"/><circle cx="84.1" cy="79.7" r="0.7"/><circle cx="188.3" cy="81.7" r="0.7"/><circle cx="227.9" cy="28.7" r="0.7"/><circle cx="82.2" cy="54.2" r="0.7"/><circle cx="113.4" cy="85.9" r="0.7"/><circle cx="239.7" cy="79.6" r="0.7"/><circle cx="155.1" cy="27.6" r="0.7"/><circle cx="154.9" cy="79.6" r="0.7"/><circle cx="242.8" cy="48.1" r="0.7"/><circle cx="67.5" cy="39.1" r="0.7"/><circle cx="72.2" cy="98.5" r="0.7"/><circle cx="206.3" cy="97.1" r="0.7"/><circle cx="234.7" cy="37.9" r="0.7"/><circle cx="68.8" cy="46.8" r="0.7"/><circle cx="81.1" cy="90.4" r="0.7"/><circle cx="208.6" cy="90.0" r="0.7"/><circle cx="222.0" cy="30.1" r="0.7"/><circle cx="89.1" cy="51.7" r="0.7"/><circle cx="117.6" cy="88.2" r="0.7"/><circle cx="248.5" cy="79.6" r="0.7"/><circle cx="144.1" cy="32.0" r="0.7"/><circle cx="150.8" cy="83.6" r="0.7"/><circle cx="253.6" cy="53.7" r="0.7"/><circle cx="65.3" cy="39.7" r="0.7"/><circle cx="69.6" cy="97.1" r="0.7"/><circle cx="201.5" cy="94.9" r="0.7"/><circle cx="238.6" cy="36.3" r="0.7"/><circle cx="63.5" cy="50.1" r="0.7"/><circle cx="79.3" cy="85.2" r="0.7"/><circle cx="195.4" cy="85.1" r="0.7"/><circle cx="228.4" cy="28.5" r="0.7"/><circle cx="81.7" cy="54.5" r="0.7"/><circle cx="113.5" cy="85.6" r="0.7"/><circle cx="239.1" cy="79.3" r="0.7"/><circle cx="155.3" cy="27.2" r="0.7"/><circle cx="155.5" cy="79.9" r="0.7"/><circle cx="243.5" cy="47.8" r="0.7"/><circle cx="66.3" cy="39.7" r="0.7"/><circle cx="70.8" cy="97.4" r="0.7"/><circle cx="203.6" cy="95.6" r="0.7"/><circle cx="236.8" cy="36.7" r="0.7"/><circle cx="65.9" cy="49.0" r="0.7"/><circle cx="80.5" cy="87.2" r="0.7"/><circle cx="201.5" cy="87.0" r="0.7"/><circle cx="225.1" cy="28.4" r="0.7"/><circle cx="86.3" cy="53.9" r="0.7"/><circle cx="118.4" cy="86.3" r="0.7"/><circle cx="245.4" cy="77.5" r="0.7"/><circle cx="142.1" cy="29.3" r="0.7"/><circle cx="152.6" cy="87.7" r="0.7"/><circle cx="262.6" cy="55.8" r="0.7"/><circle cx="60.9" cy="43.9" r="0.7"/><circle cx="66.8" cy="90.6" r="0.7"/><circle cx="189.0" cy="87.1" r="0.7"/><circle cx="239.9" cy="32.5" r="0.7"/><circle cx="62.8" cy="54.7" r="0.7"/><circle cx="87.7" cy="80.8" r="0.7"/><circle cx="196.3" cy="82.4" r="0.7"/><circle cx="220.8" cy="26.2" r="0.7"/><circle cx="95.1" cy="55.0" r="0.7"/><circle cx="132.8" cy="84.6" r="0.7"/><circle cx="251.6" cy="67.4" r="0.7"/><circle cx="104.6" cy="31.3" r="0.7"/><circle cx="123.1" cy="106.9" r="0.7"/><circle cx="268.7" cy="96.6" r="0.7"/><circle cx="157.3" cy="60.2" r="0.7"/><circle cx="185.6" cy="46.4" r="0.7"/><circle cx="138.8" cy="40.5" r="0.7"/><circle cx="149.4" cy="78.2" r="0.7"/><circle cx="239.2" cy="51.4" r="0.7"/><circle cx="78.1" cy="34.2" r="0.7"/><circle cx="86.8" cy="106.4" r="0.7"/><circle cx="228.0" cy="107.6" r="0.7"/><circle cx="206.8" cy="50.7" r="0.7"/><circle cx="121.3" cy="29.6" r="0.7"/><circle cx="141.1" cy="101.1" r="0.7"/><circle cx="278.3" cy="78.3" r="0.7"/><circle cx="114.2" cy="51.5" r="0.7"/><circle cx="147.3" cy="81.5" r="0.7"/><circle cx="248.2" cy="54.9" r="0.7"/><circle cx="74.1" cy="35.6" r="0.7"/><circle cx="80.9" cy="104.2" r="0.7"/><circle cx="220.4" cy="105.0" r="0.7"/><circle cx="218.5" cy="46.5" r="0.7"/><circle cx="98.4" cy="33.7" r="0.7"/><circle cx="114.3" cy="106.2" r="0.7"/><circle cx="261.3" cy="100.5" r="0.7"/><circle cx="166.5" cy="59.4" r="0.7"/><circle cx="180.0" cy="40.4" r="0.7"/><circle cx="138.0" cy="49.9" r="0.7"/><circle cx="160.5" cy="68.6" r="0.7"/><circle cx="209.2" cy="41.4" r="0.7"/><circle cx="105.8" cy="39.3" r="0.7"/><circle cx="123.3" cy="98.0" r="0.7"/><circle cx="267.3" cy="86.8" r="0.7"/><circle cx="142.7" cy="49.3" r="0.7"/><circle cx="160.7" cy="65.9" r="0.7"/><circle cx="200.9" cy="41.7" r="0.7"/><circle cx="116.7" cy="40.2" r="0.7"/><circle cx="135.1" cy="92.3" r="0.7"/><circle cx="267.7" cy="72.9" r="0.7"/><circle cx="105.4" cy="42.0" r="0.7"/><circle cx="124.5" cy="95.1" r="0.7"/><circle cx="265.3" cy="82.8" r="0.7"/><circle cx="135.1" cy="44.7" r="0.7"/><circle cx="151.6" cy="76.1" r="0.7"/><circle cx="233.4" cy="49.0" r="0.7"/><circle cx="81.5" cy="34.3" r="0.7"/><circle cx="91.4" cy="106.7" r="0.7"/><circle cx="234.2" cy="107.6" r="0.7"/><circle cx="198.3" cy="52.6" r="0.7"/><circle cx="135.6" cy="29.6" r="0.7"/><circle cx="150.1" cy="92.0" r="0.7"/><circle cx="270.6" cy="61.8" r="0.7"/><circle cx="70.1" cy="45.8" r="0.7"/><circle cx="81.5" cy="91.9" r="0.7"/><circle cx="211.6" cy="91.5" r="0.7"/><circle cx="220.6" cy="31.4" r="0.7"/><circle cx="90.0" cy="50.2" r="0.7"/><circle cx="116.0" cy="89.5" r="0.7"/><circle cx="249.7" cy="81.7" r="0.7"/><circle cx="148.2" cy="33.9" r="0.7"/><circle cx="150.4" cy="78.6" r="0.7"/><circle cx="240.4" cy="50.9" r="0.7"/><circle cx="75.5" cy="35.2" r="0.7"/><circle cx="82.9" cy="104.9" r="0.7"/><circle cx="223.0" cy="105.9" r="0.7"/><circle cx="214.5" cy="47.8" r="0.7"/><circle cx="105.8" cy="32.1" r="0.7"/><circle cx="124.0" cy="105.8" r="0.7"/><circle cx="269.8" cy="94.8" r="0.7"/><circle cx="154.5" cy="59.1" r="0.7"/><circle cx="183.1" cy="49.1" r="0.7"/><circle cx="145.4" cy="38.9" r="0.7"/><circle cx="150.2" cy="75.2" r="0.7"/><circle cx="230.6" cy="49.7" r="0.7"/><circle cx="86.5" cy="32.7" r="0.7"/><circle cx="99.0" cy="108.5" r="0.7"/><circle cx="242.9" cy="108.3" r="0.7"/><circle cx="186.4" cy="56.9" r="0.7"/><circle cx="158.7" cy="30.5" r="0.7"/><circle cx="151.3" cy="74.3" r="0.7"/><circle cx="228.0" cy="48.6" r="0.7"/><circle cx="88.3" cy="33.0" r="0.7"/><circle cx="101.4" cy="108.1" r="0.7"/><circle cx="246.1" cy="107.3" r="0.7"/><circle cx="183.0" cy="57.5" r="0.7"/><circle cx="163.6" cy="31.7" r="0.7"/><circle cx="148.8" cy="69.7" r="0.7"/><circle cx="214.1" cy="49.9" r="0.7"/><circle cx="109.9" cy="29.9" r="0.7"/><circle cx="130.1" cy="106.3" r="0.7"/><circle cx="273.7" cy="91.6" r="0.7"/><circle cx="147.2" cy="58.5" r="0.7"/><circle cx="181.7" cy="54.9" r="0.7"/><circle cx="158.3" cy="34.4" r="0.7"/><circle cx="149.2" cy="70.7" r="0.7"/><circle cx="217.1" cy="49.6" r="0.7"/><circle cx="105.1" cy="30.4" r="0.7"/><circle cx="124.5" cy="107.6" r="0.7"/><circle cx="269.3" cy="96.5" r="0.7"/><circle cx="156.8" cy="60.6" r="0.7"/><circle cx="186.8" cy="46.6" r="0.7"/>
+      </g>
+    </defs>
+  </svg>
+
+  <div class="page">
+
+    <header class="masthead">
+      <div class="left">
+        <span class="id">System / Design / Accent Probe · v2</span> · process-ink at field scale
+      </div>
+      <div class="right">2026.05.17 · branch main</div>
+    </header>
+
+    <div class="mode-band" role="group" aria-label="Substrate toggle">
+      <form class="mode-toggle" aria-label="Page substrate">
+        <input type="radio" name="mode" id="m-light" checked>
+        <label for="m-light">Light</label>
+        <input type="radio" name="mode" id="m-dark">
+        <label for="m-dark">Dark</label>
+      </form>
+      <span class="mode-note">
+        Substrate test only — dark mode is a departure from the skill's white-page baseline.
+        Inks shift to their dark-substrate hex (shown second in each column header).
+      </span>
+    </div>
+
+    <section class="intro">
+      <div>
+        <h1>One process ink, doing real work.</h1>
+        <p class="lede">
+          Iteration two. The first pass treated colour as a single-mark accent
+          (one bar, one line). The reference set instead points toward a
+          <em>printer's-ink data layer</em> — a Tufte scatter where every dot is red,
+          a planning drawing where translucent blue zones layer behind black hairlines,
+          a Risograph page where red brackets annotate cyan halftone photography. The
+          ink is the data and diagram surface, not a highlight.
+        </p>
+        <p class="meta">
+          Top: same probe set on both sides — single-ink mode, red <em>or</em> blue per artifact.
+          Below the columns: Mode 3 — dual ink, red leading, blue supporting.
+          Hue picks are printerly rather than modern UI saturated.
+        </p>
+      </div>
+      <aside class="rules" aria-label="Rules">
+        <span class="rh">Earned uses of the ink</span>
+        <ul>
+          <li>Whole-cloud / whole-field data marks (scatter, attractor)</li>
+          <li>Isolines / contours at full hairline density</li>
+          <li>Hatch fills carrying stratigraphic regions</li>
+          <li>Annotation brackets, callouts, dotted boxes over a base figure</li>
+          <li>Hatched fill of the highlighted bar / one ink-coloured value</li>
+        </ul>
+        <span class="rh" style="margin-top: 10px;">Still forbidden</span>
+        <ul>
+          <li>Links, buttons, body prose</li>
+          <li>Section rules, dividers, chrome paint</li>
+          <li>Backgrounds, header stripes</li>
+          <li>Decoration with no data</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="ab" aria-label="Accent A/B comparison">
+
+      <!-- ═════════════════ RED column ═════════════════ -->
+      <div class="col red" aria-labelledby="red-h">
+        <header class="col-head">
+          <span class="swatch" aria-hidden="true"></span>
+          <span class="name" id="red-h">Variant A · Process Red</span>
+          <span class="hex">
+            <span class="hl">#d83a2f</span><span class="sep">·</span><span class="hd">#ee4d42</span>
+          </span>
+        </header>
+
+        <!-- P1 scatter -->
+        <div class="probe">
+          <div class="ph"><span class="n">P1</span>Scatter — Tufte attractor, whole cloud in ink</div>
+          <figure class="scatter">
+            <svg viewBox="0 0 320 160" role="img" aria-label="Scatter plot of a Clifford attractor, 260 points in the accent ink">
+              <text class="title" x="0" y="10">CLIFFORD ATTRACTOR  ·  a=−1.4  b=1.6  c=1.0  d=0.7</text>
+              <!-- frame -->
+              <rect class="frame" x="40" y="20" width="270" height="110" />
+              <!-- ticks left -->
+              <line class="tick" x1="38" y1="20"  x2="42" y2="20" />
+              <line class="tick" x1="38" y1="75"  x2="42" y2="75" />
+              <line class="tick" x1="38" y1="130" x2="42" y2="130" />
+              <text class="tick-lbl" x="14" y="22">2</text>
+              <text class="tick-lbl" x="14" y="77">0</text>
+              <text class="tick-lbl" x="10" y="132">−2</text>
+              <!-- ticks bottom -->
+              <line class="tick" x1="40"  y1="130" x2="40"  y2="134" />
+              <line class="tick" x1="175" y1="130" x2="175" y2="134" />
+              <line class="tick" x1="310" y1="130" x2="310" y2="134" />
+              <text class="tick-lbl" x="34"  y="146">−2</text>
+              <text class="tick-lbl" x="172" y="146">0</text>
+              <text class="tick-lbl" x="306" y="146">2</text>
+              <text class="axis-lbl" x="170" y="158">x</text>
+              <text class="axis-lbl" x="6"   y="78" transform="rotate(-90 6 78)">y</text>
+              <!-- cloud -->
+              <use href="#attractor-cloud" class="cloud" />
+            </svg>
+            <figcaption>Fig. 1 — 260-iterate cloud. Ink at field scale.</figcaption>
+          </figure>
+        </div>
+
+        <!-- P2 topographic contour -->
+        <div class="probe">
+          <div class="ph"><span class="n">P2</span>Topographic contour — ink isolines, no fills</div>
+          <figure class="contour">
+            <svg viewBox="0 0 320 210" role="img" aria-label="Topographic contour map with two peaks, isolines in the accent ink">
+              <text class="title" x="0" y="10">TOPOGRAPHIC QUAD · 4-N · GRID 1 : 5000</text>
+              <!-- frame -->
+              <rect class="frame" x="14" y="20" width="292" height="170"/>
+              <!-- frame ticks (cartographic) -->
+              <g class="tick">
+                <line x1="14"  y1="20"  x2="14"  y2="14"/>
+                <line x1="72"  y1="20"  x2="72"  y2="14"/>
+                <line x1="160" y1="20"  x2="160" y2="14"/>
+                <line x1="248" y1="20"  x2="248" y2="14"/>
+                <line x1="306" y1="20"  x2="306" y2="14"/>
+                <line x1="14"  y1="190" x2="14"  y2="196"/>
+                <line x1="72"  y1="190" x2="72"  y2="196"/>
+                <line x1="160" y1="190" x2="160" y2="196"/>
+                <line x1="248" y1="190" x2="248" y2="196"/>
+                <line x1="306" y1="190" x2="306" y2="196"/>
+                <line x1="14"  y1="20"  x2="8"  y2="20"/>
+                <line x1="14"  y1="62"  x2="8"  y2="62"/>
+                <line x1="14"  y1="105" x2="8"  y2="105"/>
+                <line x1="14"  y1="148" x2="8"  y2="148"/>
+                <line x1="14"  y1="190" x2="8"  y2="190"/>
+              </g>
+              <!-- coordinate labels (n, e) -->
+              <text class="lbl-mute" x="64"  y="10">E 1.0</text>
+              <text class="lbl-mute" x="152" y="10">E 1.5</text>
+              <text class="lbl-mute" x="240" y="10">E 2.0</text>
+              <text class="lbl-mute" x="316" y="22" transform="rotate(90 316 22)">N 0.5</text>
+              <text class="lbl-mute" x="316" y="107" transform="rotate(90 316 107)">N 1.0</text>
+              <text class="lbl-mute" x="316" y="192" transform="rotate(90 316 192)">N 1.5</text>
+
+              <!-- ============= primary peak (centre-right) ============= -->
+              <!-- 100 m index -->
+              <path class="iso-index" d="M 96 100 C 100 60, 150 48, 200 52 C 252 56, 296 70, 296 110 C 296 152, 252 172, 198 168 C 144 164, 92 142, 96 100 Z"/>
+              <!-- 150 m intermediate -->
+              <path class="iso" d="M 118 102 C 122 76, 162 62, 206 66 C 250 70, 282 82, 282 110 C 282 138, 248 156, 204 152 C 162 150, 116 134, 118 102 Z"/>
+              <!-- 200 m index -->
+              <path class="iso-index" d="M 140 106 C 144 88, 178 78, 214 82 C 248 86, 268 96, 268 112 C 268 130, 244 144, 210 140 C 178 138, 138 126, 140 106 Z"/>
+              <!-- 250 m intermediate -->
+              <path class="iso" d="M 162 110 C 166 96, 192 90, 220 94 C 246 98, 256 106, 254 116 C 252 126, 234 134, 212 130 C 190 128, 160 122, 162 110 Z"/>
+              <!-- 300 m index -->
+              <path class="iso-index" d="M 188 112 C 194 102, 214 100, 234 106 C 246 110, 248 120, 236 126 C 222 132, 200 128, 192 122 C 186 117, 186 114, 188 112 Z"/>
+
+              <!-- contour labels (mono in ink), embedded in line gaps -->
+              <text class="lbl-iso" x="178" y="58">100</text>
+              <text class="lbl-iso" x="184" y="90">200</text>
+              <text class="lbl-iso" x="208" y="111">300</text>
+
+              <!-- peak marker × + label -->
+              <path class="peak" d="M 219 116 L 225 122 M 225 116 L 219 122"/>
+              <text class="lbl" x="232" y="119">PEAK 348</text>
+
+              <!-- ============= secondary feature (lower-left) ============= -->
+              <!-- 50 m -->
+              <path class="iso-index" d="M 28 170 C 28 154, 46 144, 70 146 C 92 148, 102 162, 96 178 C 90 188, 72 188, 54 186 C 38 184, 26 178, 28 170 Z"/>
+              <!-- 75 m -->
+              <path class="iso" d="M 46 172 C 48 162, 62 158, 76 162 C 86 166, 86 178, 76 182 C 64 184, 50 178, 46 172 Z"/>
+              <text class="lbl-iso" x="78" y="148">50</text>
+              <path class="peak" d="M 64 169 L 70 175 M 70 169 L 64 175"/>
+              <text class="lbl" x="76" y="174">PEAK 82</text>
+
+              <!-- ============= north arrow ============= -->
+              <g transform="translate(280 30)">
+                <path class="peak" d="M 0 14 L 5 0 L 10 14 L 5 10 Z"/>
+                <text class="lbl" x="3" y="22">N</text>
+              </g>
+
+              <!-- ============= scale bar ============= -->
+              <g transform="translate(220 200)">
+                <line class="frame" x1="0" y1="0" x2="80" y2="0" stroke-width="1"/>
+                <line class="frame" x1="0" y1="-3" x2="0" y2="3" stroke-width="1"/>
+                <line class="frame" x1="40" y1="-3" x2="40" y2="3" stroke-width="1"/>
+                <line class="frame" x1="80" y1="-3" x2="80" y2="3" stroke-width="1"/>
+                <text class="lbl-mute" x="-3" y="-6">0</text>
+                <text class="lbl-mute" x="34" y="-6">50 m</text>
+                <text class="lbl-mute" x="68" y="-6">100 m</text>
+              </g>
+            </svg>
+            <figcaption>Fig. 2 — Two-peak topographic quad; ink as isoline data only, no fills.</figcaption>
+          </figure>
+        </div>
+
+        <!-- P4 annotation overlay -->
+        <div class="probe">
+          <div class="ph"><span class="n">P4</span>Annotation overlay — ink brackets and callouts on a base figure</div>
+          <figure class="anno">
+            <svg viewBox="0 0 320 160" role="img" aria-label="Base figure overlaid with ink brackets and annotation callouts">
+              <!-- base: stack of plates, hairline -->
+              <g class="base">
+                <rect x="60"  y="30" width="200" height="14"/>
+                <rect x="60"  y="50" width="200" height="14"/>
+                <rect x="60"  y="70" width="200" height="14"/>
+                <rect x="60"  y="90" width="200" height="14"/>
+                <rect x="60"  y="110" width="200" height="14"/>
+              </g>
+              <!-- one plate filled (a 'sample') -->
+              <rect class="base-fill" x="60" y="70" width="200" height="14"/>
+              <!-- ink overlay: dashed box around sample row -->
+              <rect class="overlay-dash" x="54" y="66" width="212" height="22"/>
+              <!-- bracket above the figure -->
+              <path class="bracket" d="M60 22 L60 16 L260 16 L260 22"/>
+              <text class="lbl-acc" x="118" y="11">[ STACK · 5 LAYERS ]</text>
+              <!-- right-side callout to filled row -->
+              <path class="overlay" d="M266 77 L296 77 L296 50"/>
+              <text class="lbl-acc" x="276" y="44">SAMPLE</text>
+              <!-- left callout: small ink note -->
+              <path class="overlay" d="M54 130 L40 142 L8 142"/>
+              <text class="lbl-acc" x="10" y="138">retire 0 · keep 1–4</text>
+              <!-- circled detail -->
+              <circle class="overlay" cx="158" cy="77" r="9" fill="none"/>
+              <text class="lbl-mute" x="60" y="156">BASE FIGURE · INK OVERLAY</text>
+            </svg>
+            <figcaption>Fig. 4 — Risograph-style annotation; ink only on the overlay, base stays monochrome.</figcaption>
+          </figure>
+        </div>
+
+        <!-- P5 bars with hatched accent + single value -->
+        <div class="probe">
+          <div class="ph"><span class="n">P5</span>Bars — hatched ink on the focus bar; one accent value</div>
+          <figure class="bars">
+            <svg viewBox="0 0 320 150" role="img" aria-label="Bar chart with one hatched ink bar and one accent value">
+              <defs>
+                <pattern id="hatch-r" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
+                  <line class="hatch-st" x1="0" y1="0" x2="0" y2="5"/>
+                </pattern>
+              </defs>
+              <line class="axis" x1="40" y1="118" x2="310" y2="118"/>
+              <!-- 5 bars: channels(9) systems(3) packages(9) services(8) scripts(13) ; max 13 → h = v*7 -->
+              <rect class="bar-blk" x="55"  y="55"  width="36" height="63"/>
+              <rect class="bar-blk" x="110" y="97"  width="36" height="21"/>
+              <rect class="bar-blk" x="165" y="55"  width="36" height="63"/>
+              <rect class="bar-blk" x="220" y="62"  width="36" height="56"/>
+              <!-- focus bar: hatched ink + ink outline -->
+              <rect x="275" y="27" width="36" height="91" fill="url(#hatch-r)"/>
+              <rect class="bar-out" x="275" y="27" width="36" height="91"/>
+              <!-- labels -->
+              <text class="lbl" x="55"  y="132">channels</text>
+              <text class="lbl" x="112" y="132">systems</text>
+              <text class="lbl" x="165" y="132">packages</text>
+              <text class="lbl" x="222" y="132">services</text>
+              <text class="lbl" x="280" y="132">scripts</text>
+              <!-- values -->
+              <text class="val"     x="67"  y="50">9</text>
+              <text class="val"     x="122" y="92">3</text>
+              <text class="val"     x="177" y="50">9</text>
+              <text class="val"     x="232" y="57">8</text>
+              <text class="val-acc" x="285" y="22">13</text>
+            </svg>
+            <figcaption>Fig. 5 — Hatched ink on the focus bar; single ink-coloured value.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <!-- ═════════════════ BLUE column ═════════════════ -->
+      <div class="col blue" aria-labelledby="blue-h">
+        <header class="col-head">
+          <span class="swatch" aria-hidden="true"></span>
+          <span class="name" id="blue-h">Variant B · Process Blue</span>
+          <span class="hex">
+            <span class="hl">#2e62c4</span><span class="sep">·</span><span class="hd">#5a8de8</span>
+          </span>
+        </header>
+
+        <div class="probe">
+          <div class="ph"><span class="n">P1</span>Scatter — Tufte attractor, whole cloud in ink</div>
+          <figure class="scatter">
+            <svg viewBox="0 0 320 160" role="img" aria-label="Scatter plot of a Clifford attractor, 260 points in the accent ink">
+              <text class="title" x="0" y="10">CLIFFORD ATTRACTOR  ·  a=−1.4  b=1.6  c=1.0  d=0.7</text>
+              <rect class="frame" x="40" y="20" width="270" height="110" />
+              <line class="tick" x1="38" y1="20"  x2="42" y2="20" />
+              <line class="tick" x1="38" y1="75"  x2="42" y2="75" />
+              <line class="tick" x1="38" y1="130" x2="42" y2="130" />
+              <text class="tick-lbl" x="14" y="22">2</text>
+              <text class="tick-lbl" x="14" y="77">0</text>
+              <text class="tick-lbl" x="10" y="132">−2</text>
+              <line class="tick" x1="40"  y1="130" x2="40"  y2="134" />
+              <line class="tick" x1="175" y1="130" x2="175" y2="134" />
+              <line class="tick" x1="310" y1="130" x2="310" y2="134" />
+              <text class="tick-lbl" x="34"  y="146">−2</text>
+              <text class="tick-lbl" x="172" y="146">0</text>
+              <text class="tick-lbl" x="306" y="146">2</text>
+              <text class="axis-lbl" x="170" y="158">x</text>
+              <text class="axis-lbl" x="6"   y="78" transform="rotate(-90 6 78)">y</text>
+              <use href="#attractor-cloud" class="cloud" />
+            </svg>
+            <figcaption>Fig. 1 — 260-iterate cloud. Ink at field scale.</figcaption>
+          </figure>
+        </div>
+
+        <div class="probe">
+          <div class="ph"><span class="n">P2</span>Topographic contour — ink isolines, no fills</div>
+          <figure class="contour">
+            <svg viewBox="0 0 320 210" role="img" aria-label="Topographic contour map with two peaks, isolines in the accent ink">
+              <text class="title" x="0" y="10">TOPOGRAPHIC QUAD · 4-N · GRID 1 : 5000</text>
+              <rect class="frame" x="14" y="20" width="292" height="170"/>
+              <g class="tick">
+                <line x1="14"  y1="20"  x2="14"  y2="14"/>
+                <line x1="72"  y1="20"  x2="72"  y2="14"/>
+                <line x1="160" y1="20"  x2="160" y2="14"/>
+                <line x1="248" y1="20"  x2="248" y2="14"/>
+                <line x1="306" y1="20"  x2="306" y2="14"/>
+                <line x1="14"  y1="190" x2="14"  y2="196"/>
+                <line x1="72"  y1="190" x2="72"  y2="196"/>
+                <line x1="160" y1="190" x2="160" y2="196"/>
+                <line x1="248" y1="190" x2="248" y2="196"/>
+                <line x1="306" y1="190" x2="306" y2="196"/>
+                <line x1="14"  y1="20"  x2="8"  y2="20"/>
+                <line x1="14"  y1="62"  x2="8"  y2="62"/>
+                <line x1="14"  y1="105" x2="8"  y2="105"/>
+                <line x1="14"  y1="148" x2="8"  y2="148"/>
+                <line x1="14"  y1="190" x2="8"  y2="190"/>
+              </g>
+              <text class="lbl-mute" x="64"  y="10">E 1.0</text>
+              <text class="lbl-mute" x="152" y="10">E 1.5</text>
+              <text class="lbl-mute" x="240" y="10">E 2.0</text>
+              <text class="lbl-mute" x="316" y="22" transform="rotate(90 316 22)">N 0.5</text>
+              <text class="lbl-mute" x="316" y="107" transform="rotate(90 316 107)">N 1.0</text>
+              <text class="lbl-mute" x="316" y="192" transform="rotate(90 316 192)">N 1.5</text>
+              <path class="iso-index" d="M 96 100 C 100 60, 150 48, 200 52 C 252 56, 296 70, 296 110 C 296 152, 252 172, 198 168 C 144 164, 92 142, 96 100 Z"/>
+              <path class="iso" d="M 118 102 C 122 76, 162 62, 206 66 C 250 70, 282 82, 282 110 C 282 138, 248 156, 204 152 C 162 150, 116 134, 118 102 Z"/>
+              <path class="iso-index" d="M 140 106 C 144 88, 178 78, 214 82 C 248 86, 268 96, 268 112 C 268 130, 244 144, 210 140 C 178 138, 138 126, 140 106 Z"/>
+              <path class="iso" d="M 162 110 C 166 96, 192 90, 220 94 C 246 98, 256 106, 254 116 C 252 126, 234 134, 212 130 C 190 128, 160 122, 162 110 Z"/>
+              <path class="iso-index" d="M 188 112 C 194 102, 214 100, 234 106 C 246 110, 248 120, 236 126 C 222 132, 200 128, 192 122 C 186 117, 186 114, 188 112 Z"/>
+              <text class="lbl-iso" x="178" y="58">100</text>
+              <text class="lbl-iso" x="184" y="90">200</text>
+              <text class="lbl-iso" x="208" y="111">300</text>
+              <path class="peak" d="M 219 116 L 225 122 M 225 116 L 219 122"/>
+              <text class="lbl" x="232" y="119">PEAK 348</text>
+              <path class="iso-index" d="M 28 170 C 28 154, 46 144, 70 146 C 92 148, 102 162, 96 178 C 90 188, 72 188, 54 186 C 38 184, 26 178, 28 170 Z"/>
+              <path class="iso" d="M 46 172 C 48 162, 62 158, 76 162 C 86 166, 86 178, 76 182 C 64 184, 50 178, 46 172 Z"/>
+              <text class="lbl-iso" x="78" y="148">50</text>
+              <path class="peak" d="M 64 169 L 70 175 M 70 169 L 64 175"/>
+              <text class="lbl" x="76" y="174">PEAK 82</text>
+              <g transform="translate(280 30)">
+                <path class="peak" d="M 0 14 L 5 0 L 10 14 L 5 10 Z"/>
+                <text class="lbl" x="3" y="22">N</text>
+              </g>
+              <g transform="translate(220 200)">
+                <line class="frame" x1="0" y1="0" x2="80" y2="0" stroke-width="1"/>
+                <line class="frame" x1="0" y1="-3" x2="0" y2="3" stroke-width="1"/>
+                <line class="frame" x1="40" y1="-3" x2="40" y2="3" stroke-width="1"/>
+                <line class="frame" x1="80" y1="-3" x2="80" y2="3" stroke-width="1"/>
+                <text class="lbl-mute" x="-3" y="-6">0</text>
+                <text class="lbl-mute" x="34" y="-6">50 m</text>
+                <text class="lbl-mute" x="68" y="-6">100 m</text>
+              </g>
+            </svg>
+            <figcaption>Fig. 2 — Two-peak topographic quad; ink as isoline data only, no fills.</figcaption>
+          </figure>
+        </div>
+
+        <div class="probe">
+          <div class="ph"><span class="n">P4</span>Annotation overlay — ink brackets and callouts on a base figure</div>
+          <figure class="anno">
+            <svg viewBox="0 0 320 160" role="img" aria-label="Base figure overlaid with ink brackets and annotation callouts">
+              <g class="base">
+                <rect x="60"  y="30" width="200" height="14"/>
+                <rect x="60"  y="50" width="200" height="14"/>
+                <rect x="60"  y="70" width="200" height="14"/>
+                <rect x="60"  y="90" width="200" height="14"/>
+                <rect x="60"  y="110" width="200" height="14"/>
+              </g>
+              <rect class="base-fill" x="60" y="70" width="200" height="14"/>
+              <rect class="overlay-dash" x="54" y="66" width="212" height="22"/>
+              <path class="bracket" d="M60 22 L60 16 L260 16 L260 22"/>
+              <text class="lbl-acc" x="118" y="11">[ STACK · 5 LAYERS ]</text>
+              <path class="overlay" d="M266 77 L296 77 L296 50"/>
+              <text class="lbl-acc" x="276" y="44">SAMPLE</text>
+              <path class="overlay" d="M54 130 L40 142 L8 142"/>
+              <text class="lbl-acc" x="10" y="138">retire 0 · keep 1–4</text>
+              <circle class="overlay" cx="158" cy="77" r="9" fill="none"/>
+              <text class="lbl-mute" x="60" y="156">BASE FIGURE · INK OVERLAY</text>
+            </svg>
+            <figcaption>Fig. 4 — Risograph-style annotation; ink only on the overlay, base stays monochrome.</figcaption>
+          </figure>
+        </div>
+
+        <div class="probe">
+          <div class="ph"><span class="n">P5</span>Bars — hatched ink on the focus bar; one accent value</div>
+          <figure class="bars">
+            <svg viewBox="0 0 320 150" role="img" aria-label="Bar chart with one hatched ink bar and one accent value">
+              <defs>
+                <pattern id="hatch-b" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
+                  <line class="hatch-st" x1="0" y1="0" x2="0" y2="5"/>
+                </pattern>
+              </defs>
+              <line class="axis" x1="40" y1="118" x2="310" y2="118"/>
+              <rect class="bar-blk" x="55"  y="55"  width="36" height="63"/>
+              <rect class="bar-blk" x="110" y="97"  width="36" height="21"/>
+              <rect class="bar-blk" x="165" y="55"  width="36" height="63"/>
+              <rect class="bar-blk" x="220" y="62"  width="36" height="56"/>
+              <rect x="275" y="27" width="36" height="91" fill="url(#hatch-b)"/>
+              <rect class="bar-out" x="275" y="27" width="36" height="91"/>
+              <text class="lbl" x="55"  y="132">channels</text>
+              <text class="lbl" x="112" y="132">systems</text>
+              <text class="lbl" x="165" y="132">packages</text>
+              <text class="lbl" x="222" y="132">services</text>
+              <text class="lbl" x="280" y="132">scripts</text>
+              <text class="val"     x="67"  y="50">9</text>
+              <text class="val"     x="122" y="92">3</text>
+              <text class="val"     x="177" y="50">9</text>
+              <text class="val"     x="232" y="57">8</text>
+              <text class="val-acc" x="285" y="22">13</text>
+            </svg>
+            <figcaption>Fig. 5 — Hatched ink on the focus bar; single ink-coloured value.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ════════════════════ Mode 3 — Dual Ink ════════════════════ -->
+    <section class="dual-section" aria-label="Mode 3 — dual ink">
+      <header class="dual-head">
+        <h2>Mode 3 · Dual Ink</h2>
+        <span class="dual-tag">Red leads, blue supports. Asymmetric roles only — primary signal vs context substrate.</span>
+        <div class="swatches">
+          <span class="sw sw-red"></span><span class="lab">Primary</span>
+          <span class="sw sw-blue"></span><span class="lab">Support</span>
+        </div>
+      </header>
+
+      <!-- P3 dual: Risograph register -->
+      <div class="dual-probe">
+        <div class="ph"><span class="n">P3</span>Risograph register — blue hatch substrate · red sample annotation overprint</div>
+        <figure class="strat-dual">
+          <svg viewBox="0 0 700 260" role="img" aria-label="Stratigraphic core section with blue hatched substrate and red sample annotation overprint">
+            <text class="title" x="0" y="12">RISOGRAPH REGISTER · STRATIGRAPHIC CORE A-12 · SAMPLE 2.7 m</text>
+
+            <!-- BLUE substrate: hatched strata -->
+            <g class="ink-blue">
+              <rect x="200" y="28"  width="160" height="38" fill="url(#hatch-strat-fine)"/>
+              <rect x="200" y="66"  width="160" height="38" fill="url(#hatch-strat-dots)"/>
+              <rect x="200" y="104" width="160" height="38" fill="url(#hatch-strat-dense)"/>
+              <rect x="200" y="142" width="160" height="38" fill="url(#hatch-strat-horiz)"/>
+              <rect x="200" y="180" width="160" height="38" fill="url(#hatch-strat-cross)"/>
+            </g>
+
+            <!-- BLACK frame & separators (structure) -->
+            <rect class="frame" x="200" y="28" width="160" height="190"/>
+            <line class="layer-sep" x1="200" y1="66"  x2="360" y2="66"/>
+            <line class="layer-sep" x1="200" y1="104" x2="360" y2="104"/>
+            <line class="layer-sep" x1="200" y1="142" x2="360" y2="142"/>
+            <line class="layer-sep" x1="200" y1="180" x2="360" y2="180"/>
+
+            <!-- depth ticks + labels -->
+            <g class="tick">
+              <line x1="360" y1="28"  x2="366" y2="28"/>
+              <line x1="360" y1="66"  x2="366" y2="66"/>
+              <line x1="360" y1="104" x2="366" y2="104"/>
+              <line x1="360" y1="142" x2="366" y2="142"/>
+              <line x1="360" y1="180" x2="366" y2="180"/>
+              <line x1="360" y1="218" x2="366" y2="218"/>
+            </g>
+            <text class="lbl" x="370" y="32">0 m</text>
+            <text class="lbl" x="370" y="70">1 m</text>
+            <text class="lbl" x="370" y="108">2 m</text>
+            <text class="lbl" x="370" y="146">3 m</text>
+            <text class="lbl" x="370" y="184">4 m</text>
+            <text class="lbl" x="370" y="222">5 m</text>
+
+            <!-- stratum names -->
+            <text class="lbl-name" x="410" y="51">TOPSOIL</text>
+            <text class="lbl-name" x="410" y="89">SAND</text>
+            <text class="lbl-name" x="410" y="127">CLAY</text>
+            <text class="lbl-name" x="410" y="165">SHALE</text>
+            <text class="lbl-name" x="410" y="203">BEDROCK</text>
+
+            <!-- RED overlay: sample annotation (primary layer) -->
+            <g class="ink-red">
+              <!-- bracket at sample depth (2.7m → y = 28 + 2.7*38 = 130.6) -->
+              <path class="anno" d="M 200 120 L 188 120 L 188 142 L 200 142"/>
+              <path class="anno" d="M 188 131 L 130 131"/>
+              <text class="lbl-acc" x="74" y="128">SAMPLE</text>
+              <text class="lbl-acc" x="74" y="141">2.7 m</text>
+
+              <!-- × marker within the clay layer + ring -->
+              <path class="anno-mark" d="M 273 126 L 285 138 M 285 126 L 273 138"/>
+              <circle class="anno" cx="279" cy="132" r="9"/>
+
+              <!-- callout to right-side detail block -->
+              <path class="anno" d="M 290 132 L 510 132"/>
+
+              <!-- right-side analytical detail (sample data) -->
+              <text class="lbl-acc" x="520" y="116">[ SAMPLE A1 ]</text>
+              <text class="lbl-acc" x="520" y="132">CLAY · HIGH PLASTICITY</text>
+              <text class="lbl-acc" x="520" y="148">w = 27.4 %</text>
+              <text class="lbl-acc" x="520" y="164">LL = 52   PI = 28</text>
+              <text class="lbl-acc" x="520" y="180">RECOVERED 2026.05.17</text>
+            </g>
+
+            <!-- BLACK bottom note -->
+            <text class="lbl-mute" x="200" y="246">SCALE 1 : 20  ·  HATCH NOTATION USGS-STD  ·  RED OVERPRINT 2026.05.17</text>
+          </svg>
+          <figcaption>Fig. 3 — Risograph register: blue as substrate data layer, red as primary annotation overprint.</figcaption>
+        </figure>
+      </div>
+
+      <!-- P6 dual: Topographic active route -->
+      <div class="dual-probe">
+        <div class="ph"><span class="n">P6</span>Topographic — blue contour substrate · red active route layer</div>
+        <figure class="contour-dual">
+          <svg viewBox="0 0 700 320" role="img" aria-label="Topographic map with blue contour isolines and a red active route across the terrain">
+            <text class="title" x="0" y="12">TOPOGRAPHIC QUAD · 4-N · ROUTE A · GRID 1 : 5000</text>
+
+            <!-- frame & cartographic ticks -->
+            <rect class="frame" x="14" y="22" width="672" height="270"/>
+            <g class="tick">
+              <line x1="14"  y1="22"  x2="14"  y2="16"/>
+              <line x1="180" y1="22"  x2="180" y2="16"/>
+              <line x1="350" y1="22"  x2="350" y2="16"/>
+              <line x1="520" y1="22"  x2="520" y2="16"/>
+              <line x1="686" y1="22"  x2="686" y2="16"/>
+              <line x1="14"  y1="292" x2="14"  y2="298"/>
+              <line x1="180" y1="292" x2="180" y2="298"/>
+              <line x1="350" y1="292" x2="350" y2="298"/>
+              <line x1="520" y1="292" x2="520" y2="298"/>
+              <line x1="686" y1="292" x2="686" y2="298"/>
+              <line x1="14"  y1="22"  x2="8"   y2="22"/>
+              <line x1="14"  y1="92"  x2="8"   y2="92"/>
+              <line x1="14"  y1="157" x2="8"   y2="157"/>
+              <line x1="14"  y1="225" x2="8"   y2="225"/>
+              <line x1="14"  y1="292" x2="8"   y2="292"/>
+            </g>
+            <text class="lbl-mute" x="170" y="12">E 1.0</text>
+            <text class="lbl-mute" x="340" y="12">E 1.5</text>
+            <text class="lbl-mute" x="510" y="12">E 2.0</text>
+            <text class="lbl-mute" x="676" y="12">E 2.5</text>
+
+            <!-- ===== BLUE substrate: contour isolines ===== -->
+            <!-- primary peak around (450, 160) -->
+            <path class="iso-index" d="M 320 160 C 326 100, 400 78, 470 84 C 552 90, 600 110, 600 165 C 600 220, 540 252, 460 248 C 380 244, 314 220, 320 160 Z"/>
+            <path class="iso"       d="M 348 162 C 354 116, 412 100, 472 106 C 532 112, 580 124, 580 165 C 580 206, 528 230, 470 226 C 410 222, 344 204, 348 162 Z"/>
+            <path class="iso-index" d="M 380 166 C 386 132, 432 122, 480 128 C 524 134, 558 140, 558 168 C 558 196, 518 214, 478 210 C 432 206, 376 196, 380 166 Z"/>
+            <path class="iso"       d="M 410 170 C 416 148, 448 142, 484 148 C 514 152, 538 158, 536 175 C 534 191, 506 202, 478 198 C 446 194, 408 188, 410 170 Z"/>
+            <path class="iso-index" d="M 440 172 C 448 158, 470 156, 494 164 C 510 169, 512 184, 496 192 C 478 198, 452 192, 444 184 C 438 178, 438 174, 440 172 Z"/>
+            <text class="lbl-iso" x="424" y="100">100</text>
+            <text class="lbl-iso" x="430" y="138">200</text>
+            <text class="lbl-iso" x="452" y="172">300</text>
+
+            <!-- secondary peak around (110, 235) -->
+            <path class="iso-index" d="M 36 235 C 36 208, 70 192, 116 196 C 158 200, 178 222, 168 250 C 156 270, 120 274, 86 270 C 54 266, 32 252, 36 235 Z"/>
+            <path class="iso"       d="M 64 238 C 68 220, 92 214, 120 220 C 144 226, 146 244, 132 254 C 112 262, 80 252, 64 238 Z"/>
+            <text class="lbl-iso" x="142" y="200">50</text>
+
+            <!-- ===== RED active layer: route + waypoints + peak markers ===== -->
+            <g class="ink-red">
+              <!-- dashed route line W1 → W2 → W3 → W4 → W5 -->
+              <path class="route" d="M 50 280 L 200 240 L 350 198 L 488 158 L 660 78"/>
+
+              <!-- waypoint markers (small circles) -->
+              <circle class="waypoint" cx="50"  cy="280" r="3"/>
+              <circle class="waypoint" cx="200" cy="240" r="3"/>
+              <circle class="waypoint" cx="350" cy="198" r="3"/>
+              <circle class="waypoint" cx="488" cy="158" r="3"/>
+              <circle class="waypoint" cx="660" cy="78"  r="3"/>
+
+              <!-- waypoint labels -->
+              <text class="lbl-red" x="32"  y="296">W1</text>
+              <text class="lbl-red" x="206" y="234">W2</text>
+              <text class="lbl-red" x="356" y="192">W3</text>
+              <text class="lbl-red" x="494" y="152">W4</text>
+              <text class="lbl-red" x="630" y="74">W5</text>
+
+              <!-- primary peak × marker + label -->
+              <path class="peak" d="M 475 178 L 487 190 M 487 178 L 475 190"/>
+              <text class="lbl-red" x="494" y="190">PEAK 348</text>
+
+              <!-- secondary peak × marker + label -->
+              <path class="peak" d="M 102 230 L 114 242 M 114 230 L 102 242"/>
+              <text class="lbl-red" x="120" y="242">PEAK 82</text>
+
+              <!-- route summary -->
+              <text class="lbl-red" x="220" y="260">ROUTE A · 4.2 km · 5 waypoints</text>
+            </g>
+
+            <!-- ===== BLACK chrome ===== -->
+            <!-- north arrow -->
+            <g transform="translate(650 38)">
+              <path class="arrow" d="M 0 16 L 6 0 L 12 16 L 6 11 Z"/>
+              <text class="lbl" x="4" y="28">N</text>
+            </g>
+
+            <!-- scale bar -->
+            <g transform="translate(540 304)">
+              <line class="frame" x1="0" y1="0" x2="100" y2="0" stroke-width="1"/>
+              <line class="frame" x1="0"  y1="-4" x2="0"  y2="4" stroke-width="1"/>
+              <line class="frame" x1="50" y1="-4" x2="50" y2="4" stroke-width="1"/>
+              <line class="frame" x1="100" y1="-4" x2="100" y2="4" stroke-width="1"/>
+              <text class="lbl-mute" x="-4" y="-8">0</text>
+              <text class="lbl-mute" x="42" y="-8">100 m</text>
+              <text class="lbl-mute" x="88" y="-8">200 m</text>
+            </g>
+          </svg>
+          <figcaption>Fig. 6 — Topographic dual ink: blue contour substrate carries terrain data, red active layer carries the route and labelled landmarks.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <footer class="colophon">
+      <div>System / Design / Accent Probe · v2 · single file · 2026.05.17</div>
+      <div class="eof">END OF DOCUMENT</div>
+    </footer>
+
+  </div>
+</body>
+</html>

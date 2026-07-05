@@ -45,9 +45,64 @@
             #~"(defcommand add-todo (todo-text) ((:string \"Enter TODO: \"))"
             #~"(run-shell-command (concatenate 'string \"~/Projects/System/scripts/add-todo.scm \\\"\" todo-text \"\\\" ~/Projects/WorkingMemory/wm.org\"))"
             #~"(format t \"Added TODO: ~A~%\" todo-text))"
+            #~"(defcommand codex-agent () ()"
+            #~"(run-shell-command \"alacritty -e ~/Projects/System/scripts/codex-guix.scm\"))"
+            #~"(defcommand claude-agent () ()"
+            #~"(run-shell-command \"alacritty -e ~/Projects/System/scripts/claude-guix.scm\"))"
+            #~"(defcommand opencode-agent () ()"
+            #~"(run-shell-command \"alacritty -e ~/Projects/System/scripts/open-code-guix.scm\"))"
+            #~"(defcommand pi-agent () ()"
+            #~"(run-shell-command \"alacritty -e ~/Projects/System/scripts/pi-guix.scm\"))"
+            #~"(defcommand voice-dictate () ()"
+            #~"(run-shell-command \"~/Projects/System/scripts/voice-dictate.scm\"))"
+            #~"(defcommand zen () ()"
+            #~"  \"Toggle distraction-free mode: flip gaps and the mode line together.\""
+            #~"  (swm-gaps:toggle-gaps)"
+            #~"  (dolist (h (screen-heads (current-screen)))"
+            #~"    (toggle-mode-line (current-screen) h)))"
+            #~"(defcommand next-wallpaper () ()"
+            #~"  \"Reshuffle the desktop wallpaper from ~/Projects/images.\""
+            #~"  (run-shell-command \"feh --no-fehbg --bg-fill --randomize ~/Projects/images/*\")"
+            #~"  (message \"^2*wallpaper reshuffled\"))"
+            #~";; AI oracle (backed by scripts/ask-ai.scm — needs ANTHROPIC_API_KEY)"
+            #~"(defun sh-quote (s)"
+            #~"  (let ((q (string #\\')) (esc (coerce (list #\\' #\\\\ #\\' #\\') 'string)))"
+            #~"    (concatenate 'string q"
+            #~"      (with-output-to-string (o)"
+            #~"        (loop for c across s do"
+            #~"          (if (char= c #\\') (write-string esc o) (write-char c o))))"
+            #~"      q)))"
+            #~"(defcommand ask-ai (q) ((:string \"Ask AI: \"))"
+            #~"  \"Ask Claude a one-shot question; show the answer as a centered message.\""
+            #~"  (when (plusp (length q))"
+            #~"    (message \"^5*thinking...\")"
+            #~"    (let ((ans (run-shell-command"
+            #~"                 (concatenate 'string"
+            #~"                   (getenv \"HOME\") \"/Projects/System/scripts/ask-ai.scm \""
+            #~"                   (sh-quote q))"
+            #~"                 t)))"
+            #~"      (message \"^7*~a\" (string-trim '(#\\Space #\\Newline #\\Return) ans)))))"
+            #~"(defcommand ai-clipboard () ()"
+            #~"  \"Improve the X selection with Claude and put the result on the clipboard.\""
+            #~"  (let ((sel (run-shell-command \"xsel -o -b\" t)))"
+            #~"    (if (plusp (length (string-trim '(#\\Space #\\Newline #\\Return) sel)))"
+            #~"        (progn"
+            #~"          (message \"^5*rewriting selection...\")"
+            #~"          (let ((ans (string-trim '(#\\Space #\\Newline #\\Return)"
+            #~"                       (run-shell-command"
+            #~"                         (concatenate 'string"
+            #~"                           \"ASK_AI_SYSTEM='You are a copy editor. Improve grammar, clarity and flow. Keep the meaning and the original language. Output only the revised text.' \""
+            #~"                           (getenv \"HOME\") \"/Projects/System/scripts/ask-ai.scm \""
+            #~"                           (sh-quote sel))"
+            #~"                         t))))"
+            #~"            (run-shell-command"
+            #~"              (concatenate 'string \"printf %s \" (sh-quote ans) \" | xsel -i -b\") nil)"
+            #~"            (message \"^2*clipboard updated (~a chars)\" (length ans))))"
+            #~"        (message \"^1*clipboard empty\"))))"
             #~";; Init"
             #~"(when *initializing*"
             #~"      (run-shell-command \"picom -b\")"
+            #~"      (run-shell-command \"xss-lock --transfer-sleep-lock -- ~/Projects/System/scripts/lock-screen.scm &\")"
             #~"      (run-shell-command \"feh --no-fehbg --bg-fill --randomize ~/Projects/images/*\")"
 	    #~"      (run-shell-command \"if [ $(hostname) = 'T450s' ]; then setxkbmap de bone; fi\")"
             #~"      (mode-line)"
@@ -107,6 +162,7 @@
               (list
                ;; Applications
                (stumpwm-keybinding (key "Return") (command "exec alacritty"))
+               (stumpwm-keybinding (key "a") (command "ask-ai"))
                (stumpwm-keybinding (key "b") (command "exec nyxt"))
                (stumpwm-keybinding (key "e") (command "exec lem -i sdl2"))
                (stumpwm-keybinding (key "r") (command "exec"))
@@ -137,7 +193,9 @@
                ;; Custom commands
                (stumpwm-keybinding (key "D") (command "dashboard"))
                (stumpwm-keybinding (key "t") (command "terminal-dashboard"))
-               (stumpwm-keybinding (key "T") (command "add-todo")))))
+               (stumpwm-keybinding (key "T") (command "add-todo"))
+               (stumpwm-keybinding (key "w") (command "voice-dictate"))
+               (stumpwm-keybinding (key "z") (command "zen")))))
             
             ;; Screenshot map
             (stumpwm-keymap
@@ -147,6 +205,17 @@
               (list
                (stumpwm-keybinding (key ".") (command "exec spectacle"))
                (stumpwm-keybinding (key ",") (command "get-latex")))))
+
+            ;; Agent launcher map
+            (stumpwm-keymap
+             (name "agents")
+             (prefix-key "A")
+             (bindings
+              (list
+               (stumpwm-keybinding (key "c") (command "codex-agent"))
+               (stumpwm-keybinding (key "d") (command "claude-agent"))
+               (stumpwm-keybinding (key "o") (command "opencode-agent"))
+               (stumpwm-keybinding (key "p") (command "pi-agent")))))
             
             ;; Misc map
             (stumpwm-keymap
@@ -156,6 +225,8 @@
              (bindings
               (list
                (stumpwm-keybinding (key "s") (command "browser-search"))
+               (stumpwm-keybinding (key "w") (command "next-wallpaper"))
+               (stumpwm-keybinding (key "a") (command "ai-clipboard"))
                ;;(stumpwm-keybinding (key "i") (command "internet-10-min"))
                ;;(stumpwm-keybinding (key "t") (run-shell-command "date "+%Y-%m-%d" | xsel --clipboard --input"))
                ))))))))
