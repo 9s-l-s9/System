@@ -1,25 +1,28 @@
 (use-modules (base-system)
-             (gnu))
+             (gnu bootloader)
+             (gnu bootloader grub)
+             (gnu system)
+             (gnu system file-systems)
+             (gnu system keyboard))
 
 (operating-system
- (inherit base-system)
- (keyboard-layout (keyboard-layout "de" "bone"))
- 
- (host-name "T450s")
+  (inherit base-system)
+  (keyboard-layout (keyboard-layout "de" "bone"))
+  (host-name "T450s")
 
- (file-systems
-  (append
-   (list (file-system
-          (device (uuid "bbd2fd05-4888-45bc-bc6f-714b4245289c"))
-          (mount-point "/")
-          (type "ext4")))
-   %base-file-systems))
+  (file-systems
+   (append
+    (list (file-system
+           (device (uuid "bbd2fd05-4888-45bc-bc6f-714b4245289c"))
+           (mount-point "/")
+           (type "ext4")))
+    %base-file-systems))
 
- (swap-devices '("/dev/sda2")) ; from default-system
-    (bootloader
+  ;; /dev/sda2 currently has a swsuspend signature rather than an active swap
+  ;; signature, so declaring it as swap makes shepherd fail during reconfigure.
+  (swap-devices '())
+
+  (bootloader
    (bootloader-configuration
-    (bootloader grub-bootloader) ; Specifies the GRUB EFI bootloader.
-    (targets (list "/dev/sda")))
-   ) ; Specifies the installation target for the bootloader.
-
-    )
+    (bootloader grub-bootloader)
+    (targets (list "/dev/sda")))))
