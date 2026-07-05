@@ -99,6 +99,9 @@
         (maybe-mount "--expose"
                      (string-append home "/.config/git/config")
                      (string-append home "/.config/git/config"))
+        (maybe-mount "--expose"
+                     (string-append home "/.gitconfig")
+                     (string-append home "/.gitconfig"))
         ;; Pi auth, sessions, and settings (~/.pi/agent/auth.json etc.)
         (maybe-mount "--share"
                      (string-append home "/.pi")
