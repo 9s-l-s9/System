@@ -1,3 +1,6 @@
+(define-module (manifests claude)
+  #:use-module (gnu packages))
+
 (specifications->manifest
  '("bash"
    "coreutils"
