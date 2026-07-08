@@ -29,8 +29,7 @@
 (let ((backup-dir (expand-file-name "backups" user-emacs-directory)))
   (make-directory backup-dir t)
   (setq backup-directory-alist         `(("." . ,backup-dir))
-        auto-save-file-name-transforms `((".*" ,backup-dir t))
-        undo-tree-history-directory-alist `(("." . ,backup-dir))))
+        auto-save-file-name-transforms `((".*" ,backup-dir t))))
 
 (setq create-lockfiles nil
       backup-by-copying   t
@@ -53,6 +52,13 @@
 ;; Performance: disable bidi for left-to-right text
 (setq-default bidi-paragraph-direction 'left-to-right)
 (setq bidi-inhibit-bpa t)
+
+;; Don't fontify during a keystroke burst; catch up when input pauses.
+(setq redisplay-skip-fontification-on-input t)
+
+;; Icon fonts (all-the-icons) trigger font-cache compaction while
+;; scrolling, causing stutter; keep the caches instead.
+(setq inhibit-compacting-font-caches t)
 
 ;; Handle very long lines gracefully
 (global-so-long-mode 1)

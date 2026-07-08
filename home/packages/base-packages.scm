@@ -106,8 +106,8 @@
    "emacs-rg"
    "emacs-sudo-edit"
    ;;"emacs-telega"
-   "emacs-undo-tree"
-   "emacs-vertico"))
+   "emacs-vertico"
+   "emacs-vundo"))
 
 ;; Custom packages missing from upstream Guix (package objects, not specs).
 (define custom-home-packages
