@@ -13,6 +13,9 @@
 ;; Boost completion responsiveness (eglot uses Jsonrpc under the hood)
 (setq jsonrpc-default-request-timeout 10)
 
+;; Batch didChange notifications instead of sending one per keystroke.
+(setq eglot-send-changes-idle-time 0.5)
+
 ;; ── Server programs ───────────────────────────────────────────────────────────
 
 ;; Python: eglot already ships a default entry for pylsp; no override needed.

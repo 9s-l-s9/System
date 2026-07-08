@@ -23,6 +23,7 @@
    '("c" . sls-config-jump)        ; jump to any file in ~/Projects/System
    '("v" . magit-status)
    '("y" . sls-copy-file-path)
+   '("u" . vundo)              ; visual undo tree
    '("f" . delete-other-windows) ;focus
    ;; AI
    '("a" . gptel)              ; chat / rewrite
