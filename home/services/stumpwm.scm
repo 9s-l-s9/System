@@ -165,6 +165,7 @@
                (stumpwm-keybinding (key "a") (command "ask-ai"))
                (stumpwm-keybinding (key "b") (command "exec nyxt"))
                (stumpwm-keybinding (key "e") (command "exec lem -i sdl2"))
+               (stumpwm-keybinding (key "E") (command "exec emacsclient -c"))
                (stumpwm-keybinding (key "r") (command "exec"))
                
                ;; Frame Management

@@ -25,6 +25,20 @@ WSL2 Ubuntu (portable packages, no WM):
   guix home reconfigure home/samuel-wsl2-home-configuration.scm
 
 
+== Emacs Daemon ==
+
+Emacs runs as a Shepherd user service (services/emacs.scm, part of
+base-services). Open frames with:
+
+  emacsclient -c        # graphical frame
+  emacsclient -t        # terminal frame
+
+init.el no longer calls `server-start' — the daemon is the server.
+Restart it after config changes with:
+
+  herd restart emacs-daemon
+
+
 == WSL2 First-Time Setup ==
 
 1. Install Guix on Ubuntu WSL2:
