@@ -7,6 +7,9 @@
   #:use-module (gnu services desktop)
   #:use-module (gnu services docker)
   #:use-module (gnu services networking)
+  #:use-module (gnu services linux)
+  #:use-module (gnu services mcron)
+  #:use-module (guix gexp)
   #:use-module (gnu services virtualization)
   #:use-module (gnu packages wm)
   #:use-module (gnu packages cups)
@@ -141,6 +144,25 @@
                  (name "i3lock")
                  (program (file-append i3lock "/bin/i3lock"))
                  (using-setuid? #t)))
+       ;; Compressed swap in RAM. The T450s has 8 GB and no disk swap
+       ;; (T450s.scm sets swap-devices to '()), so without this, memory
+       ;; pressure goes straight to cache-thrashing and the OOM killer.
+       ;; Note: zram cannot back hibernation; that would need real disk swap.
+       (service zram-device-service-type
+                (zram-device-configuration
+                 (size "4G")
+                 (compression-algorithm 'zstd)
+                 (priority 100)))
+
+       ;; Weekly TRIM (Sunday 04:00) so the SSD learns which blocks are
+       ;; free; neither Guix nor the ext4 mount does this by default.
+       (service mcron-service-type
+                (mcron-configuration
+                 (jobs (list #~(job "0 4 * * 0"
+                                    (string-append
+                                     #$(file-append util-linux "/sbin/fstrim")
+                                     " /"))))))
+
        (service containerd-service-type)
        (service docker-service-type)
        (service bluetooth-service-type

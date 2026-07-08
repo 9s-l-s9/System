@@ -73,7 +73,4 @@
 ;; Load at the end
 (require 'keybindings-conf)
 
-(unless (and (fboundp 'server-running-p) (server-running-p))
-  (server-start))
-
 ;;; init.el ends here
