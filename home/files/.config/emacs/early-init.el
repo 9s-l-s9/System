@@ -58,7 +58,9 @@
 
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (setq gc-cons-threshold (* 1000 1000 8)
+            ;; 100 MB: fewer, batched collections. 8 MB caused visible
+            ;; micro-pauses while typing under eglot/corfu churn.
+            (setq gc-cons-threshold (* 1000 1000 100)
                   gc-cons-percentage 0.1
                   file-name-handler-alist prot-emacs--file-name-handler-alist
                   vc-handled-backends prot-emacs--vc-handled-backends)))

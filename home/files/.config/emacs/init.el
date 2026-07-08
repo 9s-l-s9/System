@@ -22,8 +22,11 @@
   :commands (rg rg-menu rg-project rg-dwim)
   :config (rg-enable-default-bindings))
 
-(use-package undo-tree
-  :init (global-undo-tree-mode))
+;; Built-in undo does the work (meow-undo drives it); vundo visualizes the
+;; tree on demand. Replaced undo-tree, whose per-edit tree bookkeeping and
+;; history serialization were pure runtime cost.
+(use-package vundo
+  :commands (vundo))
 
 (with-eval-after-load 'ediff
   (setq ediff-split-window-function 'split-window-horizontally
