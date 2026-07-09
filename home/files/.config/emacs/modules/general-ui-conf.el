@@ -9,6 +9,11 @@
 ;; General
 (setq widget-image-enable nil)
 
+;; Base font size for everything (default face; header-line, minibuffer,
+;; etc. all derive from it). 1/10 pt units: 120 = 12 pt. C-x C-+ still
+;; scales buffer text on top of this.
+(set-face-attribute 'default nil :height 120)
+
 ;; Indentation lines
 (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
 (setq highlight-indent-guides-method 'character)

@@ -4,6 +4,16 @@
   color: #F2F1F0;
 }
 
+/* Match the StumpWM mode line: black panel, red hairline border. */
+window {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+.sysinfo-box {
+  border: 1px solid #cc241d;
+  padding: 20px;
+}
+
 .nameinfo {
   font-family: "EnvyCodeR Nerd Font Mono";
   font-weight: bold;

@@ -60,6 +60,17 @@
             #~"  (swm-gaps:toggle-gaps)"
             #~"  (dolist (h (screen-heads (current-screen)))"
             #~"    (toggle-mode-line (current-screen) h)))"
+            #~";; eww desktop widgets (config in ~/.config/eww)"
+            #~"(defcommand toggle-widgets () ()"
+            #~"  \"Show or hide the eww sysinfo desktop widget.\""
+            #~"  ;; StumpWM ignores eww's bg-stacking request, so lower it by hand."
+            #~"  (run-shell-command \"eww open --toggle sysinfo && sleep 0.3 && xdotool search --class eww windowlower\"))"
+            #~"(add-hook *focus-group-hook*"
+            #~"          (lambda (new old)"
+            #~"            (declare (ignore old))"
+            #~"            (run-shell-command"
+            #~"              (concatenate 'string \"~/.config/eww/scripts/get-workspace \""
+            #~"                           (sh-quote (group-name new))))))"
             #~"(defcommand next-wallpaper () ()"
             #~"  \"Reshuffle the desktop wallpaper from ~/Projects/images.\""
             #~"  (run-shell-command \"feh --no-fehbg --bg-fill --randomize ~/Projects/images/*\")"
@@ -101,14 +112,25 @@
             #~"        (message \"^1*clipboard empty\"))))"
             #~";; Init"
             #~"(when *initializing*"
-            #~"      (run-shell-command \"picom -b\")"
+            #~"      ;; SDDM (Guix default Numlock=on) hands the session a locked"
+            #~"      ;; Mod2, which can leave every key grab unmatched (dead"
+            #~"      ;; keyboard). Clear it before anything else; idempotent."
+            #~"      (run-shell-command \"numlockx off\")"
+            #~"      ;; Same GDM-used-to-do-this class of bug: elogind restores the"
+            #~"      ;; backlight saved at shutdown (possibly 0 = panel off), and SDDM,"
+            #~"      ;; unlike GDM, never raises it. Only bump when it's near-dark so a"
+            #~"      ;; deliberately chosen level survives re-login. Needs the video"
+            #~"      ;; group for unprivileged sysfs writes (elogind udev rules)."
+            #~"      (run-shell-command \"[ $(brightnessctl get) -lt 100 ] && brightnessctl set 80%\")"
+            #~"      (run-shell-command \"picom -b --backend xrender\")"
             #~"      (run-shell-command \"xss-lock --transfer-sleep-lock -- ~/Projects/System/scripts/lock-screen.scm &\")"
             #~"      (run-shell-command \"feh --no-fehbg --bg-fill --randomize ~/Projects/images/*\")"
 	    #~"      (run-shell-command \"if [ $(hostname) = 'T450s' ]; then setxkbmap de bone; fi\")"
             #~"      (mode-line)"
             #~"      (dolist (h (screen-heads (current-screen)))"   
             #~"        (enable-mode-line (current-screen) h t))"
-            #~"      (swm-gaps:toggle-gaps))"))
+            #~"      (swm-gaps:toggle-gaps)"
+            #~"      (run-shell-command \"eww open sysinfo && ~/.config/eww/scripts/get-workspace ' I ' && sleep 0.3 && xdotool search --class eww windowlower\"))"))
           (setf-entries
            (list
             ;; Mode line padding and format (no color settings here)
@@ -196,6 +218,7 @@
                (stumpwm-keybinding (key "t") (command "terminal-dashboard"))
                (stumpwm-keybinding (key "T") (command "add-todo"))
                (stumpwm-keybinding (key "w") (command "voice-dictate"))
+               (stumpwm-keybinding (key "i") (command "toggle-widgets"))
                (stumpwm-keybinding (key "z") (command "zen")))))
             
             ;; Screenshot map
