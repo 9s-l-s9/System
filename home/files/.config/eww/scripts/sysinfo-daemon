@@ -1,0 +1,135 @@
+#!/bin/sh
+# Single resident emitter for the eww sysinfo widget (driven via deflisten).
+# Replaces seven 1-second defpolls that each forked a pipeline -- four of
+# them `mpstat -P N 1 1`, which *blocks a full second sampling*, so four
+# mpstat processes were permanently alive and ~15 processes were spawned
+# every second while the widget existed. This loop reads /proc and /sys
+# with shell builtins instead: steady-state it forks only `sleep` per tick
+# and `iwgetid` on network refreshes.
+#
+# Output: one JSON object per line, every TICK seconds. eww exposes it as
+# `stats` and widgets read {stats.cpu0}, {stats.mem}, ...
+
+TICK=2        # seconds between updates
+NET_EVERY=5   # refresh network fields every NET_EVERY ticks
+
+# --- coretemp sysfs files, located once (hwmon numbering varies per boot) --
+temp0_file="" temp1_file=""
+for hw in /sys/class/hwmon/hwmon*; do
+    [ -r "$hw/name" ] || continue
+    read -r hwname < "$hw/name"
+    [ "$hwname" = "coretemp" ] || continue
+    for lf in "$hw"/temp*_label; do
+        [ -r "$lf" ] || continue
+        read -r label < "$lf"
+        case "$label" in
+            "Core 0") temp0_file="${lf%_label}_input" ;;
+            "Core 1") temp1_file="${lf%_label}_input" ;;
+        esac
+    done
+done
+
+# bar PERCENT -> sets BAR to the 8-block gauge used by the old scripts.
+# Sets a global instead of printing: $(bar ...) would fork a subshell.
+bar() {
+    filled=$(( $1 * 8 / 100 ))
+    [ "$filled" -gt 8 ] && filled=8
+    [ "$filled" -lt 0 ] && filled=0
+    out="" i=0
+    while [ $i -lt 8 ]; do
+        if [ $i -lt "$filled" ]; then out="$out█"; else out="$out░"; fi
+        i=$((i + 1))
+    done
+    BAR="[ $out ]"
+}
+
+# read_temp FILE -> sets TEMP ("48°C", or "--" when the sensor is absent)
+read_temp() {
+    if [ -n "$1" ] && [ -r "$1" ]; then
+        read -r t < "$1"
+        TEMP="$((t / 1000))°C"
+    else
+        TEMP="--"
+    fi
+}
+
+# Per-core usage from /proc/stat deltas between ticks (what mpstat did,
+# without occupying a process for a second to do it).
+cpu_bars() {
+    while read -r name u n s idle io irq sirq steal _; do
+        case "$name" in
+            cpu[0-3])
+                c=${name#cpu}
+                total=$((u + n + s + idle + io + irq + sirq + steal))
+                idl=$((idle + io))
+                eval "pt=\$prev_total_$c pi=\$prev_idle_$c"
+                usage=0
+                if [ -n "$pt" ] && [ $((total - pt)) -gt 0 ]; then
+                    usage=$(( ((total - pt) - (idl - pi)) * 100 / (total - pt) ))
+                fi
+                bar "$usage"
+                eval "cpu$c=\$BAR prev_total_$c=$total prev_idle_$c=$idl"
+                ;;
+        esac
+    done < /proc/stat
+}
+
+mem_swap_bars() {
+    memtotal=0 memavail=0 swaptotal=0 swapfree=0
+    while read -r key val _; do
+        case "$key" in
+            MemTotal:)     memtotal=$val ;;
+            MemAvailable:) memavail=$val ;;
+            SwapTotal:)    swaptotal=$val ;;
+            SwapFree:)     swapfree=$val ;;
+        esac
+    done < /proc/meminfo
+    if [ "$memtotal" -gt 0 ]; then
+        bar $(( (memtotal - memavail) * 100 / memtotal ))
+    else
+        bar 0
+    fi
+    mem=$BAR
+    if [ "$swaptotal" -gt 0 ]; then
+        bar $(( (swaptotal - swapfree) * 100 / swaptotal ))
+    else
+        bar 0
+    fi
+    swap=$BAR
+}
+
+# Same labels the old network-status script produced: ONLINE/OFFLINE,
+# interface name or OFFLINE, SSID or N/A. The default-route interface
+# comes from /proc/net/route instead of an ip(8) pipeline.
+refresh_net() {
+    net_iface="OFFLINE" net_stat="OFFLINE" net_ssid="N/A"
+    while read -r iface dest _; do
+        if [ "$dest" = "00000000" ]; then
+            net_iface=$iface
+            break
+        fi
+    done < /proc/net/route
+    if [ "$net_iface" != "OFFLINE" ]; then
+        net_stat="ONLINE"
+        ssid=$(iwgetid -r 2>/dev/null | tr -d '"\\')
+        [ -n "$ssid" ] && net_ssid=$ssid
+    fi
+}
+
+tick=0
+while :; do
+    printf -v now '%(%H.%M %a %b %d)T' -1
+    read -r up _ < /proc/uptime
+    up=${up%.*}
+    upstr="$((up / 3600)):$((up % 3600 / 60)):$((up % 60))"
+    cpu_bars
+    mem_swap_bars
+    read_temp "$temp0_file"; temp0=$TEMP
+    read_temp "$temp1_file"; temp1=$TEMP
+    [ $((tick % NET_EVERY)) -eq 0 ] && refresh_net
+    printf '{"time":"%s","up":"%s","cpu0":"%s","cpu1":"%s","cpu2":"%s","cpu3":"%s","mem":"%s","swap":"%s","temp0":"%s","temp1":"%s","net_stat":"%s","net_iface":"%s","net_ssid":"%s"}\n' \
+        "$now" "$upstr" "$cpu0" "$cpu1" "$cpu2" "$cpu3" "$mem" "$swap" \
+        "$temp0" "$temp1" "$net_stat" "$net_iface" "$net_ssid"
+    tick=$((tick + 1))
+    sleep "$TICK"
+done

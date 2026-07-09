@@ -1,22 +1,15 @@
-(defvar IMAGE "images/iwak.jpg")
+(defvar workspace-motto "")
 
-(defpoll time-poll :interval "10s" "date '+%H.%M %a %b %d'")
-(defpoll uptime-poll :interval "1s" "scripts/uptime")
-(defpoll cpu-bar-0-poll :interval "1s" "scripts/cpu-bar 0")
-(defpoll cpu-bar-1-poll :interval "1s" "scripts/cpu-bar 1")
-(defpoll cpu-bar-2-poll :interval "1s" "scripts/cpu-bar 2")
-(defpoll cpu-bar-3-poll :interval "1s" "scripts/cpu-bar 3")
-(defpoll mem-bar-poll :interval "1s" "scripts/mem-bar ram")
-(defpoll swap-bar-poll :interval "1s" "scripts/mem-bar swap")
+;; All fast-changing values come from one resident daemon (deflisten keeps
+;; a single process alive) instead of per-second defpolls, which forked
+;; ~15 processes a second -- see scripts/sysinfo-daemon for the numbers.
+(deflisten stats
+	:initial "{\"time\":\"--\",\"up\":\"--\",\"cpu0\":\"\",\"cpu1\":\"\",\"cpu2\":\"\",\"cpu3\":\"\",\"mem\":\"\",\"swap\":\"\",\"temp0\":\"--\",\"temp1\":\"--\",\"net_stat\":\"--\",\"net_iface\":\"--\",\"net_ssid\":\"--\"}"
+	"scripts/sysinfo-daemon")
+
 (defpoll kernel-release-poll :interval "5m" "uname -r")
 (defpoll kernel-name-poll :interval "5m" "uname -s")
 (defpoll name-poll :interval "5m" "h=$(uname -n); u=$(whoami); echo $u @ $h")
-(defpoll core0-temp-poll :interval "10s" "sensors | grep 'Core 0' | awk '{print $3}'")
-(defpoll core1-temp-poll :interval "10s" "sensors | grep 'Core 1' | awk '{print $3}'")
-(defpoll net-stat-poll :interval "10s" "scripts/network-status connectivity")
-(defpoll net-interface-poll :interval "10s" "scripts/network-status interface")
-(defpoll net-ssid-poll :interval "10s" "scripts/network-status ssid")
-(defpoll get-workspace-poll :interval "1s" "scripts/get-workspace")
 
 (defwidget show-workspace-widget []
 	(box	:orientation "h"
@@ -25,7 +18,7 @@
 		:space-evenly "false"
 		:class "workspace-box"
 		
-		(label :text get-workspace-poll :class "workspace-name")
+		(label :text workspace-motto :class "workspace-name")
 	)
 )
 
@@ -40,21 +33,21 @@
 			:space-evenly "false"
 			
 			(label :text "NET_STAT: " :class "varlabel")
-			(label :text net-stat-poll)
+			(label :text {stats.net_stat})
 		)
 
 		(box	:orientation "h"
 			:space-evenly "false"
 			
 			(label :text "NET_INTERFACE: " :class "varlabel")
-			(label :text net-interface-poll)
+			(label :text {stats.net_iface})
 		)
 
 		(box	:orientation "h"
 			:space-evenly "false"
 		
 			(label :text "NET_SSID: " :class "varlabel")
-			(label :text net-ssid-poll)
+			(label :text {stats.net_ssid})
 		)
 	)
 )
@@ -69,13 +62,13 @@
 			:space-evenly "false"
 			
 			(label :text "CUR_TIMES: " :class "varlabel")
-			(label :text time-poll)
+			(label :text {stats.time})
 		)
 
 		(box	:orientation "h"
 			:space-evenly "false"
 			(label :text "UP_TIMES: " :class "varlabel")
-			(label :text uptime-poll)
+			(label :text {stats.up})
 		)
 	)
 )
@@ -90,14 +83,14 @@
 			:space-evenly "false"
 			
 			(label :text "MEM: " :class "varlabel")
-			(label :text mem-bar-poll)
+			(label :text {stats.mem})
 		)
 
 		(box	:orientation "h"
 			:space-evenly "false"
 			
 			(label :text "SWAP: " :class "varlabel")
-			(label :text swap-bar-poll)
+			(label :text {stats.swap})
 		)
 	)
 )
@@ -112,28 +105,28 @@
 			:space-evenly "false"
 		
 			(label :text "CPU_0: " :class "varlabel")
-			(label :text cpu-bar-0-poll)
+			(label :text {stats.cpu0})
 		)
 		
 		(box	:orientation "h"
 			:space-evenly "false"
 		
 			(label :text "CPU_1: " :class "varlabel")
-			(label :text cpu-bar-1-poll)
+			(label :text {stats.cpu1})
 		)
 		
 		(box	:orientation "h"
 			:space-evenly "false"
 		
 			(label :text "CPU_2: " :class "varlabel")
-			(label :text cpu-bar-2-poll)
+			(label :text {stats.cpu2})
 		)
 		
 		(box	:orientation "h"
 			:space-evenly "false"
 		
 			(label :text "CPU_3: " :class "varlabel")
-			(label :text cpu-bar-3-poll)
+			(label :text {stats.cpu3})
 		)
 
 	)		
@@ -148,14 +141,14 @@
 			:space-evenly "false"
 			
 			(label :text "CORE0_TMP: " :class "varlabel")
-			(label :text core0-temp-poll)
+			(label :text {stats.temp0})
 
 		)
 		(box	:orientation "h"
 			:space-evenly "false"
 			
 			(label :text "CORE1_TMP: " :class "varlabel")
-			(label :text core1-temp-poll)
+			(label :text {stats.temp1})
 		)
 	)		
 )
@@ -184,10 +177,11 @@
 )
 
 (defwidget sysinfo-widget []
-	(box 	:orientation "v" 
-		:halign "center" 
+	(box 	:orientation "v"
+		:halign "center"
 		:valign "start"
 		:space-evenly false
+		:class "sysinfo-box"
 	
 		(show-workspace-widget)
 		(os-info-widget)
@@ -217,7 +211,7 @@
 					:anchor "center center"
 			)
 	:stacking "bg"
-	:focusable true
+	:focusable false
 	:wm-ignore true
 	:windowtype "desktop"
 	:exclusive false

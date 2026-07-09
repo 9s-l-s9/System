@@ -18,9 +18,15 @@
            (type "ext4")))
     %base-file-systems))
 
-  ;; /dev/sda2 currently has a swsuspend signature rather than an active swap
-  ;; signature, so declaring it as swap makes shepherd fail during reconfigure.
-  (swap-devices '())
+  ;; /dev/sda2, re-initialised with mkswap 2026-07-08 (it used to carry a
+  ;; stale swsuspend signature that made shepherd fail to swapon during
+  ;; reconfigure). Priority 10 keeps it strictly a spill-over behind the
+  ;; zram device (priority 100, base-system.scm): pages land here only when
+  ;; compressed RAM is exhausted, instead of waking the OOM killer.
+  (swap-devices (list (swap-space
+                       (target (uuid "7f8c9350-eb0c-4ee4-9249-033923569373"))
+                       (priority 10)
+                       (discard? #t))))
 
   (bootloader
    (bootloader-configuration
