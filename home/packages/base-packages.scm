@@ -43,7 +43,11 @@
 ;; System utilities (hardware / desktop daemons)
 
 (define system-utilities-packages
-  (list "adb" "wireplumber" "dnsmasq" "hostapd"
+  (list "adb" "hostapd"     ; wireplumber comes from home-pipewire-service-type
+                            ; dnsmasq intentionally omitted: NetworkManager manages
+                            ; its own internal dnsmasq instance for split DNS; a
+                            ; second dnsmasq binary in PATH causes version conflicts
+                            ; and DNS failures after channel updates.
         "ark" "flatpak"))
 
 (define utilities-packages
@@ -144,7 +148,12 @@
    ;; "rofi"
    "dunst" "spectacle" "kmix" "xrandr" "arandr"
    "feh" "picom" "redshift"
+   "eww"                              ; desktop widgets (yuck config, driven from StumpWM)
    "xdotool"                          ; type transcription into focused window
+   "numlockx"                         ; clear SDDM's forced NumLock at session start
+   "brightnessctl"                    ; restore backlight at session start (SDDM,
+                                      ; unlike GDM, leaves it wherever elogind
+                                      ; restored it -- possibly 0)
    "xdg-desktop-portal-wlr" "xsel" "xdg-utils"))
 
 ;; Wayland (defined but not assembled by default)

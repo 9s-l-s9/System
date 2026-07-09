@@ -10,6 +10,8 @@
 (define-module (base-home)
   #:use-module (gnu home services)
   #:use-module (gnu home services dotfiles)
+  #:use-module (gnu home services desktop)
+  #:use-module (gnu home services sound)
   #:use-module (services stumpwm)
   #:use-module (services git)
   #:use-module (services redshift)
@@ -20,6 +22,14 @@
 (define (base-services)
   "Services shared by every user's home environment."
   (list
+   ;; Audio stack: PipeWire + WirePlumber as user services, with
+   ;; pipewire-pulse providing the PulseAudio-compatible socket (so pactl,
+   ;; whisper's alsa_input.* source names, etc. keep working). This is also
+   ;; what handles Bluetooth audio, talking to the system bluetoothd —
+   ;; no bluez-alsa, no real PulseAudio daemon (autospawn is off in
+   ;; base-system.scm). Requires the D-Bus user session below.
+   (service home-dbus-service-type)
+   (service home-pipewire-service-type)
    (stumpwm-service)
    (git-service)
    (redshift-service)
