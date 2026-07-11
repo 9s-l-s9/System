@@ -1,10 +1,20 @@
 (use-modules (gnu)
              (base-system))
 
+;; schemewm is built from the local checkout via its own guix.scm (the
+;; crate graph is vendored there, so the build is offline). Clone it to
+;; this path first: git clone <remote> ~/Projects/scheme-wayland-wm
+(define schemewm
+  (primitive-load "/home/samuel/Projects/scheme-wayland-wm/guix.scm"))
 
 (operating-system
   (inherit base-system)
-  (host-name "X1")    
+  (host-name "X1")
+
+  ;; Add schemewm system-wide so SDDM finds its wayland-session entry in
+  ;; /run/current-system/profile/share/wayland-sessions.
+  (packages (cons schemewm (operating-system-packages base-system)))
+
       (swap-devices (list (swap-space
                         (target (uuid
                                  "ce43f82b-3ad3-449b-a73e-4129acc8c322")))))
