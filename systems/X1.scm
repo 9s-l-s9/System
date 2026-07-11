@@ -2,8 +2,11 @@
              (base-system))
 
 ;; schemewm is built from the local checkout via its own guix.scm (the
-;; crate graph is vendored there, so the build is offline). Clone it to
-;; this path first: git clone <remote> ~/Projects/scheme-wayland-wm
+;; crate graph is vendored there, so the build is offline). Set it up
+;; first -- vendor/ is gitignored, so after cloning it must be recreated:
+;;   git clone https://github.com/9s-l-s9/scheme-wayland-wm ~/Projects/scheme-wayland-wm
+;;   cd ~/Projects/scheme-wayland-wm
+;;   guix shell -m manifest.scm -- cargo vendor vendor
 (define schemewm
   (primitive-load "/home/samuel/Projects/scheme-wayland-wm/guix.scm"))
 
