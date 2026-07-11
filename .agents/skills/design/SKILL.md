@@ -56,6 +56,8 @@ Prioritize structure, legibility, density, and editorial restraint over decorati
 - **Imagery is monochrome or duotone**: blueprint line drawings, one-bit dot-matrix renderings, orange/red duotone halftones, monochrome photography. No stock photography, no flat illustration, no glossy product renders.
 - **No sticky sidebars** chasing the reader. (Running prose is two-column within the measure; see § Compression.)
 - **Hairline rules instead of shadows.** Sharp rectangular geometry; no rounded corners.
+- **Registration vocabulary.** Corner brackets (`.reg`) frame major text blocks instead of full borders; dotted-leader index pairs (`.idx`) carry small machine readouts; a dark title plate (`.plate`) may open the document when a genuine diagram earns it. See § Registration devices.
+- **Justified prose.** Body paragraphs set `text-align: justify` with `hyphens: auto` — the typeset-plate read of the reference. Never justify table cells, captions, or labels.
 - **Dense, indexed information architecture.** Metadata everywhere: dates, IDs, revision markers, file paths, counters.
 - **Minimal animation.** Respect `prefers-reduced-motion`.
 - **Black surfaces must be earned.** Each dark moment on a white page is a strong signal. Three patterns earn it: **terminal/code blocks** (carrying real commands or output), **blueprint diagrams** (carrying real diagrammatic content with monospace dimension annotations), and the **dark data-plate dict variant** (`dl.meta`, used only when the artifact is a genuine dossier and the metadata is itself the centerpiece — see § Dictionaries). Never introduce a dark surface as decoration, visual variety, or as a default metadata treatment.
@@ -320,6 +322,59 @@ Use hairline rules instead of shadows:
 .section { border-top: 1px solid var(--rule); }
 .hairline { border-top: 1px solid var(--rule-soft); }
 ```
+
+## Registration devices (inspo-derived)
+
+Three devices adapted from the print-plate / sci-fi-codex reference (`inspo.jpg`). They give the page its "registered artwork" read — the sense that every block was placed on a press sheet and marked for trimming. Use them as the default framing vocabulary.
+
+### Corner brackets — `.reg`
+
+Every major text block (a paragraph group, an abstract, a column of prose) is framed by **corner registration brackets** — four small L-shaped marks at the block's corners, like crop marks on a press sheet. No full border: only the corners. This replaces heavy hairline boxing as the primary block-framing device.
+
+```css
+.reg { position: relative; padding: 18px 20px; }
+.reg::before, .reg::after,
+.reg > .reg-b::before, .reg > .reg-b::after {
+  content: ""; position: absolute; width: 10px; height: 10px;
+  border: 0 solid var(--ink);
+}
+.reg::before          { top: 0;    left: 0;  border-top-width: 1.5px; border-left-width: 1.5px; }
+.reg::after           { top: 0;    right: 0; border-top-width: 1.5px; border-right-width: 1.5px; }
+.reg > .reg-b::before { bottom: 0; left: 0;  border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.reg > .reg-b::after  { bottom: 0; right: 0; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+```
+
+(`<span class="reg-b" aria-hidden="true"></span>` as the last child supplies the bottom pair.) Inside a dark plate the brackets invert to `--term-fg`. Stray *unpaired* brackets may also sit in page margins as registration texture — sparingly, 2–4 per page, aligned to the column grid, never random.
+
+Corner brackets are **framing chrome**, and they earn their keep only if the rest of the chrome stays quiet: when a block has brackets it does not also get hairline top/bottom rules.
+
+### Dotted-leader index pairs — `.idx`
+
+Small machine-register readouts: `[Intellect]···········[0····1]`. A bracketed key, a dotted leader, a bracketed value. They sit at plate corners, under figures, or as compact metadata clusters — the inspo uses them as calibration readouts in the margins.
+
+```css
+.idx { font-family: var(--mono); font-size: 10px; letter-spacing: .02em;
+       color: var(--muted); display: grid; gap: 2px; }
+.idx .row { display: flex; align-items: baseline; }
+.idx .row::before { content: none; }
+.idx .k, .idx .v { white-space: nowrap; }
+.idx .l { flex: 1; overflow: hidden; margin: 0 2px;
+          border-bottom: 1px dotted var(--faint); transform: translateY(-3px); }
+```
+
+Markup: `<div class="row"><span class="k">[Intellect]</span><span class="l"></span><span class="v">[0····1]</span></div>`. Keys and values keep their literal square brackets — the brackets are the register's identity. Values are real (counts, revisions, states), never lorem texture. 2–6 rows per cluster, at most a few clusters per page.
+
+### Dark title plate — `.plate`
+
+The inspo's hero: a full-bleed black panel carrying a white hairline diagram with leader-line callouts, uppercase mono labels with small dot terminals, `.idx` readouts in the corners, and a heavyweight display title in the bottom-left. This is a **fourth earned dark surface** (alongside terminal blocks, blueprint figures, and `dl.meta`) — earned only when the artifact opens with a genuine diagram *of its own subject*: a `.blockdiag` schematic, an exploded assembly, a topology. Never an empty black banner. **Adapt the reference's devices, not its subject matter** — do not reproduce the inspo's orbital/solar-system imagery (or any inspo motif) unless the artifact is actually about that domain.
+
+- Diagram: hairline white/`#ededed` strokes, dotted or dashed ellipses for orbits/paths, hatched regions (reuse the strat hatches at low density), `fill: none`.
+- Callouts: vertical or orthogonal leader lines from feature to label, terminating in a 3px dot at the feature end; label uppercase mono 10px, optional 2-line detail beneath in lowercase.
+- Corners: `.idx` clusters and stray corner brackets, in `--term-muted`.
+- Title: `--display`, bold, 26–34px, wide letter-spacing (`.25–.3em`), bottom-left, white. The only large type on the plate.
+- Field texture: the black field should feel spacious — generous padding around the diagram, plus 3–5 small `+` registration ticks in dim gray scattered on the grid. Blocks and labels stay tight; the *space around them* carries the plate.
+- All block labels (title, detail, ID) sit **inside** their block rectangles with even padding; only edge labels ride outside, along their edges.
+- The plate spans the full page measure and is followed directly by the bracketed prose columns — the inspo's plate-above / text-below sheet structure.
 
 ## HTML document defaults
 
@@ -882,6 +937,8 @@ Before finishing, verify:
 - Imagery subjects favor classical, architectural, sculptural, mechanical, botanical, or pure-geometric references — paired with computational treatment where dot-matrix is used.
 - SVG flow diagrams are clean hairline strokes with `Fig. N` captions.
 - Hairline rules and tabular structure carry the page, not shadows or filled cards.
+- Major prose blocks are framed with corner registration brackets (`.reg`), not full borders; bracketed blocks don't double up with hairline rules. Body prose is justified with hyphenation.
+- Any `.idx` dotted-leader readouts carry real values; any `.plate` dark title plate carries a genuine hairline diagram with leader-line callouts — never an empty black banner.
 - Print stylesheet inverts terminal blocks for legibility.
 - Responsive at narrow widths without losing the typographic hierarchy.
 - `alt` text describes halftone and blueprint imagery subjects.
