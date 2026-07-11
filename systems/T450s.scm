@@ -5,10 +5,20 @@
              (gnu system file-systems)
              (gnu system keyboard))
 
+;; schemewm is built from the local checkout via its own guix.scm (the
+;; crate graph is vendored there, so the build is offline). The file's
+;; last expression is the package object; primitive-load hands it back.
+(define schemewm
+  (primitive-load "/home/samuel/Projects/scheme-wayland-wm/guix.scm"))
+
 (operating-system
   (inherit base-system)
   (keyboard-layout (keyboard-layout "de" "bone"))
   (host-name "T450s")
+
+  ;; Add schemewm system-wide so SDDM finds its wayland-session entry in
+  ;; /run/current-system/profile/share/wayland-sessions.
+  (packages (cons schemewm (operating-system-packages base-system)))
 
   (file-systems
    (append
