@@ -41,3 +41,13 @@ window {
   font-family: "EnvyCodeR Nerd Font Mono";
   padding: 50px;
 }
+
+/* schemewm top bar (gruvbox, matches the message area) */
+.schemewm-status {
+  margin-left: 8px;
+  color: #d79921;
+}
+
+.bar-clock {
+  margin-right: 8px;
+}
