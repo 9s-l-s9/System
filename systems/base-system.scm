@@ -322,14 +322,11 @@
       (elogind-service-type config =>
                             (elogind-configuration
                              (inherit config)
-                             ;; Lid close suspends (real S3) to actually save
-                             ;; power. Resume reliability is handled via the
-                             ;; mem_sleep_default=deep + i915.enable_psr=0
-                             ;; kernel-arguments above. xss-lock still locks the
-                             ;; session around the suspend so it comes back
-                             ;; locked. Docked: stay awake.
-                             (handle-lid-switch 'suspend)
-                             (handle-lid-switch-external-power 'suspend)
+                             ;; Keep long-running jobs alive even when the lid
+                             ;; closes. Manual suspend remains available, but
+                             ;; elogind no longer initiates it implicitly.
+                             (handle-lid-switch 'ignore)
+                             (handle-lid-switch-external-power 'ignore)
                              (handle-lid-switch-docked 'ignore)))
 
       (guix-service-type config => (guix-configuration
