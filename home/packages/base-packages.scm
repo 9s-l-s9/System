@@ -44,6 +44,9 @@
 
 (define system-utilities-packages
   (list "adb" "hostapd"     ; wireplumber comes from home-pipewire-service-type
+        "alsa-utils"        ; alsamixer/amixer for the hardware (card-level)
+                            ; HDA controls PipeWire doesn't manage (Speaker,
+                            ; PCM, Headphone); use `alsamixer -c 0`
                             ; dnsmasq intentionally omitted: NetworkManager manages
                             ; its own internal dnsmasq instance for split DNS; a
                             ; second dnsmasq binary in PATH causes version conflicts
@@ -147,7 +150,7 @@
   (list
    ;; "rofi"
    "dunst" "spectacle" "kmix" "xrandr" "arandr"
-   "feh" "picom" "redshift"
+   "feh" "picom" "redshift" "xset"
    "eww"                              ; desktop widgets (yuck config, driven from StumpWM)
    "xdotool"                          ; type transcription into focused window
    "numlockx"                         ; clear SDDM's forced NumLock at session start
@@ -159,7 +162,7 @@
 ;; Wayland (defined but not assembled by default)
 
 (define wayland-packages
-  (list "gammastep" "mako" "fuzzel"))
+  (list "gammastep" "mako" "fuzzel" "swaybg" "wl-clipboard"))
 
 ;; KDE desktop
 
@@ -199,6 +202,7 @@
             cli-utilities-packages
             system-utilities-packages
             xorg-packages
+	    wayland-packages
             kde-packages
             gui-theming-packages
             browser-packages
