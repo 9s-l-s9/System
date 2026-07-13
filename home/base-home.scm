@@ -13,6 +13,7 @@
   #:use-module (gnu home services desktop)
   #:use-module (gnu home services sound)
   #:use-module (services stumpwm)
+  #:use-module (services schemewm)
   #:use-module (services git)
   #:use-module (services redshift)
   #:use-module (services emacs)
@@ -21,7 +22,8 @@
 
 (define (base-services)
   "Services shared by every user's home environment."
-  (list
+  (append
+   (list
    ;; Audio stack: PipeWire + WirePlumber as user services, with
    ;; pipewire-pulse providing the PulseAudio-compatible socket (so pactl,
    ;; whisper's alsa_input.* source names, etc. keep working). This is also
@@ -37,4 +39,5 @@
    (agent-skills-service)
    (service home-dotfiles-service-type
             (home-dotfiles-configuration
-             (directories '("./files"))))))
+             (directories '("./files")))))
+   (schemewm-services)))
