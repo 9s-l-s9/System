@@ -16,7 +16,7 @@
           (provision '(emacs-daemon))
           (start #~(make-forkexec-constructor
                     (list #$(file-append
-                             (specification->package "emacs-next")
+                             (specification->package "emacs-next-pgtk")
                              "/bin/emacs")
                           "--fg-daemon")))
           (stop #~(make-kill-destructor))

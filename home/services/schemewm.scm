@@ -84,4 +84,4 @@
    (simple-service 'schemewm-environment
                    home-environment-variables-service-type
                    '(("XKB_DEFAULT_LAYOUT" . "de")
-                     ("XKB_DEFAULT_VARIANT" . "bone"))))))
+                     ("XKB_DEFAULT_VARIANT" . "bone")))))
