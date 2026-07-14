@@ -16,6 +16,10 @@
       inhibit-x-resources t
       inhibit-startup-buffer-menu t)
 
+;; PGTK otherwise draws a client-side title bar above the editor.  The
+;; compositor owns window framing, so ask GTK for a borderless surface.
+(add-to-list 'default-frame-alist '(undecorated . t))
+
 ;; Must be a literal in early-init for Emacs to honor it.
 (setq inhibit-startup-echo-area-message "samuel")
 
@@ -64,4 +68,3 @@
                   gc-cons-percentage 0.1
                   file-name-handler-alist prot-emacs--file-name-handler-alist
                   vc-handled-backends prot-emacs--vc-handled-backends)))
-
