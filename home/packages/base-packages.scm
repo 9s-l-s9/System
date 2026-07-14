@@ -125,7 +125,7 @@
 ;; Editors
 
 (define editors-packages
-  (list "emacs-next"
+  (list "emacs-next-pgtk"
         "helix"))
 
 ;; Shell
