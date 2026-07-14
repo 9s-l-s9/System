@@ -4,9 +4,9 @@
   #:export (schemewm-services))
 
 (define schemewm-package
-  ;; Local checkout until Sprint 9 replaces this with the tagged release
-  ;; package. Keeping the path here makes the personal integration explicit.
-  (load "/home/samuel/Projects/scheme-wayland-wm/guix.scm"))
+  ;; The shared selector retains the checkout fallback and accepts an explicit
+  ;; RC archive through SCHEMEWM_RC_ARCHIVE + SCHEMEWM_RC_REVISION.
+  (primitive-load "/home/samuel/Projects/System/schemewm-package.scm"))
 
 (define personal-init
   (plain-file
