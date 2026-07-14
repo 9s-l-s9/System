@@ -5,11 +5,11 @@
              (gnu system file-systems)
              (gnu system keyboard))
 
-;; schemewm is built from the local checkout via its own guix.scm (the
-;; crate graph is vendored there, so the build is offline). The file's
-;; last expression is the package object; primitive-load hands it back.
+;; The shared selector defaults to the working checkout. Set
+;; SCHEMEWM_RC_ARCHIVE and SCHEMEWM_RC_REVISION to test/install the explicit
+;; vendored RC artifact without removing the checkout rollback path.
 (define schemewm
-  (primitive-load "/home/samuel/Projects/scheme-wayland-wm/guix.scm"))
+  (primitive-load "/home/samuel/Projects/System/schemewm-package.scm"))
 
 (operating-system
   (inherit base-system)
