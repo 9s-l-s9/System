@@ -1,14 +1,11 @@
 (use-modules (gnu)
              (base-system))
 
-;; schemewm is built from the local checkout via its own guix.scm (the
-;; crate graph is vendored there, so the build is offline). Set it up
-;; first -- vendor/ is gitignored, so after cloning it must be recreated:
-;;   git clone https://github.com/9s-l-s9/scheme-wayland-wm ~/Projects/scheme-wayland-wm
-;;   cd ~/Projects/scheme-wayland-wm
-;;   guix shell -m manifest.scm -- cargo vendor vendor
+;; The shared selector defaults to the working checkout. Set
+;; SCHEMEWM_RC_ARCHIVE and SCHEMEWM_RC_REVISION to test/install the explicit
+;; vendored RC artifact without removing the checkout rollback path.
 (define schemewm
-  (primitive-load "/home/samuel/Projects/scheme-wayland-wm/guix.scm"))
+  (primitive-load "/home/samuel/Projects/System/schemewm-package.scm"))
 
 (operating-system
   (inherit base-system)
