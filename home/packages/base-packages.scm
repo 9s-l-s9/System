@@ -144,25 +144,26 @@
   (list "typst-bin"
         "haunt"))
 
-;; X11 / display server
+;; X11 applications retained for an easy StumpWM rollback, but deliberately
+;; not included by `all-packages'.
 
 (define xorg-packages
   (list
    ;; "rofi"
-   "dunst" "spectacle" "kmix" "xrandr" "arandr"
+   "dunst" "xrandr" "arandr"
    "feh" "picom" "redshift" "xset"
-   "eww"                              ; desktop widgets (yuck config, driven from StumpWM)
    "xdotool"                          ; type transcription into focused window
    "numlockx"                         ; clear SDDM's forced NumLock at session start
-   "brightnessctl"                    ; restore backlight at session start (SDDM,
-                                      ; unlike GDM, leaves it wherever elogind
-                                      ; restored it -- possibly 0)
-   "xdg-desktop-portal-wlr" "xsel" "xdg-utils"))
+   "xsel"))
 
 ;; Wayland (defined but not assembled by default)
 
 (define wayland-packages
-  (list "gammastep" "mako" "fuzzel" "swaybg" "wl-clipboard"))
+  (list "gammastep" "mako" "fuzzel" "swaybg" "wl-clipboard"
+        "eww"                         ; Minde bar and sysinfo widgets
+        "brightnessctl"
+        "xdg-desktop-portal-wlr"
+        "xdg-utils"))
 
 ;; KDE desktop
 
@@ -201,8 +202,7 @@
     (append programming-packages
             cli-utilities-packages
             system-utilities-packages
-            xorg-packages
-	    wayland-packages
+            wayland-packages
             kde-packages
             gui-theming-packages
             browser-packages
