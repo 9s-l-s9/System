@@ -120,6 +120,8 @@
    (list "--" "bash" "-c"
          (string-append
           "export SHELL=$(command -v bash); "
+          ;; Reuse the manifest's python instead of downloading a standalone one.
+          "export UV_PYTHON_PREFERENCE=system; "
           "export NPM_CONFIG_PREFIX=\"$HOME/.local\"; "
           "export PATH=\"$HOME/.local/bin:$PATH\"; "
           "if [ ! -f \"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\" ]; then "
