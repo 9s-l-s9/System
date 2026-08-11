@@ -63,6 +63,11 @@
   ;; (services/redshift.scm); needs minde's wlr-gamma-control support.
   (wm-spawn \"gammastep -m wayland -l 35.81:-0.80 -t 3500:3000\")
   (wm-spawn \"[ $(brightnessctl get) -lt 100 ] && brightnessctl set 80% || true\")
+  ;; KDE Connect has no Plasma session to D-Bus-activate its daemon, so start
+  ;; it here; without a running kdeconnectd the phone never discovers this PC.
+  ;; The indicator gives a tray entry for pairing/sending files.
+  (wm-spawn \"kdeconnectd\")
+  (wm-spawn \"kdeconnect-indicator\")
   (wm-log \"personal autostart complete\"))
 
 ;; Preserve personal additions across the base configuration's atomic reload.

@@ -172,7 +172,16 @@
 ;; KDE desktop
 
 (define kde-packages
-  (list "dolphin" "kmix" "konsole"))
+  (list "dolphin" "kmix" "konsole"
+        ;; Phone<->PC file transfer (also works without a Plasma session):
+        ;; provides the kdeconnectd daemon, `kdeconnect-cli`, and the
+        ;; `kdeconnect-indicator` tray app. Uses ports 1714-1764 TCP/UDP,
+        ;; which are already reachable (no firewall service on this system).
+        "kdeconnect"
+        ;; Dolphin KIO workers for remote/device protocols. Without this the
+        ;; mtp:// worker is missing and browsing a USB-connected phone errors
+        ;; out. Pulls in libmtp for the actual MTP transport.
+        "kio-extras"))
 
 ;; GUI theming
 
