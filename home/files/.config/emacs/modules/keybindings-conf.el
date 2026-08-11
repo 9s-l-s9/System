@@ -23,6 +23,8 @@
    '("c" . sls-config-jump)        ; jump to any file in ~/Projects/System
    '("v" . magit-status)
    '("y" . sls-copy-file-path)
+   '("R" . sls-reload-init-file) ; reload config in place (no daemon restart)
+   '("n" . naur-context-menu) ; project-aware <NAUR> entry (SPC n)
    '("u" . vundo)              ; visual undo tree
    '("f" . delete-other-windows) ;focus
    ;; AI
