@@ -168,19 +168,11 @@
                         exfat-utils
                         fuse-exfat
 			
-			;; Stumpwm
-			sbcl
-			stumpish
-			stumpwm
-			sbcl-stumpwm-swm-gaps
+                        swaylock       ;; Wayland locker for minde
+                                       ;; (lock-screen!/suspend!); PAM entry
+                                       ;; comes from the screen-locker service
+                                       ;; below.
 
-                        ;; Sway
-                        ;; sway
-                        ;; swaybg
-                        ;; swayidle
-                        ;; swaylock
-
-			xterm
                         bluez          ;; bluetoothctl; the daemon comes from
                                        ;; bluetooth-service-type below. Audio
                                        ;; routing is PipeWire's job (Guix Home
@@ -188,23 +180,21 @@
                                        ;; bluez-alsa here.
                         xf86-input-libinput
 			xf86-input-wacom
-                        i3lock         ;; X locker with image background
-                        xss-lock       ;; bridges elogind Lock signal -> i3lock
                         gvfs)         ;; for user mounts
                       %base-packages))
 
     (services
      (append
       (list
-       ;; Registers /etc/pam.d/i3lock so i3lock can authenticate. Without
-       ;; this service, i3lock rejects every password (red ring) regardless
-       ;; of correctness. setuid lets pam_unix read /etc/shadow; i3lock
-       ;; drops privileges after auth.
+       ;; swaylock is Minde's ext-session-lock-v1 locker:
+       ;; /etc/pam.d/swaylock so password verification works. No setuid --
+       ;; swaylock is designed to run unprivileged through PAM.
        (service screen-locker-service-type
                 (screen-locker-configuration
-                 (name "i3lock")
-                 (program (file-append i3lock "/bin/i3lock"))
-                 (using-setuid? #t)))
+                 (name "swaylock")
+                 (program (file-append swaylock "/bin/swaylock"))
+                 (using-pam? #t)
+                 (using-setuid? #f)))
        ;; Compressed swap in RAM. The T450s has 8 GB and no disk swap
        ;; (T450s.scm sets swap-devices to '()), so without this, memory
        ;; pressure goes straight to cache-thrashing and the OOM killer.

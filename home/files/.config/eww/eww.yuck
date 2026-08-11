@@ -217,15 +217,15 @@
 	:exclusive false
 	(sysinfo-widget)
 )
-;; ---- schemewm top bar ----
-;; schemewm writes "[I]  II  III | window title" to
-;; $XDG_RUNTIME_DIR/schemewm-status whenever it changes; the exclusive
-;; zone makes schemewm's frame tree tile below the bar automatically.
+;; ---- minde top bar ----
+;; minde writes "[I]  II  III | window title" to
+;; $XDG_RUNTIME_DIR/minde-status whenever it changes; the exclusive
+;; zone makes minde's frame tree tile below the bar automatically.
 ;; Same daemon as sysinfo: `eww open bar` / `eww open sysinfo` coexist.
 
-(deflisten schemewm-status
+(deflisten minde-status
 	:initial "…"
-	"tail -F $XDG_RUNTIME_DIR/schemewm-status 2>/dev/null")
+	"tail -F $XDG_RUNTIME_DIR/minde-status 2>/dev/null")
 
 (defpoll bar-clock :interval "10s" "date '+%a %d %b  %H:%M'")
 
@@ -240,7 +240,7 @@
 	:stacking "fg"
 	:exclusive true
 	(centerbox
-		(box :halign "start" :class "schemewm-status" schemewm-status)
+		(box :halign "start" :class "minde-status" minde-status)
 		(box)
 		(box :halign "end" :class "bar-clock" bar-clock)
 	)

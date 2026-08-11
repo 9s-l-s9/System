@@ -6,19 +6,19 @@
              (gnu system keyboard))
 
 ;; The shared selector defaults to the working checkout. Set
-;; SCHEMEWM_RC_ARCHIVE and SCHEMEWM_RC_REVISION to test/install the explicit
+;; MINDE_RC_ARCHIVE and MINDE_RC_REVISION to test/install the explicit
 ;; vendored RC artifact without removing the checkout rollback path.
-(define schemewm
-  (primitive-load "/home/samuel/Projects/System/schemewm-package.scm"))
+(define minde
+  (primitive-load "/home/samuel/Projects/System/minde-package.scm"))
 
 (operating-system
   (inherit base-system)
   (keyboard-layout (keyboard-layout "de" "bone"))
   (host-name "T450s")
 
-  ;; Add schemewm system-wide so SDDM finds its wayland-session entry in
+  ;; Add minde system-wide so SDDM finds its wayland-session entry in
   ;; /run/current-system/profile/share/wayland-sessions.
-  (packages (cons schemewm (operating-system-packages base-system)))
+  (packages (cons minde (operating-system-packages base-system)))
 
   (file-systems
    (append
