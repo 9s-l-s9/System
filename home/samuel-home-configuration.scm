@@ -8,8 +8,14 @@
   #:use-module (services helix)
   #:use-module (services lem))
 
+(define emacs-naur
+  ;; Load NAUR, whose output exposes its pinned Pi runtime as `pi'.  Keeping
+  ;; this Samuel-specific avoids imposing /home/samuel on the shared desktop
+  ;; and WSL package assemblers.
+  (primitive-load "/home/samuel/Projects/naur/naur.scm"))
+
 (home-environment
- (packages (all-packages))
+ (packages (cons emacs-naur (all-packages)))
  (services
   (append (base-services)
           (list (fish-service)

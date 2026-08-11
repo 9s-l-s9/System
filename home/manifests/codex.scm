@@ -1,21 +1,14 @@
 (define-module (manifests codex)
   #:use-module (gnu packages))
 
+;; Shared base (bash/git/guix/uv/python/nss-certs/... — see agent-base.scm).
+(define base-specs
+  (primitive-load
+   "/home/samuel/Projects/System/home/manifests/agent-base.scm"))
+
 (specifications->manifest
-   '("bash"
-     "coreutils"
-     "grep"
-     "sed"
-     "gawk"
-     "git"
-     "node@22"
-     "nss-certs"
-     "curl"
-     "bind:utils"
-     "podman"
-     "gh"
-     "openssh"
-     "guix"
-     "guile"
-     "make"
-     "findutils"))
+ (append base-specs
+         '("node@22"
+           "curl"
+           "bind:utils"   ; dig/nslookup for network debugging
+           "poppler")))   ; pdftotext etc. for document handling
