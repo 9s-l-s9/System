@@ -4,7 +4,7 @@
 ;;; `home-environment' on top of the helpers exported here:
 ;;;
 ;;;   - `base-services'  returns the services every user shares
-;;;     (window manager, git, redshift, dotfiles tree).
+;;;     (Minde, git, Emacs, agent integration, dotfiles tree).
 ;;;   - per-user files add their user-specific services on top.
 
 (define-module (base-home)
@@ -12,12 +12,11 @@
   #:use-module (gnu home services dotfiles)
   #:use-module (gnu home services desktop)
   #:use-module (gnu home services sound)
-  #:use-module (services stumpwm)
-  #:use-module (services schemewm)
+  #:use-module (services minde)
   #:use-module (services git)
-  #:use-module (services redshift)
   #:use-module (services emacs)
   #:use-module (services agent-skills)
+  #:use-module (services agent-launchers)
   #:export (base-services))
 
 (define (base-services)
@@ -32,12 +31,11 @@
    ;; base-system.scm). Requires the D-Bus user session below.
    (service home-dbus-service-type)
    (service home-pipewire-service-type)
-   (stumpwm-service)
    (git-service)
-   (redshift-service)
    (emacs-daemon-service)
    (agent-skills-service)
    (service home-dotfiles-service-type
             (home-dotfiles-configuration
              (directories '("./files")))))
-   (schemewm-services)))
+   (agent-launcher-services)
+   (minde-services)))
