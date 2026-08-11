@@ -136,6 +136,8 @@
          ;; pnpm 11 blocks these by default; dangerouslyAllowAllBuilds opts out.
          (string-append
           "export SHELL=$(command -v bash); "
+          ;; Reuse the manifest's python instead of downloading a standalone one.
+          "export UV_PYTHON_PREFERENCE=system; "
           "export PNPM_HOME=\"$HOME/.local/share/pnpm\"; "
           "export PATH=\"$PNPM_HOME/bin:$PNPM_HOME:$PATH\"; "
           "pnpm config set dangerouslyAllowAllBuilds true; "

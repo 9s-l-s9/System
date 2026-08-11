@@ -116,7 +116,7 @@
    (list "-m" manifest)
    '("--"
      "bash" "-c"
-     "export SHELL=$(command -v bash); exec npx -y opencode-ai \"$@\""
+     "export SHELL=$(command -v bash); export UV_PYTHON_PREFERENCE=system; exec npx -y opencode-ai \"$@\""
      "opencode-guix")
    opencode-args))
 

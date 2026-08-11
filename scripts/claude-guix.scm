@@ -109,12 +109,16 @@
   (ensure-directory (string-append home "/.local/share/pnpm/bin"))
   (let ((cmd (string-append
               "export SHELL=$(command -v bash); "
+              ;; Reuse the manifest's python instead of letting uv download a
+              ;; standalone CPython on first use.
+              "export UV_PYTHON_PREFERENCE=system; "
               "export PNPM_HOME=\"$HOME/.local/share/pnpm\"; "
               "export PATH=\"$PNPM_HOME/bin:$PNPM_HOME:$PATH\"; "
               "cd "
               (format #f "~s" project-dir)
-              " && pnpm add -g @anthropic-ai/claude-code@latest"
-              " && exec claude --dangerously-skip-permissions \"$@\"")))
+              " && if [ ! -x \"$PNPM_HOME/bin/claude\" ]; then"
+              " pnpm add -g @anthropic-ai/claude-code@latest; fi"
+              " && exec \"$PNPM_HOME/bin/claude\" --dangerously-skip-permissions \"$@\"")))
     (append
      (append
       '("shell" "--container" "--emulate-fhs" "--nesting" "--network")
@@ -144,6 +148,10 @@
           '())
       ;; Host Docker/Podman sockets for container-backed tools.
       (container-socket-mounts)
+      ;; Removable media (e.g. /run/media/samuel/Seagate), read-write when present.
+      (maybe-mount "--share"
+                   (string-append "/run/media/" (env "USER" "samuel"))
+                   (string-append "/run/media/" (env "USER" "samuel")))
       ;; runtime / display
       (let ((xdg-runtime (getenv "XDG_RUNTIME_DIR")))
         (if (and xdg-runtime (file-exists? xdg-runtime))
