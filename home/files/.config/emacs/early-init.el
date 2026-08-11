@@ -60,6 +60,10 @@
 (setq file-name-handler-alist nil
       vc-handled-backends nil)
 
+;; Never load a stale .elc over a newer .el (e.g. the VALSI working tree,
+;; which sits on `load-path' and is edited in place).
+(setq load-prefer-newer t)
+
 (add-hook 'emacs-startup-hook
           (lambda ()
             ;; 100 MB: fewer, batched collections. 8 MB caused visible

@@ -81,6 +81,15 @@ Uses pixel width so alignment stays correct with icons or wide chars."
                       :background (face-background 'default)
                       :box        nil
                       :inherit    nil)
+  ;; Emacs 31 draws non-selected windows with `header-line-inactive';
+  ;; style it to match so headers don't flip colors on focus change.
+  (when (facep 'header-line-inactive)
+    (set-face-attribute 'header-line-inactive nil
+                        :underline  (face-foreground 'default)
+                        :foreground (face-foreground 'shadow nil t)
+                        :background (face-background 'default)
+                        :box        nil
+                        :inherit    nil))
   ;; Window divider provides the visible separator lines (top/right/bottom).
   (set-face-attribute 'window-divider nil
                       :foreground (face-foreground 'default))
