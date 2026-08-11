@@ -256,7 +256,7 @@
            (list "FETCH" " " "f" "fastfetch")
            (list "FISH" " " "s" "fish")
            (list "GUILE" " " "g" "guile")
-	   (list "Anki" " " "a" "")
+	   (list "Anki" " " "a" "anki")
 	   ;; habits?
 	   ;; bookmarks
 	   ;; git (magit)

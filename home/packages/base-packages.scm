@@ -1,7 +1,9 @@
 (define-module (packages base-packages)
   #:use-module (gnu packages)
+  #:use-module (packages anki)
   #:use-module (packages eca)
   #:use-module (packages font-space-mono)
+  #:use-module (packages modus-buffer-theme)
   #:use-module (packages whisper)
   #:export (all-packages)
   #:export (wsl2-packages)
@@ -118,7 +120,9 @@
 
 ;; Custom packages missing from upstream Guix (package objects, not specs).
 (define custom-home-packages
-  (list emacs-eca
+  (list anki-bin
+        emacs-eca
+        emacs-modus-buffer-theme
         emacs-whisper
         font-space-mono))
 
