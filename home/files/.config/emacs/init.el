@@ -12,6 +12,7 @@
 
 ;; ── UI ────────────────────────────────────────────────────────────────────────
 (require 'general-ui-conf)
+(require 'modus-buffer-theme-conf)
 (require 'modeline-conf)
 
 (use-package highlight-indent-guides
@@ -60,6 +61,10 @@
 
 (use-package magit
   :commands (magit-status magit-dispatch magit-file-dispatch))
+
+;; ── AI/ML ─────────────────────────────────────────────────────────────────────
+
+(require 'naur-conf)
 
 ;; ── Apps ──────────────────────────────────────────────────────────────────────
 (require 'dired-conf)

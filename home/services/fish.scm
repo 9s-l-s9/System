@@ -19,6 +19,7 @@
                ("grep" . "grep --color=auto")
                ("gh" . "guix home reconfigure ~/Projects/System/home/samuel-home-configuration.scm")
                ("gs" . "sudo guix system reconfigure ~/Projects/System/systems/$(hostname).scm")
+               ("reload-emacs" . "herd restart emacs-daemon")
                ("codex" . "~/Projects/System/scripts/codex-guix.scm")
                ("codex-full" . "~/Projects/System/scripts/codex-guix.scm --full")
                ("claude" . "~/Projects/System/scripts/claude-guix.scm")
