@@ -1,7 +1,7 @@
 ---
 name: design
 description: >
-  Use this skill by default whenever producing HTML, websites, web pages, interactive docs, visual documentation, architecture overviews, project knowledge bases, concept pages, dossiers, technical reports, or other designed artifacts, unless the user asks for another visual direction. Apply a technical-manual / cybernetic aesthetic: white page, near-black monospace body (IBM Plex Mono) with a Space Mono display register for chrome and headings, black terminal blocks as the only chrome-dark element, booktabs tables, hairline rules, dense two-column layout, and an addressable / machine-readable structure where every block is typed and carries a stable identifier. Reads like a systems manual, parts catalog, or control-theory document, not a marketing page or a terminal UI. Imagery is monochrome or duotone: blueprint / exploded line drawings with measurement annotations, one-bit dot-matrix renderings, orange/red duotone halftones, and monochrome photography. Do not use for pure code-only, backend, data, or prose tasks unless the output includes visual design or HTML.
+  Use this skill whenever producing HTML, websites, web pages, interactive docs, visual documentation, architecture overviews, project knowledge bases, concept pages, dossiers, technical reports, or other designed artifacts, unless the user asks for another visual direction. Always ask the user first, if you should use the design skill for a specific artifact.
 license: CC0-1.0
 ---
 
