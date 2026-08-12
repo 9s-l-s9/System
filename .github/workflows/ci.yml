@@ -31,8 +31,12 @@ jobs:
         uses: PromyLOPh/guix-install-action@v1
 
       - name: Configure channels
+        # guix-install-action's initial `sudo guix pull` creates
+        # ~/.config/guix owned by root, so a plain cp here fails with
+        # "Permission denied". Reclaim the dir for the runner first.
         run: |
-          mkdir -p ~/.config/guix
+          sudo mkdir -p ~/.config/guix
+          sudo chown -R "$(id -un):$(id -gn)" ~/.config/guix
           cp channels.scm ~/.config/guix/channels.scm
 
       - name: Authorize nonguix substitute server
