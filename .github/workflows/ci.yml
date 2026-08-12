@@ -7,7 +7,13 @@ on:
     branches: [main]
 
 jobs:
-  # ── Fast: Guile policy + syntax (no Guix needed, ~30 s) ─────────────────────
+  # ── Guile policy + syntax (no Guix needed, ~30 s) ────────────────────────────
+  #
+  # The Guix home dry-run job was removed: it evaluated the full home configs,
+  # which load machine-local checkouts by absolute path at eval time
+  # (minde-package.scm -> ~/Projects/minde, samuel's config -> the valsi
+  # checkout). Those don't exist on the runner, so the job could never go green.
+  # Home/system configs are validated locally via `make qa-all` (time-machine).
   guile-check:
     name: Guile policy check
     runs-on: ubuntu-latest
@@ -19,56 +25,3 @@ jobs:
 
       - name: Guile-only script policy
         run: make qa-guile-only
-
-  # ── Slow: Guix home dry-run (evaluates all home configs, ~15 min) ────────────
-  guix-home:
-    name: Guix home dry-run
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Guix
-        uses: PromyLOPh/guix-install-action@v1
-
-      - name: Configure channels
-        # guix-install-action's initial `sudo guix pull` creates
-        # ~/.config/guix owned by root, so a plain cp here fails with
-        # "Permission denied". Reclaim the dir for the runner first.
-        run: |
-          sudo mkdir -p ~/.config/guix
-          sudo chown -R "$(id -un):$(id -gn)" ~/.config/guix
-          cp channels.scm ~/.config/guix/channels.scm
-
-      - name: Authorize nonguix substitute server
-        # Speeds up pulls that touch nonguix packages
-        run: |
-          guix archive --authorize <<'EOF'
-          (public-key
-           (ecc
-            (curve Ed25519)
-            (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))
-          EOF
-
-      # Cache channel download tarballs.  Key is channels.scm so the cache
-      # is invalidated whenever channels are pinned to a new commit.
-      - name: Restore Guix download cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/guix
-          key: guix-${{ runner.os }}-${{ hashFiles('channels.scm') }}
-          restore-keys: guix-${{ runner.os }}-
-
-      - name: Pull channels
-        run: |
-          guix pull \
-            --substitute-urls="https://ci.guix.gnu.org \
-                               https://bordeaux.guix.gnu.org \
-                               https://substitutes.nonguix.org" \
-            --allow-downgrades
-          guix describe
-
-      - name: Check Samuel home config
-        run: make qa-home-samuel
-
-      - name: Check Levi home config
-        run: make qa-home-levi
