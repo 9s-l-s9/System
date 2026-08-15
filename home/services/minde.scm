@@ -177,5 +177,11 @@ name = \"laptop-only\"
                      ("shikane/config.toml" ,shikane-config)))
    (simple-service 'minde-environment
                    home-environment-variables-service-type
-                   '(("XKB_DEFAULT_LAYOUT" . "de")
-                     ("XKB_DEFAULT_VARIANT" . "bone")))))
+                   ;; Two layout groups: de(bone) for the built-in keyboard
+                   ;; and plain us for the Corne, whose firmware already
+                   ;; implements Bone on top of a US host layout.
+                   ;; Super+Space toggles; xkbcommon handles the switch
+                   ;; inside minde, no compositor code involved.
+                   '(("XKB_DEFAULT_LAYOUT" . "de,us")
+                     ("XKB_DEFAULT_VARIANT" . "bone,")
+                     ("XKB_DEFAULT_OPTIONS" . "grp:win_space_toggle")))))
