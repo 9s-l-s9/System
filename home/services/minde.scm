@@ -35,6 +35,13 @@
 (bind-prefix-key! \"V\"
   (lambda () (wm-spawn \"~/Projects/System/scripts/voice-dictate.scm\"))
   \"voice dictation\")
+;; Brightness toggle: any nonzero level -> 0%, otherwise -> 60%. Same
+;; unquoted $() style as handle-startup!'s brightnessctl line.
+(bind-prefix-key! \"h\"
+  (lambda ()
+    (wm-spawn
+     \"if [ $(brightnessctl get) -gt 0 ]; then brightnessctl set 0%; else brightnessctl set 60%; fi\"))
+  \"brightness 0/60\")
 ;; swaylock with the personal background color. The base config binds
 ;; s l -> lock-screen! and s z -> suspend! ((minde session)); both
 ;; honor %lock-command, so no personal rebinding is needed anymore.
