@@ -12,8 +12,8 @@
 
 ;; ── UI ────────────────────────────────────────────────────────────────────────
 (require 'general-ui-conf)
-(require 'modus-buffer-theme-conf)
 (require 'modeline-conf)
+(require 'modus-buffer-theme-conf)
 
 (use-package highlight-indent-guides
   :hook (prog-mode . highlight-indent-guides-mode))
@@ -64,7 +64,7 @@
 
 ;; ── AI/ML ─────────────────────────────────────────────────────────────────────
 
-(require 'naur-conf)
+(require 'valsi-conf)
 
 ;; ── Apps ──────────────────────────────────────────────────────────────────────
 (require 'dired-conf)
