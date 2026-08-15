@@ -1,7 +1,26 @@
 (define-module (services fish)
   #:use-module (gnu services)
   #:use-module (gnu home services shells)
+  #:use-module (guix gexp)
   #:export (fish-service))
+
+;; Each new Konsole tab picks a random color scheme from the ones curated in
+;; ~/.local/share/konsole (a .colorscheme can bundle its own Wallpaper=, so
+;; scheme and background travel together). konsoleprofile only restyles the
+;; current session, which is exactly the per-tab behaviour wanted.
+(define %konsole-random-scheme
+  (plain-file
+   "konsole-random-scheme.fish"
+   "if status is-interactive; and set -q KONSOLE_VERSION
+    set -l schemes
+    for f in ~/.local/share/konsole/*.colorscheme
+        set -a schemes (basename $f .colorscheme)
+    end
+    if test (count $schemes) -gt 0
+        konsoleprofile ColorScheme=(random choice $schemes)
+    end
+end
+"))
 
 (define (fish-service)
   (service home-fish-service-type
@@ -30,5 +49,4 @@
                ("pi" . "~/Projects/System/scripts/pi-guix.scm")
                ("pi-full" . "~/Projects/System/scripts/pi-guix.scm --full")
                ("alire-shell" . "guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME")))
-            ;; You might want to add custom Fish config here
-			    )))
+            (config (list %konsole-random-scheme)))))
