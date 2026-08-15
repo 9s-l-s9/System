@@ -5,7 +5,7 @@
   #:export (agent-launcher-services))
 
 ;; Install the agent launcher scripts as real executables in ~/.local/bin so
-;; they work anywhere a program is spawned directly (Emacs/NAUR, dmenu,
+;; they work anywhere a program is spawned directly (Emacs/VALSI, dmenu,
 ;; compile commands), not only in interactive shells where aliases expand.
 ;; Publish both the public CLI names expected by integrations and the explicit
 ;; *-guix names used when a caller wants to select these wrappers deliberately.
@@ -65,7 +65,7 @@
                    agent-launchers-activation)
    ;; Session-wide, so shepherd children (the Emacs daemon) inherit it at
    ;; login, unlike shell aliases. Append it so packages installed in Guix
-   ;; profiles win when both provide a command (notably NAUR's pinned Pi).
+   ;; profiles win when both provide a command (notably VALSI's pinned Pi).
    (simple-service 'agent-launchers-path
                    home-environment-variables-service-type
                    '(("PATH" . "$PATH:$HOME/.local/bin")))))
