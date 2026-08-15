@@ -8,6 +8,48 @@
   ;; RC archive through MINDE_RC_ARCHIVE + MINDE_RC_REVISION.
   (primitive-load "/home/samuel/Projects/System/minde-package.scm"))
 
+;; shikane (wlr-output-management profile daemon) lives in minde's own
+;; channel until it reaches upstream Guix.
+(eval-when (expand load eval)
+  (add-to-load-path "/home/samuel/Projects/minde/guix-channel"))
+(define shikane-package
+  (module-ref (resolve-interface '(minde packages)) 'shikane))
+
+;; Output profiles: shikane picks the one whose outputs match every
+;; connected display and applies it on login and on every hotplug.  The
+;; Samsung is matched by serial so a second identical model would not
+;; collide; the laptop panel by connector name.  Over the X1 Yoga's HDMI
+;; 1.4 port 2560x1440@60 is the sharpest full-RGB mode (4K only at 24 Hz,
+;; chroma-subsampled); switch to 3840x2160@60 + scale 1.5 once the
+;; monitor hangs off DisplayPort.
+(define shikane-config
+  (plain-file
+   "shikane-config.toml"
+   "[[profile]]
+name = \"samsung-only\"
+
+    [[profile.output]]
+    search = [\"m=LC32G7xT\", \"s=H4ZT101963\"]
+    enable = true
+    mode = \"2560x1440@59.951Hz\"
+    position = \"0,0\"
+    scale = 1.0
+
+    [[profile.output]]
+    search = \"n=eDP-1\"
+    enable = false
+
+[[profile]]
+name = \"laptop-only\"
+
+    [[profile.output]]
+    search = \"n=eDP-1\"
+    enable = true
+    mode = \"preferred\"
+    position = \"0,0\"
+    scale = 1.0
+"))
+
 (define personal-init
   (plain-file
    "minde-init.scm"
@@ -60,19 +102,40 @@
    \"~/Projects/images/*.jpg ~/Projects/images/*.jpeg); \"
    \"[ -n \\\"$img\\\" ] && exec swaybg -m fill -i \\\"$img\\\"\"))
 
-(define (handle-startup!)
-  ;; Wallpaper and widgets first -- they are the visible part of startup.
-  (wm-spawn %personal-wallpaper)
-  (wm-spawn \"eww open sysinfo\")
-  ;; One bar per monitor: (wm-outputs) entries are (id x y w h name).
-  ;; --screen selects the Wayland connector, while --id lets separate
-  ;; instances of the same bar window coexist.
+;; One eww bar per enabled monitor.  (wm-outputs) entries are
+;; (id x y w h name); --screen selects the Wayland connector, --id lets
+;; separate instances of the same bar window coexist.  Re-run after
+;; every output change so a bar appears on a newly enabled head and the
+;; bar of a disabled head is closed (its output is gone anyway).
+(define (sync-bars!)
   (for-each
    (lambda (output)
      (let ((name (list-ref output 5)))
        (wm-spawn (string-append \"eww open bar --id bar-\" name
                                 \" --screen \" name))))
    (wm-outputs))
+  (when (defined? 'output-heads)
+    (for-each
+     (lambda (head)
+       (unless (assq-ref head 'enabled)
+         (wm-spawn (string-append \"eww close bar-\"
+                                  (assq-ref head 'name)))))
+     (output-heads))))
+
+;; Runs after an output-management client (shikane, wlr-randr) or
+;; configure-output! changed the layout.
+(define (handle-output-configured!)
+  (sync-bars!))
+
+(define (handle-startup!)
+  ;; Output layout first: shikane applies the matching profile from
+  ;; ~/.config/shikane/config.toml now and on every hotplug; the bars
+  ;; follow through handle-output-configured!.
+  (wm-spawn \"shikane\")
+  ;; Wallpaper and widgets -- they are the visible part of startup.
+  (wm-spawn %personal-wallpaper)
+  (wm-spawn \"eww open sysinfo\")
+  (sync-bars!)
   ;; Same temperatures/location as the X11 redshift service
   ;; (services/redshift.scm); needs minde's wlr-gamma-control support.
   (wm-spawn \"gammastep -m wayland -l 35.81:-0.80 -t 3500:3000\")
@@ -106,11 +169,12 @@
   (list
    (simple-service 'minde-package
                    home-profile-service-type
-                   (list minde-package))
+                   (list minde-package shikane-package))
    (simple-service 'minde-config
                    home-xdg-configuration-files-service-type
                    `(("minde/init.scm" ,personal-init)
-                     ("minde/config.scm" ,personal-config)))
+                     ("minde/config.scm" ,personal-config)
+                     ("shikane/config.toml" ,shikane-config)))
    (simple-service 'minde-environment
                    home-environment-variables-service-type
                    '(("XKB_DEFAULT_LAYOUT" . "de")
