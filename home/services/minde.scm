@@ -62,10 +62,17 @@
 
 (define (handle-startup!)
   ;; Wallpaper and widgets first -- they are the visible part of startup.
-  ;; One eww invocation: two parallel `eww open` calls race to autostart
-  ;; the daemon and both pay its init.
   (wm-spawn %personal-wallpaper)
-  (wm-spawn \"eww open-many bar sysinfo\")
+  (wm-spawn \"eww open sysinfo\")
+  ;; One bar per monitor: (wm-outputs) entries are (id x y w h name).
+  ;; --screen selects the Wayland connector, while --id lets separate
+  ;; instances of the same bar window coexist.
+  (for-each
+   (lambda (output)
+     (let ((name (list-ref output 5)))
+       (wm-spawn (string-append \"eww open bar --id bar-\" name
+                                \" --screen \" name))))
+   (wm-outputs))
   ;; Same temperatures/location as the X11 redshift service
   ;; (services/redshift.scm); needs minde's wlr-gamma-control support.
   (wm-spawn \"gammastep -m wayland -l 35.81:-0.80 -t 3500:3000\")
