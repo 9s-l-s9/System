@@ -84,6 +84,13 @@ name = \"laptop-only\"
     (wm-spawn
      \"if [ $(brightnessctl get) -gt 0 ]; then brightnessctl set 0%; else brightnessctl set 60%; fi\"))
   \"brightness 0/60\")
+;; Print X: flip the XKB layout group between de(bone) (built-in
+;; keyboard) and us (the Corne, whose firmware already implements Bone
+;; on top of a US host layout).  Groups come from XKB_DEFAULT_LAYOUT
+;; below; handle-keyboard-layout-changed! shows the new name.
+(when (defined? 'set-keyboard-layout!)
+  (bind-prefix-key! \"X\" (lambda () (set-keyboard-layout! 'next))
+                    \"keyboard layout de(bone)/us\"))
 ;; swaylock with the personal background color. The base config binds
 ;; s l -> lock-screen! and s z -> suspend! ((minde session)); both
 ;; honor %lock-command, so no personal rebinding is needed anymore.
@@ -178,10 +185,7 @@ name = \"laptop-only\"
    (simple-service 'minde-environment
                    home-environment-variables-service-type
                    ;; Two layout groups: de(bone) for the built-in keyboard
-                   ;; and plain us for the Corne, whose firmware already
-                   ;; implements Bone on top of a US host layout.
-                   ;; Super+Space toggles; xkbcommon handles the switch
-                   ;; inside minde, no compositor code involved.
+                   ;; and plain us for the Corne; Print X switches (see
+                   ;; personal-init), so no grp:* chord is configured.
                    '(("XKB_DEFAULT_LAYOUT" . "de,us")
-                     ("XKB_DEFAULT_VARIANT" . "bone,")
-                     ("XKB_DEFAULT_OPTIONS" . "grp:win_space_toggle")))))
+                     ("XKB_DEFAULT_VARIANT" . "bone,")))))
