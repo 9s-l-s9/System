@@ -4,6 +4,7 @@
   #:use-module (packages eca)
   #:use-module (packages font-ia-writer)
   #:use-module (packages font-space-mono)
+  #:use-module (packages modus-buffer-theme)
   #:use-module (packages whisper)
   #:export (all-packages)
   #:export (wsl2-packages)
