@@ -2,9 +2,9 @@
 //
 // Root cause it defends against: a GPU-less Chromium (headless, or headed inside
 // a container without /dev/dri) falls back to SwiftShader software rendering, so
-// UNMASKED_RENDERER_WEBGL reports "ANGLE (... SwiftShader driver)". Cloudflare
-// Turnstile and Ashby fingerprint exactly this string and block the submit,
-// while a real user reports a hardware GPU. We rewrite the two unmasked
+// UNMASKED_RENDERER_WEBGL reports "ANGLE (... SwiftShader driver)". Bot
+// detection fingerprints exactly this string, while a real user reports a
+// hardware GPU. We rewrite the two unmasked
 // parameters to a plausible Linux/Mesa Intel GPU, consistent with
 // navigator.platform = "Linux x86_64" (a Windows/D3D11 string here would itself
 // be an inconsistency tell).

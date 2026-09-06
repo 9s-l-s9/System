@@ -6,9 +6,8 @@
 ;; Why a config file instead of CLI flags: we need to pass Chromium args
 ;; (--load-extension for the WebGL-renderer spoof) which @playwright/mcp only
 ;; accepts via browser.launchOptions.args in a JSON config. The spoof extension
-;; rewrites the SwiftShader WebGL renderer string that Cloudflare Turnstile /
-;; Ashby fingerprint to block automated submits (see chromium-extensions/
-;; webgl-spoof/). Headed by default (headless:false) so the container's Wayland/X
+;; rewrites the SwiftShader WebGL renderer string that bot-detection
+;; services fingerprint (see chromium-extensions/webgl-spoof/). Headed by default (headless:false) so the container's Wayland/X
 ;; display is used; for a pure SSH/headless run set PW_MCP_HEADLESS=1.
 
 (use-modules (ice-9 format)

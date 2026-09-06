@@ -89,7 +89,6 @@ tree alongside the owner's own uncommitted edits.
 - `scripts/pw-mcp-gen-config.sh` and `scripts/chromium-debug.sh` ported to
   Guile (`.scm`) and the `.sh` files deleted; they would otherwise fail the
   Guile-only CI check on first commit. `claude-guix.scm` calls the `.scm`.
-  `scripts/playwright-real-browser.org` reference updated.
 
 ## 2. Review finding not fixed (needs a decision)
 
