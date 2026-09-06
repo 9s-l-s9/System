@@ -1,6 +1,13 @@
 #!/usr/bin/env guile
 !#
 
+;;; lock-screen.scm --- X11-rollback screen locker only.
+;;;
+;;; StumpWM's Wayland setup uses swaylock; this script execs i3lock, which is
+;;; NOT installed by default. It is referenced only by the X11 rollback path
+;;; (xss-lock) in home/services/stumpwm.scm. Install i3lock before relying on
+;;; this script under X11.
+
 (use-modules (ice-9 ftw)
              (ice-9 binary-ports)
              (srfi srfi-13))

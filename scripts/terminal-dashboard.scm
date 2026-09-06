@@ -133,9 +133,8 @@
 
 (define (get-first-todo)
   "Returns the first TODO from org files or a message if none found"
-  (let* ((org-files '("/home/samuel/Projects/WorkingMemory/wm-T450s.org"
-                      "/home/samuel/Projects/WorkingMemory/wm-X1.org"
-                      "/home/samuel/Projects/WorkingMemory/wm-palma.org"))
+  (let* ((org-files '("/home/samuel/Projects/WorkingMemory/wm.org"
+                      "/home/samuel/Projects/WorkingMemory/wm-archive.org"))
          (all-todos '()))
     
     ;; Try to get TODOs from each org file
@@ -207,9 +206,8 @@
 ;; Dashboard function
 (define (generate-dashboard)
   "Generates comprehensive dashboard text including TODOs, git status, and downloads"
-  (let* ((org-files '("/home/samuel/Projects/WorkingMemory/wm-T450s.org"
-                      "/home/samuel/Projects/WorkingMemory/wm-X1.org"
-                      "/home/samuel/Projects/WorkingMemory/wm-palma.org"))
+  (let* ((org-files '("/home/samuel/Projects/WorkingMemory/wm.org"
+                      "/home/samuel/Projects/WorkingMemory/wm-archive.org"))
          (todos-section 
           (string-append "=== TODOs ===\n"
                          (string-join 
