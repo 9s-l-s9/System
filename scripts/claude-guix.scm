@@ -85,13 +85,13 @@
               ;; path (it changes when the manifest/channels update). HEADED
               ;; (kein --headless): der Container erbt DISPLAY/WAYLAND_DISPLAY der
               ;; startenden Session, ein echter headed Browser umgeht Anti-Bot-
-              ;; Erkennung (z. B. Ashby), die HeadlessChrome hart blockt. Bei rein
+              ;; Erkennung, die HeadlessChrome hart blockt. Bei rein
               ;; headless/SSH ohne Display hier wieder --headless ergaenzen.
               ;; --user-data-dir = persistentes echtes Profil (Cookies/History).
               ;; Config wird von pw-mcp-gen-config.scm erzeugt (loest chromium-Pfad
               ;; auf, headed, und laedt die webgl-spoof-Extension via
               ;; launchOptions.args). Die Extension ueberschreibt den SwiftShader-
-              ;; WebGL-Renderer, den Cloudflare Turnstile/Ashby als Bot-Tell
+              ;; WebGL-Renderer, den Bot-Erkennung als Tell
               ;; fingerprinten. Fuer reinen SSH/headless-Lauf PW_MCP_HEADLESS=1.
               " && { \"$HOME/Projects/System/scripts/pw-mcp-gen-config.scm\";"
               " \"$PNPM_HOME/claude\" mcp remove -s user playwright >/dev/null 2>&1;"
@@ -138,7 +138,7 @@
                    (string-append "/run/media/" (env "USER" "samuel")))
       ;; GPU device nodes: gives the container real hardware-accelerated WebGL
       ;; instead of software SwiftShader. Software rendering is a strong anti-bot
-      ;; signal (reCAPTCHA v3 / Ashby) — a real GPU makes the automated browser's
+      ;; signal -- a real GPU makes the automated browser's
       ;; canvas/GL behaviour match a normal desktop browser. Read-write (DRM
       ;; render nodes need it); only mounted when the host actually has a GPU.
       (maybe-mount "--share" "/dev/dri" "/dev/dri")
