@@ -17,7 +17,7 @@
 
 ;; Samuel's policy, layered over minde's portable C-t defaults.
 (set-prefix-key! '() \"Print\")
-(setenv \"MINDE_TERMINAL\" \"alacritty || foot || xterm\")
+(setenv \"MINDE_TERMINAL\" \"foot || konsole\")
 
 (bind-prefix-key! \"b\"
   (lambda () (wm-spawn \"MOZ_ENABLE_WAYLAND=1 zen || chromium --ozone-platform-hint=auto\"))
@@ -27,21 +27,21 @@
 (bind-prefix-key! \"i\" (lambda () (wm-spawn \"eww open --toggle sysinfo\")) \"eww widgets\")
 (bind-prefix-key! \"A\"
   (make-keymap
-   \"c\" (lambda () (wm-spawn \"alacritty -e ~/Projects/System/scripts/codex-guix.scm\"))
-   \"d\" (lambda () (wm-spawn \"alacritty -e ~/Projects/System/scripts/claude-guix.scm\"))
-   \"o\" (lambda () (wm-spawn \"alacritty -e ~/Projects/System/scripts/open-code-guix.scm\"))
-   \"p\" (lambda () (wm-spawn \"alacritty -e ~/Projects/System/scripts/pi-guix.scm\")))
+   \"c\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/codex-guix.scm\"))
+   \"d\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/claude-guix.scm\"))
+   \"h\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/dsh-guix.scm\"))
+   \"o\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/open-code-guix.scm\"))
+   \"p\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/pi-guix.scm\")))
   \"agents\")
 (bind-prefix-key! \"V\"
   (lambda () (wm-spawn \"~/Projects/System/scripts/voice-dictate.scm\"))
   \"voice dictation\")
-;; Brightness toggle: any nonzero level -> 0%, otherwise -> 60%. Same
-;; unquoted $() style as handle-startup!'s brightnessctl line.
+;; Eco toggle (replaces the plain brightness 0/60 toggle): backlight off,
+;; turbo off, Zen SIGSTOPped, bluetooth blocked -- Wi-Fi stays up so agent
+;; sessions keep running. Second press restores everything.
 (bind-prefix-key! \"h\"
-  (lambda ()
-    (wm-spawn
-     \"if [ $(brightnessctl get) -gt 0 ]; then brightnessctl set 0%; else brightnessctl set 60%; fi\"))
-  \"brightness 0/60\")
+  (lambda () (wm-spawn \"~/Projects/System/scripts/eco-toggle.scm\"))
+  \"eco mode on/off\")
 ;; swaylock with the personal background color. The base config binds
 ;; s l -> lock-screen! and s z -> suspend! ((minde session)); both
 ;; honor %lock-command, so no personal rebinding is needed anymore.
@@ -73,8 +73,9 @@
        (wm-spawn (string-append \"eww open bar --id bar-\" name
                                 \" --screen \" name))))
    (wm-outputs))
-  ;; Same temperatures/location as the X11 redshift service
-  ;; (services/redshift.scm); needs minde's wlr-gamma-control support.
+  ;; Same temperatures/location the old X11 redshift service used before it
+  ;; was removed as dead (Wayland-only session now); needs minde's
+  ;; wlr-gamma-control support.
   (wm-spawn \"gammastep -m wayland -l 35.81:-0.80 -t 3500:3000\")
   (wm-spawn \"[ $(brightnessctl get) -lt 100 ] && brightnessctl set 80% || true\")
   ;; KDE Connect has no Plasma session to D-Bus-activate its daemon, so start
