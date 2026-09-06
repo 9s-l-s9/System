@@ -9,6 +9,7 @@
 
 (operating-system
   (inherit base-system)
+  (keyboard-layout (keyboard-layout "de" "bone"))
   (host-name "X1")
 
   ;; Add minde system-wide so SDDM finds its wayland-session entry in

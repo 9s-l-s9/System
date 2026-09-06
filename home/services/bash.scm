@@ -15,8 +15,7 @@
                 . ,(string-join '("$HOME/.guix-home/profile/lib/guile/3.0/site-ccache"
                                  "$XDG_CONFIG_HOME/guix/current/lib/guile/3.0/site-ccache")
                                ":"))
-               ("GUIX_LOCPATH" . "$HOME_ENVIRONMENT/profile/lib/locales")
-               ("LD_LIBRARY_PATH" . "/usr/lib/cuda-11.2/lib64:$LD_LIBRARY_PATH")))
+               ("GUIX_LOCPATH" . "$HOME_ENVIRONMENT/profile/lib/locales")))
 
             (aliases
              '(("ls" . "ls -p --color=auto")
@@ -28,12 +27,12 @@
                ;; Short names for the launcher executables that
                ;; agent-launchers installs into ~/.local/bin.
                ("codex" . "codex-guix")
-               ("codex-full" . "codex-guix --full")
                ("claude" . "claude-guix")
-               ("claude-full" . "claude-guix --full")
+               ("claude-host" . "claude-guix --host")   ; no container: sudo, /sys, herd
+               ("deepseek" . "dsh-guix")
+               ("dsh" . "dsh-guix")
                ("drawio-render" . "~/.local/bin/drawio-render")
                ("drawio-export" . "~/.local/bin/drawio-render")
                ("opencode" . "opencode-guix")
                ("pi" . "pi-guix")
-               ("pi-full" . "pi-guix --full")
                ("alire-shell" . "guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME"))))))

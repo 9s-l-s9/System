@@ -1,70 +1,31 @@
 #!/usr/bin/env -S guile -s
 !#
 
-(use-modules (ice-9 format)
+(eval-when (expand load eval)
+  (add-to-load-path
+   (string-append (dirname (canonicalize-path (car (command-line)))) "/lib")))
+
+(use-modules (agent-launch)
+             (ice-9 format)
              (ice-9 popen)
              (srfi srfi-1)
              (srfi srfi-13))
 
-(define (env name default)
-  (or (getenv name) default))
-
-(define home
-  (or (getenv "HOME")
-      (begin
-        (format (current-error-port) "claude-guix: HOME is not set.~%")
-        (exit 1))))
+(define home (require-home "claude-guix"))
 
 (define default-manifest
   (string-append home "/Projects/System/home/manifests/claude.scm"))
 
-(define (mode-name mode)
-  (if (eq? mode 'full) "full" "sandbox"))
-
-(define (expand-user-path path)
-  (cond
-    ((string=? path "~") home)
-    ((string-prefix? "~/" path)
-     (string-append home (substring path 1)))
-    (else path)))
-
-(define (resolve-directory path)
-  (if (string-prefix? "/" path)
-      path
-      (string-append (getcwd) "/" path)))
-
 (define (usage)
-  (format #t "Usage: claude-guix [--full|--sandbox] [PROJECT-DIR] [-m MANIFEST-PATH]... [-- CLAUDE-ARGS...]~%")
+  (format #t "Usage: claude-guix [--full|--sandbox|--host] [PROJECT-DIR] [-m MANIFEST-PATH]... [-- CLAUDE-ARGS...]~%")
   (format #t "       claude-guix --resume SESSION-ID~%")
   (format #t "  Default mode: full. Pass --sandbox for a project-only Guix shell.~%")
+  (format #t "  --host runs Claude in a plain guix shell (no container): full host~%")
+  (format #t "     access incl. sudo, /sys, herd and guix generations.~%")
   (format #t "  PROJECT-DIR defaults to the current directory.~%")
   (format #t "  -m may be given multiple times; each manifest is layered~%")
   (format #t "     on top of the base manifest: ~a~%" default-manifest)
   (format #t "  Unknown options are passed to Claude. Use -- before Claude args when ambiguous.~%"))
-
-(define (maybe-mount flag source target)
-  (if (and source (file-exists? source))
-      (list (string-append flag "=" source "=" target))
-      '()))
-
-(define (maybe-preserve name)
-  (if (getenv name)
-      (list (string-append "--preserve=^" name "$"))
-      '()))
-
-(define (container-socket-mounts)
-  (append
-   (maybe-mount "--expose" "/var/run/docker.sock" "/var/run/docker.sock")
-   (let ((xdg-runtime (getenv "XDG_RUNTIME_DIR")))
-     (if xdg-runtime
-         (append
-          (maybe-mount "--expose"
-                       (string-append xdg-runtime "/docker.sock")
-                       (string-append xdg-runtime "/docker.sock"))
-          (maybe-mount "--expose"
-                       (string-append xdg-runtime "/podman/podman.sock")
-                       (string-append xdg-runtime "/podman/podman.sock")))
-         '()))))
 
 (define (parse-args args)
   ;; extra-manifests accumulates user -m paths (in order); the base manifest
@@ -84,23 +45,21 @@
        (loop (cdr rest) 'full project extra-manifests claude-args))
       ((string=? (car rest) "--sandbox")
        (loop (cdr rest) 'sandbox project extra-manifests claude-args))
+      ((string=? (car rest) "--host")
+       (loop (cdr rest) 'host project extra-manifests claude-args))
       ((and (string=? (car rest) "-m") (pair? (cdr rest)))
        (loop (cddr rest) mode project
-             (cons (resolve-directory (expand-user-path (cadr rest))) extra-manifests)
+             (cons (resolve-directory (expand-user-path home (cadr rest))) extra-manifests)
              claude-args))
       ((string-prefix? "-" (car rest))
        (values mode (or project (getcwd)) (reverse extra-manifests) rest))
       ((not project)
-       (loop (cdr rest) mode (resolve-directory (expand-user-path (car rest))) extra-manifests claude-args))
+       (loop (cdr rest) mode (resolve-directory (expand-user-path home (car rest))) extra-manifests claude-args))
       (else
        (values mode project (reverse extra-manifests) rest)))))
 
 (define (manifest-args manifests)
   (append-map (lambda (m) (list "-m" m)) manifests))
-
-(define (ensure-directory path)
-  (unless (file-exists? path)
-    (mkdir path)))
 
 (define (guix-args mode extra-manifests project-dir claude-args)
   (ensure-directory (string-append home "/.claude"))
@@ -112,14 +71,44 @@
               ;; Reuse the manifest's python instead of letting uv download a
               ;; standalone CPython on first use.
               "export UV_PYTHON_PREFERENCE=system; "
+              ;; Prefer the manifest's ripgrep over the vendored binary.
+              "export USE_BUILTIN_RIPGREP=0; "
               "export PNPM_HOME=\"$HOME/.local/share/pnpm\"; "
               "export PATH=\"$PNPM_HOME/bin:$PNPM_HOME:$PATH\"; "
               "cd "
               (format #f "~s" project-dir)
-              " && if [ ! -x \"$PNPM_HOME/bin/claude\" ]; then"
+              " && if [ ! -x \"$PNPM_HOME/claude\" ]; then"
               " pnpm add -g @anthropic-ai/claude-code@latest; fi"
-              " && exec \"$PNPM_HOME/bin/claude\" --dangerously-skip-permissions \"$@\"")))
+              ;; Register MCP servers (user scope -> ~/.claude.json, shared into
+              ;; the container so it persists). Re-register each launch so the
+              ;; baked --executable-path always tracks the current chromium store
+              ;; path (it changes when the manifest/channels update). HEADED
+              ;; (kein --headless): der Container erbt DISPLAY/WAYLAND_DISPLAY der
+              ;; startenden Session, ein echter headed Browser umgeht Anti-Bot-
+              ;; Erkennung, die HeadlessChrome hart blockt. Bei rein
+              ;; headless/SSH ohne Display hier wieder --headless ergaenzen.
+              ;; --user-data-dir = persistentes echtes Profil (Cookies/History).
+              ;; Config wird von pw-mcp-gen-config.scm erzeugt (loest chromium-Pfad
+              ;; auf, headed, und laedt die webgl-spoof-Extension via
+              ;; launchOptions.args). Die Extension ueberschreibt den SwiftShader-
+              ;; WebGL-Renderer, den Bot-Erkennung als Tell
+              ;; fingerprinten. Fuer reinen SSH/headless-Lauf PW_MCP_HEADLESS=1.
+              " && { \"$HOME/Projects/System/scripts/pw-mcp-gen-config.scm\";"
+              " \"$PNPM_HOME/claude\" mcp remove -s user playwright >/dev/null 2>&1;"
+              " \"$PNPM_HOME/claude\" mcp add -s user playwright --"
+              " npx -y @playwright/mcp@latest"
+              " --config \"$HOME/.cache/pw-mcp-config.json\" || true; }"
+              " && exec \"$PNPM_HOME/claude\" --dangerously-skip-permissions \"$@\"")))
     (append
+     (if (eq? mode 'host)
+         ;; Host mode: no container at all. The manifest only adds node/pnpm
+         ;; and the agent tools to PATH; everything else (sudo, /sys, herd,
+         ;; /var/guix/profiles, host processes) is the real system. Claude's
+         ;; native binary needs /lib64/ld-linux-x86-64.so.2, which
+         ;; systems/base-system.scm provides via extra-special-file (do not
+         ;; patchelf the binary: Bun executables carry their payload at fixed
+         ;; file offsets and segfault after patching).
+         '("shell")
      (append
       '("shell" "--container" "--emulate-fhs" "--nesting" "--network")
       (if (eq? mode 'sandbox)
@@ -131,12 +120,7 @@
       (if (eq? mode 'sandbox)
           (append
            ;; git config (read-only)
-           (maybe-mount "--expose"
-                        (string-append home "/.config/git/config")
-                        (string-append home "/.config/git/config"))
-           (maybe-mount "--expose"
-                        (string-append home "/.gitconfig")
-                        (string-append home "/.gitconfig"))
+           (git-config-mounts home)
            ;; claude credentials and state (read-write)
            (list (string-append "--share=" home "/.claude=" home "/.claude"))
            (maybe-mount "--share"
@@ -152,19 +136,16 @@
       (maybe-mount "--share"
                    (string-append "/run/media/" (env "USER" "samuel"))
                    (string-append "/run/media/" (env "USER" "samuel")))
+      ;; GPU device nodes: gives the container real hardware-accelerated WebGL
+      ;; instead of software SwiftShader. Software rendering is a strong anti-bot
+      ;; signal -- a real GPU makes the automated browser's
+      ;; canvas/GL behaviour match a normal desktop browser. Read-write (DRM
+      ;; render nodes need it); only mounted when the host actually has a GPU.
+      (maybe-mount "--share" "/dev/dri" "/dev/dri")
       ;; runtime / display
-      (let ((xdg-runtime (getenv "XDG_RUNTIME_DIR")))
-        (if (and xdg-runtime (file-exists? xdg-runtime))
-            (list (string-append "--expose=" xdg-runtime "=" xdg-runtime))
-            '()))
-      (maybe-preserve "DBUS_SESSION_BUS_ADDRESS")
-      (maybe-preserve "COLORTERM")
-      (maybe-preserve "CONTAINER_HOST")
-      (maybe-preserve "DISPLAY")
-      (maybe-preserve "DOCKER_HOST")
-      (maybe-preserve "WAYLAND_DISPLAY")
-      (maybe-preserve "XDG_RUNTIME_DIR")
-      (maybe-preserve "XAUTHORITY"))
+      (xdg-runtime-expose)
+      (guix-profiles-expose)
+      (preserve-common-env)))
      (manifest-args (cons default-manifest extra-manifests))
      (list "--" "bash" "-c" cmd "claude-guix")
      claude-args)))
@@ -192,12 +173,6 @@
       (unless (null? claude-args)
         (format #t "claude-guix: claude args: ~a~%" (string-join claude-args " ")))
 
-      (let ((status (apply system* "guix" (guix-args mode extra-manifests project-dir claude-args))))
-        (if (zero? status)
-            (exit 0)
-            (begin
-              (format (current-error-port)
-                      "claude-guix: guix shell exited with status ~a~%" status)
-              (exit 1)))))))
+      (run-guix "claude-guix" (guix-args mode extra-manifests project-dir claude-args)))))
 
 (main)

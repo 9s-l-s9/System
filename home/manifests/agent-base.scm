@@ -25,15 +25,29 @@
   "sed"
   "gawk"
   "git"
+  "curl"
   "podman"
-  "gh"
+  "github-cli"   ; provides the `gh` binary
   "openssh"
   "guix"
   "guile"
   "make"
   "findutils"
+  "d2"
+  ;; Wayland screenshots so an agent can capture the real screen for UI/debug
+  ;; work; the launchers expose WAYLAND_DISPLAY/XDG_RUNTIME_DIR into the
+  ;; container. slurp adds interactive region selection.
+  "grim"
+  "slurp"
   ;; Python tooling for agents:
   "uv"
   "python"
   "nss-certs"
-  "ruff")
+  "ruff"
+  ;; Node/pnpm runtime: every agent CLI (claude/codex/pi/deepseek-harness)
+  ;; needs at least node; pnpm was duplicated in three of the four.
+  "node@22"
+  "pnpm@9"
+  ;; File search, used generally and specifically by pi/deepseek-harness.
+  "ripgrep"
+  "fd")

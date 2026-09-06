@@ -12,6 +12,18 @@
 
 TICK=2        # seconds between updates
 NET_EVERY=5   # refresh network fields every NET_EVERY ticks
+BAT_EVERY=10  # refresh battery fields every BAT_EVERY ticks
+
+# --- battery sysfs dirs, located once. The T450s has TWO batteries
+# (internal BAT0 + removable Power Bridge BAT1); reading only one shows
+# energy left while the machine is about to die on the other, so every
+# pack of type Battery is collected and aggregated at refresh time.
+bat_dirs=""
+for ps in /sys/class/power_supply/*; do
+    [ -r "$ps/type" ] || continue
+    read -r pstype < "$ps/type"
+    [ "$pstype" = "Battery" ] && bat_dirs="$bat_dirs $ps"
+done
 
 # --- coretemp sysfs files, located once (hwmon numbering varies per boot) --
 temp0_file="" temp1_file=""
@@ -116,9 +128,40 @@ refresh_net() {
     fi
 }
 
+# Sets bat to one entry per pack, e.g. "BAT0 95%  BAT1 12%-" ("+" charging,
+# "-" discharging), or "--" with no battery. Packs are shown separately
+# rather than summed: the machine once shut down while a single blended
+# number still looked healthy, and only per-pack readings expose which
+# battery is actually empty. energy_* preferred over the capacity file,
+# with charge_* fallback.
+refresh_bat() {
+    bat=""
+    for d in $bat_dirs; do
+        if [ -r "$d/energy_now" ] && [ -r "$d/energy_full" ]; then
+            read -r n < "$d/energy_now"; read -r f < "$d/energy_full"
+        elif [ -r "$d/charge_now" ] && [ -r "$d/charge_full" ]; then
+            read -r n < "$d/charge_now"; read -r f < "$d/charge_full"
+        else
+            continue
+        fi
+        [ "$f" -gt 0 ] || continue
+        sign=""
+        if [ -r "$d/status" ]; then
+            read -r bstat < "$d/status"
+            case "$bstat" in
+                Charging)    sign="+" ;;
+                Discharging) sign="-" ;;
+            esac
+        fi
+        bat="$bat${bat:+  }${d##*/} $((n * 100 / f))%$sign"
+    done
+    [ -n "$bat" ] || bat="--"
+}
+
 tick=0
 while :; do
     printf -v now '%(%H.%M %a %b %d)T' -1
+    printf -v clock '%(%a %d %b  %H:%M)T' -1
     read -r up _ < /proc/uptime
     up=${up%.*}
     upstr="$((up / 3600)):$((up % 3600 / 60)):$((up % 60))"
@@ -127,9 +170,10 @@ while :; do
     read_temp "$temp0_file"; temp0=$TEMP
     read_temp "$temp1_file"; temp1=$TEMP
     [ $((tick % NET_EVERY)) -eq 0 ] && refresh_net
-    printf '{"time":"%s","up":"%s","cpu0":"%s","cpu1":"%s","cpu2":"%s","cpu3":"%s","mem":"%s","swap":"%s","temp0":"%s","temp1":"%s","net_stat":"%s","net_iface":"%s","net_ssid":"%s"}\n' \
-        "$now" "$upstr" "$cpu0" "$cpu1" "$cpu2" "$cpu3" "$mem" "$swap" \
-        "$temp0" "$temp1" "$net_stat" "$net_iface" "$net_ssid"
+    [ $((tick % BAT_EVERY)) -eq 0 ] && refresh_bat
+    printf '{"time":"%s","clock":"%s","up":"%s","cpu0":"%s","cpu1":"%s","cpu2":"%s","cpu3":"%s","mem":"%s","swap":"%s","temp0":"%s","temp1":"%s","net_stat":"%s","net_iface":"%s","net_ssid":"%s","bat":"%s"}\n' \
+        "$now" "$clock" "$upstr" "$cpu0" "$cpu1" "$cpu2" "$cpu3" "$mem" "$swap" \
+        "$temp0" "$temp1" "$net_stat" "$net_iface" "$net_ssid" "$bat"
     tick=$((tick + 1))
     sleep "$TICK"
 done

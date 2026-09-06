@@ -1,7 +1,9 @@
 ;;; eglot-conf.el --- LSP via built-in eglot -*- lexical-binding: t -*-
 ;;; Code:
 
-(require 'eglot)
+;; eglot is loaded lazily (autoloaded, or via `eglot-ensure' below); we
+;; avoid `(require 'eglot)' here so the daemon doesn't pay eglot's
+;; load cost at startup.
 
 ;; ── Performance ───────────────────────────────────────────────────────────────
 
@@ -21,8 +23,9 @@
 ;; Python: eglot already ships a default entry for pylsp; no override needed.
 
 ;; Scheme/Guile: not in eglot's defaults
-(add-to-list 'eglot-server-programs
-             '(scheme-mode . ("guile-lsp-server")))
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '(scheme-mode . ("guile-lsp-server"))))
 
 ;; ── Mode hooks ────────────────────────────────────────────────────────────────
 

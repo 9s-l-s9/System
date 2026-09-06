@@ -4,17 +4,17 @@
 ;; --nesting`.  Nesting exposes the build daemon socket
 ;; (/var/guix/daemon-socket/socket) and the store read-only, but it does NOT
 ;; reliably put the `guix` command itself on PATH ("could not add current Guix
-;; to the profile").  This manifest supplies the missing `guix` binary plus the
-;; tools the packaging workflow needs (TLS certs for downloads, git for
-;; git-fetch sources and channels).
+;; to the profile").  This manifest needs `guix` plus TLS certs for downloads
+;; and git for git-fetch sources and channels -- all of which agent-base.scm
+;; already provides, so this file is just that base with no extras.
 ;;
 ;; Usage:
 ;;   claude-guix -m .agents/skills/guix-packaging/manifest.scm
 
 (use-modules (guix profiles))
 
-(specifications->manifest
- '("guix"
-   "nss-certs"
-   "git"
-   "coreutils"))
+(define base-specs
+  (primitive-load
+   "/home/samuel/Projects/System/home/manifests/agent-base.scm"))
+
+(specifications->manifest base-specs)

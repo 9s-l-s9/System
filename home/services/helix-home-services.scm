@@ -118,7 +118,7 @@
    ((boolean? value) (if value "true" "false"))
    ((number? value) (number->string value))
    ((symbol? value) (symbol->string value))
-   ((and (list? value) (every pair? value))
+   ((and (pair? value) (every pair? value))
     (string-append
      "{ "
      (string-join
