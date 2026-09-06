@@ -1,0 +1,120 @@
+#+TITLE: Playwright-MCP gegen einen echten Browser (Anti-Bot / Ashby)
+#+STARTUP: showall
+
+# AKTIV GESETZT 2026-08-24: Der Fix gehört NICHT in ~/.claude.json — der Launcher
+# scripts/claude-guix.scm re-registriert den playwright-MCP bei JEDEM Start neu
+# (via `claude mcp add -s user playwright ...`) und überschreibt ~/.claude.json.
+# Deshalb dort korrigiert (Zeile ~126-131): `--headless` entfernt, dafür headed
+# `/bin/chromium` + `--user-data-dir ~/.cache/pw-mcp-profile --no-sandbox`.
+# Container hat ein echtes Wayland-Display (DISPLAY=:1, /run/user/1000/wayland-1),
+# also läuft headed. Wirkt nach Claude-Neustart. Zurück auf headless: in
+# claude-guix.scm `--headless` wieder ergänzen (z. B. für reinen SSH-Lauf).
+
+* Problem
+Der Playwright-MCP läuft aktuell headless mit dem gebündelten Chromium. Config in
+=~/.claude.json=:
+
+#+begin_src json
+"playwright": {
+  "type": "stdio",
+  "command": "npx",
+  "args": ["-y", "@playwright/mcp@latest", "--headless", "--executable-path", "/bin/chromium"],
+  "env": {}
+}
+#+end_src
+
+Anti-Bot-Dienste (z. B. Ashby, „Your application submission was flagged as
+possible spam") erkennen genau das. Diagnose vom 2026-08-24: IP ist die eigene
+deutsche Residential-IP (unkritisch), =navigator.webdriver=, User-Agent und
+Client-Hints ließen sich per CDP fälschen — Ashby blockte trotzdem. Übrig
+bleiben Signale, die nur ein *echter* Browser sauber hat: Headless-Rendering-
+Artefakte (WebGL/GPU), CDP-Steuerung und der TLS-Fingerprint (JA3/JA4). Die fixt
+man nicht per JavaScript, sondern nur, indem man einen echten, headed Browser
+fährt.
+
+Reihenfolge unten: von „am ehesten wirksam" zu „am einfachsten einzurichten".
+
+* Option A — an den laufenden Browser andocken (=--extension=)  [empfohlen für Ashby]
+Der MCP verbindet sich über die Playwright-MCP-Browser-Extension mit einer
+*bereits offenen* Chromium-Instanz. Damit läuft alles in deinem echten Profil
+(Cookies, History, echter Fingerprint, headed) — die stärkste Tarnung.
+
+#+begin_src json
+"playwright": {
+  "type": "stdio",
+  "command": "npx",
+  "args": ["-y", "@playwright/mcp@latest", "--extension"],
+  "env": {}
+}
+#+end_src
+
+Ablauf: Extension einmalig in Chromium installieren (Playwright-MCP-Doku), dann
+Chromium normal offen lassen; der MCP klinkt sich ein. *Caveat:* Der MCP läuft
+im =claude-guix=-Container — er muss den Host-Browser erreichen. Klappt nur, wenn
+der Container Host-Netzwerk/!localhost sieht (siehe „Container-Netzwerk" unten).
+
+* Option B — an ein Remote-Debugging-Chromium andocken (=--cdp-endpoint=)
+Eigene Chromium-Instanz mit offenem DevTools-Port starten, MCP verbindet sich.
+
+#+begin_src sh
+# Start (Helper: scripts/chromium-debug.scm):
+/bin/chromium --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.cache/chromium-mcp-profile"
+#+end_src
+
+#+begin_src json
+"playwright": {
+  "type": "stdio",
+  "command": "npx",
+  "args": ["-y", "@playwright/mcp@latest", "--cdp-endpoint", "http://localhost:9222"],
+  "env": {}
+}
+#+end_src
+
+Echtes, headed Chromium mit persistentem Profil. *Caveat:* wie A — Container muss
+=localhost:9222= des Hosts erreichen.
+
+* Option C — headed Chromium, vom MCP selbst gestartet  [einfachste, container-sicher]
+Kein Host-Netzwerk nötig: der MCP startet chromium selbst, nur *nicht* headless,
+mit persistentem Profil. Entfernt die Headless-Artefakte (echtes Fenster, echte
+GPU/WebGL). Ob es Ashbys tiefere Erkennung (CDP/TLS) schlägt, ist offen, aber es
+ist der sichere erste Versuch und nur eine Zeile Änderung.
+
+#+begin_src json
+"playwright": {
+  "type": "stdio",
+  "command": "npx",
+  "args": ["-y", "@playwright/mcp@latest",
+           "--executable-path", "/bin/chromium",
+           "--user-data-dir", "/home/samuel/.cache/pw-mcp-profile",
+           "--no-sandbox"],
+  "env": {}
+}
+#+end_src
+
+=--headless= ist entfernt (Playwright-MCP ist per Default headed). Braucht
+=DISPLAY=/=WAYLAND_DISPLAY= im Container — die reicht =claude-guix= bereits durch
+(=--preserve=DISPLAY=, =WAYLAND_DISPLAY=, =XDG_RUNTIME_DIR=). Das Fenster
+erscheint dann in deiner Wayland-Session (minde).
+
+* Container-Netzwerk (für A/B relevant)
+=claude-guix= startet einen =guix shell --container=. Für Option A/B muss der
+Container den Host-=localhost= erreichen. Prüfen/aktivieren:
+- Läuft Internet im Container? (ja — Web-Tools funktionieren). Dann ist ein
+  Netzwerkzugang vorhanden.
+- Für Host-=localhost=-Zugriff ggf. =--network= an =guix shell= ergänzen bzw. den
+  Browser an =0.0.0.0:9222= binden und die Host-IP statt =localhost= verwenden.
+- Wenn A/B zu fummelig ist: Option C nehmen (kein Host-Netzwerk nötig).
+
+* Empfehlung
+1. Erst Option C testen (1-Zeilen-Change, garantiert lauffähig) — sehen, ob
+   headed allein Ashby schon durchlässt.
+2. Wenn nicht: Option A (=--extension=) mit echtem Profil — höchste Chance.
+3. Nach dem Editieren von =~/.claude.json= die Claude-Session neu starten (MCP
+   wird beim Start gelesen).
+
+* Verifikation (im Chat)
+„Prüfe UA, navigator.webdriver und Sec-CH-UA" — der Agent kann per
+=api.ipify.org= / =httpbin.org/headers= und =navigator.userAgentData= sofort
+zeigen, ob der Browser jetzt als echt durchgeht, bevor eine echte Bewerbung
+abgeschickt wird.
