@@ -17,16 +17,26 @@
           (reverse lines)
           (loop (cons (string-trim-right line) lines))))))
 
-(define (git-script-files)
-  (let* ((port (open-pipe* OPEN_READ "git" "ls-files" "scripts"))
+(define (run-git . args)
+  (let* ((port (apply open-pipe* OPEN_READ "git" args))
          (lines (read-lines port))
          (status (close-pipe port)))
     (if (zero? status)
         lines
         (begin
           (format (current-error-port)
-                  "check-guile-only: failed to list tracked script files.~%")
+                  "check-guile-only: failed to run: git ~a~%"
+                  (string-join args " "))
           (exit 1)))))
+
+(define (git-script-files)
+  "Tracked script files."
+  (run-git "ls-files" "scripts"))
+
+(define (git-untracked-script-files)
+  "Untracked, non-ignored script files (so a stray .sh is caught before
+commit, not just after)."
+  (run-git "ls-files" "--others" "--exclude-standard" "scripts"))
 
 (define (allowed-script-file? path)
   (any (lambda (suffix) (string-suffix? suffix path))
@@ -35,7 +45,8 @@
 (define (main)
   (let ((violations (filter (lambda (path)
                               (not (allowed-script-file? path)))
-                            (git-script-files))))
+                            (append (git-script-files)
+                                    (git-untracked-script-files)))))
     (if (null? violations)
         (begin
           (format #t "Guile-only script policy check passed.~%")
