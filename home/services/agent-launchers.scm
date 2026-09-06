@@ -19,6 +19,9 @@
     ("claude-guix" . "claude-guix.scm")
     ("codex" . "codex-guix.scm")
     ("codex-guix" . "codex-guix.scm")
+    ("deepseek" . "dsh-guix.scm")
+    ("dsh" . "dsh-guix.scm")
+    ("dsh-guix" . "dsh-guix.scm")
     ("opencode" . "open-code-guix.scm")
     ("opencode-guix" . "open-code-guix.scm")))
 
