@@ -5,7 +5,9 @@
   #:use-module (base-home)
   #:use-module (services fish)
   #:use-module (services helix)
-  #:use-module (services lem))
+  #:use-module (services lem)
+  #:use-module (services agent-skills)
+  #:use-module (services agent-launchers))
 
 (home-environment
  (packages
@@ -15,4 +17,6 @@
   (append (base-services)
           (list (fish-service)
                 (helix-service)
-                (lem-service)))))
+                (lem-service)
+                (agent-skills-service))
+          (agent-launcher-services))))
