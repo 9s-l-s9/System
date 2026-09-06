@@ -8,7 +8,6 @@
   (service
    home-helix-service-type
    (home-helix-configuration
-    (package (specification->package "helix"))
     (config
      (list
       (helix-config #f
@@ -149,10 +148,4 @@
           (auto-pairs . (("(" . ")")
                          ("{" . "}")
                          ("[" . "]")
-                         ("\"" . "\""))))))))
-    (grammars
-     (list
-      (helix-grammar
-       (name "scheme")
-       (source '((git . "https://github.com/6cdh/tree-sitter-scheme")
-                 (rev . "63e25a4a84142ae7ee0ee01fe3a32c985ca16745")))))))))
+                         ("\"" . "\"")))))))))))

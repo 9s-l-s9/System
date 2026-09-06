@@ -1,28 +1,62 @@
 File Structure
 
 home/
-├── samuel-home-configuration.scm       # Full desktop config (StumpWM, X11)
+├── samuel-home-configuration.scm       # Full desktop config (minde Wayland session)
 ├── samuel-wsl2-home-configuration.scm  # WSL2 config (no WM, portable packages)
 ├── levi-home-configuration.scm         # Levi's config
+├── base-home.scm                       # Shared base services/config
+├── manifests/                          # guix-shell manifests for agent containers
+│   ├── agent-base.scm           # shared base (uv/python/nss-certs)
+│   ├── claude.scm
+│   ├── codex.scm
+│   ├── pi.scm
+│   └── deepseek-harness.scm
+├── lib/
+│   └── identity.scm            # user name / e-mail shared by services (git)
 ├── packages/
-│   └── base-packages.scm       # All package lists + all-packages() + wsl2-packages()
+│   ├── base-packages.scm       # All package lists + all-packages() + wsl2-packages()
+│   └── ...                     # One-off package definitions (fonts, lem, whisper, etc.)
 ├── services/                   # Service configurations in Guile Scheme
-│   ├── stumpwm.scm
-│   ├── fish.scm
-│   ├── helix.scm
+│   ├── minde.scm                # Wayland session (primary desktop)
+│   ├── stumpwm.scm              # X11 session, kept only as a rollback
+│   ├── emacs.scm
 │   ├── git.scm
-│   └── redshift.scm
+│   ├── agent-launchers.scm
+│   ├── agent-skills.scm
+│   ├── helix.scm / helix-home-services.scm
+│   ├── lem.scm
+│   ├── redshift.scm
+│   ├── fish.scm
+│   └── bash.scm
 └── files/                      # Dotfiles (shared by all configs)
     └── .config/emacs/          # Emacs config — works on both desktop and WSL2
 
 
 == Daily Use ==
 
-Desktop (StumpWM + full packages):
+Desktop (minde Wayland session + full packages):
   guix home reconfigure home/samuel-home-configuration.scm
 
 WSL2 Ubuntu (portable packages, no WM):
   guix home reconfigure home/samuel-wsl2-home-configuration.scm
+
+Validate before reconfiguring:
+  make qa-all
+
+
+== Desktop Session ==
+
+The desktop session is minde (~/Projects/minde), a Wayland window manager
+configured via home/services/minde.scm. Personal keybindings, autostart
+(wallpaper, eww bar, gammastep, KDE Connect) and terminal selection live
+there, layered over minde's own defaults.
+
+StumpWM (home/services/stumpwm.scm) is kept only as an X11 rollback for when
+the Wayland session is unusable; it is not the daily driver.
+
+Terminal: foot (Wayland-native) is primary; konsole is the fallback under
+both sessions (X11-only commands in stumpwm.scm use konsole directly, since
+foot does not run under X11).
 
 
 == Emacs Daemon ==
@@ -65,10 +99,11 @@ Restart it after config changes with:
    - Windows 10: install VcXsrv, then set DISPLAY=:0.0 before running emacs
 
 Notes:
-  - StumpWM is NOT included — WSL2 has no bare X session to manage.
+  - No WM is included — WSL2 has no bare X session to manage.
     Use Windows Terminal as your terminal.
   - All Emacs packages are installed by Guix, identical to the desktop setup.
     No MELPA or package.el bootstrapping needed.
+
 draw.io exports
 ---------------
 

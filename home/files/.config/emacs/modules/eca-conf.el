@@ -12,23 +12,21 @@
 ;;     Set `eca-custom-command' to your `java -jar /path/to/eca.jar server'
 ;;     invocation once you have the jar (release asset from the eca repo).
 ;;
-;; This module is GUARDED: if `eca' isn't installed yet it does nothing, so it
-;; can sit in init.el while you finish pinning the Guix package.
+;; `eca' is autoloaded, so this module never needs to load the package
+;; eagerly; the settings below only apply once `eca' is actually invoked
+;; (via the meow leader, SPC e, set in keybindings-conf.el).
 ;;; Code:
 
-(when (require 'eca nil t)
-
-  ;; ── Server command ──────────────────────────────────────────────────────────
+(with-eval-after-load 'eca
+  ;; ── Server command ────────────────────────────────────────────────────────
   ;; Uncomment + adapt once you have a server jar.  Leaving this unset lets
   ;; eca-emacs fall back to its own auto-download behaviour.
   ;;
   ;; (setq eca-custom-command
   ;;       '("java" "-jar" "~/.local/share/eca/eca.jar" "server"))
 
-  ;; Start/focus a session via the meow leader (SPC e), set in keybindings-conf.
-  (with-eval-after-load 'eca
-    (when (boundp 'eca-mode-map)
-      (define-key eca-mode-map (kbd "C-c C-k") #'eca-stop))))
+  (when (boundp 'eca-mode-map)
+    (define-key eca-mode-map (kbd "C-c C-k") #'eca-stop)))
 
 (provide 'eca-conf)
 ;;; eca-conf.el ends here

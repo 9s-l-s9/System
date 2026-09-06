@@ -14,6 +14,7 @@
   #:use-module (gnu services sound)
   #:use-module (gnu services linux)
   #:use-module (gnu services mcron)
+  #:use-module (gnu services cups)
   #:use-module (gnu packages wm)
   #:use-module (gnu packages cups)
   #:use-module (gnu packages display-managers)
@@ -28,6 +29,7 @@
   #:use-module (gnu packages gnome)
   #:use-module (gnu packages mtools)
   #:use-module (gnu packages linux)
+  #:use-module (gnu packages base)
   #:use-module (gnu packages terminals)
   #:use-module (gnu packages audio)
   #:use-module (gnu packages lisp)
@@ -39,12 +41,6 @@
   #:use-module (nongnu system linux-initrd)
 
   #:export (base-system))
-(use-service-modules desktop xorg)
-(use-service-modules desktop)
-(use-package-modules certs)
-(use-package-modules shells)
-(use-service-modules desktop networking ssh xorg cups)
-
 
 ;; Shared Xorg configuration (Wacom tablet support), used by the display
 ;; manager so the greeter's X server matches the session's.
@@ -111,13 +107,6 @@
     (firmware (list linux-firmware))
     (initrd microcode-initrd)
 
-    ;; Suspend/resume reliability on the T450s (Broadwell + i915).
-    ;; mem_sleep_default=deep forces real S3 suspend (not the lighter s2idle
-    ;; that leaves the machine warm), and i915.enable_psr=0 disables panel
-    ;; self-refresh, which is the usual cause of the display wedging on resume.
-    (kernel-arguments (append '("mem_sleep_default=deep" "i915.enable_psr=0")
-                              %default-kernel-arguments))
-
     ;; Special german keyboard layout
     ;; No longer really needed because of external corne keyboard
     ;;(keyboard-layout (keyboard-layout "de" "bone"))
@@ -129,13 +118,12 @@
               (targets '("/boot/efi"))
 	      ))
 
-    (file-systems (cons*
-                   (file-system
-                     (mount-point "/tmp")
-                     (device "none")
-                     (type "tmpfs")
-                     (check? #f))
-                   %base-file-systems))
+    ;; Left empty deliberately: T450s.scm and X1.scm each build their own
+    ;; file-systems from %base-file-systems, so anything defined here would
+    ;; be dead. (An earlier tmpfs /tmp block here was never actually
+    ;; mounted on either host; on an 8 GB machine running guix builds,
+    ;; tmpfs /tmp would also be an OOM risk.)
+    (file-systems '())
 
     (users (cons (user-account
                   (name "samuel")
@@ -150,7 +138,7 @@
                                           "input"
                                           "cgroup"   ;; rootless podman: cgroup-v2 delegation
                                           "realtime"  ;; Enable realtime scheduling
-                                          "lp"        ;; control bluetooth devices
+                                          "lp"        ;; control printing devices
                                           "audio"     ;; control audio devices
                                           "video")))  ;; control video devices
 
@@ -189,6 +177,13 @@
        ;; swaylock is Minde's ext-session-lock-v1 locker:
        ;; /etc/pam.d/swaylock so password verification works. No setuid --
        ;; swaylock is designed to run unprivileged through PAM.
+       ;; FHS loader path for foreign prebuilt binaries (Claude Code's native
+       ;; Bun executable, uv-downloaded CPython, ...). Lets claude-guix --host
+       ;; run them in a plain `guix shell` with no FHS container, i.e. with
+       ;; sudo, /sys, herd and the real system. Guix's ld.so knows its own
+       ;; glibc lib dir, so libc/libm/libpthread resolve without LD_LIBRARY_PATH.
+       (extra-special-file "/lib64/ld-linux-x86-64.so.2"
+                           (file-append glibc "/lib/ld-linux-x86-64.so.2"))
        (service screen-locker-service-type
                 (screen-locker-configuration
                  (name "swaylock")
@@ -235,9 +230,9 @@
        (service tlp-service-type
                 (tlp-configuration
                  (cpu-scaling-governor-on-ac (list "performance"))
-                 ;; intel_pstate "powersave" is the kernel default this
-                 ;; machine already runs: dynamic scaling, instant ramp-up.
-                 (cpu-scaling-governor-on-bat (list "powersave"))
+                 ;; Performance over battery life is a hard preference here,
+                 ;; so battery gets the same governor as AC.
+                 (cpu-scaling-governor-on-bat (list "performance"))
                  (cpu-boost-on-ac? #t)
                  (cpu-boost-on-bat? #t)
                  (sched-powersave-on-bat? #f)   ;; default #t parks cores on battery
