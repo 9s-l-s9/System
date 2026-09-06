@@ -51,10 +51,7 @@
       imenu-list-auto-resize            nil)
 
 ;; ── winner-mode (undo/redo window layouts) ────────────────────────────────────
-
-;; winner-mode is enabled in general-settings.el; bind its commands here.
-(global-set-key (kbd "C-c <left>")  #'winner-undo)
-(global-set-key (kbd "C-c <right>") #'winner-redo)
+;; winner-mode is enabled here; its keybindings live in keybindings-conf.el.
 
 (provide 'window-conf)
 ;;; window-conf.el ends here

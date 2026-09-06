@@ -103,5 +103,38 @@
   (meow-global-mode 1))
 (require 'meow)
 
+;; ── dap-mode: debugging (C-c d prefix) ──────────────────────────────────────
+(global-set-key (kbd "C-c d d") #'dap-debug)
+(global-set-key (kbd "C-c d b") #'dap-breakpoint-toggle)
+(global-set-key (kbd "C-c d B") #'dap-breakpoint-condition)
+(global-set-key (kbd "C-c d c") #'dap-continue)
+(global-set-key (kbd "C-c d n") #'dap-next)
+(global-set-key (kbd "C-c d i") #'dap-step-in)
+(global-set-key (kbd "C-c d o") #'dap-step-out)
+(global-set-key (kbd "C-c d r") #'dap-restart-frame)
+(global-set-key (kbd "C-c d q") #'dap-disconnect)
+(global-set-key (kbd "C-c d l") #'dap-ui-locals)
+(global-set-key (kbd "C-c d s") #'dap-ui-sessions)
+(global-set-key (kbd "C-c d e") #'dap-eval-thing-at-point)
+
+;; ── gptel: chat / rewrite ───────────────────────────────────────────────────
+;; Open/menu are on the meow leader (SPC a / SPC A); `C-c a' / `C-c A' are
+;; intentionally not bound here to avoid duplicating those.
+(global-set-key (kbd "C-c RET") #'gptel-send)
+(global-set-key (kbd "C-c C-a") #'gptel-add)
+(global-set-key (kbd "C-c C-r") #'gptel-rewrite)
+
+;; ── helpful: better describe-* commands ──────────────────────────────────────
+(global-set-key [remap describe-command] #'helpful-command)
+(global-set-key [remap describe-function] #'helpful-callable)
+(global-set-key [remap describe-key] #'helpful-key)
+(global-set-key [remap describe-symbol] #'helpful-symbol)
+(global-set-key [remap describe-variable] #'helpful-variable)
+(global-set-key (kbd "C-h F") #'helpful-function)
+
+;; ── window-conf: winner-mode (undo/redo window layouts) ─────────────────────
+(global-set-key (kbd "C-c <left>")  #'winner-undo)
+(global-set-key (kbd "C-c <right>") #'winner-redo)
+
 (provide 'keybindings-conf)
 ;;; keybindings-conf.el ends here

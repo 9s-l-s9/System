@@ -16,7 +16,6 @@
 (defun sls-reload-init-file ()
   "Reload init.el without restarting Emacs."
   (interactive)
-  (server-force-delete)
   (load-file user-init-file))
 
 (defun sls--find-file-make-parent-maybe (filename &optional _wildcards)

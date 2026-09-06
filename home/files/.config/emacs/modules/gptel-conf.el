@@ -1,37 +1,38 @@
 ;;; gptel-conf.el --- AI assistant via gptel -*- lexical-binding: t -*-
 ;;; Code:
 
-(require 'gptel)
+;; gptel is used through its autoloaded entry points (gptel, gptel-send, …);
+;; defer the heavy body until the package is actually loaded.
+(with-eval-after-load 'gptel
 
-;; ── Backends ──────────────────────────────────────────────────────────────────
+  ;; ── Backends ────────────────────────────────────────────────────────────────
 
-;; Claude (Anthropic) — primary backend, key read from environment
-(defvar sls-gptel-claude-backend
-  (gptel-make-anthropic "Claude"
+  ;; Claude (Anthropic) — primary backend, key read from environment
+  (defvar sls-gptel-claude-backend
+    (gptel-make-anthropic "Claude"
+      :stream t
+      :key (lambda () (or (getenv "ANTHROPIC_API_KEY")
+                          (auth-source-pick-first-password :host "api.anthropic.com")))))
+
+  ;; Ollama — local fallback (no key needed)
+  (gptel-make-ollama "Ollama"
+    :host "localhost:11434"
     :stream t
-    :key (lambda () (or (getenv "ANTHROPIC_API_KEY")
-                        (auth-source-pick-first-password :host "api.anthropic.com")))))
+    :models '(llama3.2:latest deepseek-r1:latest))
 
-;; Ollama — local fallback (no key needed)
-(gptel-make-ollama "Ollama"
-  :host "localhost:11434"
-  :stream t
-  :models '(llama3.2:latest deepseek-r1:latest))
+  ;; Default: Claude Sonnet
+  (setq gptel-model   'claude-sonnet-4-6
+        gptel-backend sls-gptel-claude-backend)
 
-;; Default: Claude Sonnet
-(setq gptel-model   'claude-sonnet-4-5
-      gptel-backend sls-gptel-claude-backend)
+  ;; ── Behaviour ───────────────────────────────────────────────────────────────
 
-;; ── Behaviour ─────────────────────────────────────────────────────────────────
+  (setq gptel-default-mode        'org-mode
+        gptel-expert-commands      t
+        gptel-log-level            nil)
 
-(setq gptel-default-mode        'org-mode
-      gptel-expert-commands      t
-      gptel-log-level            nil)
-
-;; ── Agentic Tools ─────────────────────────────────────────────────────────────
-;; Only register tools when the API is available (gptel ≥ 0.9)
-
-(with-eval-after-load 'gptel-transient
+  ;; ── Agentic Tools ───────────────────────────────────────────────────────────
+  ;; `gptel-make-tool' lives in gptel.el itself, so registering here (rather
+  ;; than waiting on gptel-transient) works as soon as gptel loads.
   (when (fboundp 'gptel-make-tool)
 
     ;; Shell execution tool
@@ -93,17 +94,6 @@
      :args        '((:name "path" :type string
                      :description "Directory path to list"))
      :category    "filesystem")))
-
-;; ── UI / Keybindings ──────────────────────────────────────────────────────────
-
-;; Open / send are bound globally; menu gives access to backends and directives
-(global-set-key (kbd "C-c a")   #'gptel)
-(global-set-key (kbd "C-c A")   #'gptel-menu)
-(global-set-key (kbd "C-c RET") #'gptel-send)
-(global-set-key (kbd "C-c C-a") #'gptel-add)
-
-;; Rewrite / refactor: mark region, then C-c r
-(global-set-key (kbd "C-c C-r") #'gptel-rewrite)
 
 (provide 'gptel-conf)
 ;;; gptel-conf.el ends here
