@@ -20,7 +20,7 @@
 ;; ── Configuration ──────────────────────────────────────────────────────────
 (define api-key (getenv "ANTHROPIC_API_KEY"))
 
-(define model (or (getenv "ASK_AI_MODEL") "claude-sonnet-4-5"))
+(define model (or (getenv "ASK_AI_MODEL") "claude-sonnet-4-6"))
 
 (define max-tokens
   (or (and=> (getenv "ASK_AI_MAX_TOKENS") string->number) 1024))

@@ -109,7 +109,9 @@ Current examples:
 
 - `fish.scm` for shell aliases and environment variables
 - `git.scm` for Git identity and defaults
-- `stumpwm.scm` for desktop/window manager behavior
+- `minde.scm` for the Wayland desktop/window manager behavior
+- `stumpwm.scm` for the StumpWM (X11) rollback desktop, kept but not part of
+  the default session
 - `redshift.scm`, `lem.scm`, `bash.scm`
 
 These modules are the behavior layer.
@@ -136,21 +138,32 @@ The Helix service is now the owner of the generated Helix configuration for Samu
 
 ## Desktop and Workflow Integration
 
-The desktop experience is centered around StumpWM and custom scripts.
+The desktop experience is centered around minde, a Wayland compositor/session
+built from `minde-package.scm`, with StumpWM kept as an X11 rollback and
+custom scripts filling in the rest. The terminal is `foot` on Wayland, with
+`konsole` as the fallback.
 
-`home/services/stumpwm.scm` binds commands to scripts in `scripts/`, including:
+`home/services/minde.scm` (and, on the rollback path, `home/services/stumpwm.scm`)
+binds commands to scripts in `scripts/`, including:
 
 - `terminal-dashboard.scm`
-- `dashboard.scm`
 - `add-todo.scm`
+
+Agent-launcher scripts (`claude-guix.scm` and siblings) share their
+`guix shell --container` setup through `scripts/lib/agent-launch.scm`, so the
+per-agent entry points stay thin wrappers over one launcher module.
 
 This creates a practical workflow architecture:
 
 - Guix defines the environment.
-- StumpWM is the launcher/control plane.
+- minde (or StumpWM, on the rollback path) is the launcher/control plane.
 - Scripts implement task-specific workflows.
 
 The scripts are not isolated utilities; they are part of the interactive UX of the system.
+
+See also `docs/` for standalone notes (package/theme investigations, hardware
+quirks, and this repo's improvement audits) that don't belong in this
+architecture overview.
 
 ## Shared Library
 

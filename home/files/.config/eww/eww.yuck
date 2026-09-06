@@ -4,7 +4,7 @@
 ;; a single process alive) instead of per-second defpolls, which forked
 ;; ~15 processes a second -- see scripts/sysinfo-daemon for the numbers.
 (deflisten stats
-	:initial "{\"time\":\"--\",\"up\":\"--\",\"cpu0\":\"\",\"cpu1\":\"\",\"cpu2\":\"\",\"cpu3\":\"\",\"mem\":\"\",\"swap\":\"\",\"temp0\":\"--\",\"temp1\":\"--\",\"net_stat\":\"--\",\"net_iface\":\"--\",\"net_ssid\":\"--\"}"
+	:initial "{\"time\":\"--\",\"clock\":\"--\",\"up\":\"--\",\"cpu0\":\"\",\"cpu1\":\"\",\"cpu2\":\"\",\"cpu3\":\"\",\"mem\":\"\",\"swap\":\"\",\"temp0\":\"--\",\"temp1\":\"--\",\"net_stat\":\"--\",\"net_iface\":\"--\",\"net_ssid\":\"--\",\"bat\":\"--\"}"
 	"scripts/sysinfo-daemon")
 
 (defpoll kernel-release-poll :interval "5m" "uname -r")
@@ -227,7 +227,6 @@
 	:initial "…"
 	"tail -F $XDG_RUNTIME_DIR/minde-status 2>/dev/null")
 
-(defpoll bar-clock :interval "10s" "date '+%a %d %b  %H:%M'")
 
 (defwindow bar
 	:monitor 0
@@ -242,6 +241,8 @@
 	(centerbox
 		(box :halign "start" :class "minde-status" minde-status)
 		(box)
-		(box :halign "end" :class "bar-clock" bar-clock)
+		(box :halign "end" :space-evenly false :spacing 12
+			(label :class "bar-bat" :text {stats.bat})
+			(label :class "bar-clock" :text {stats.clock}))
 	)
 )

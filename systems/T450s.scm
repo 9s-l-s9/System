@@ -16,6 +16,14 @@
   (keyboard-layout (keyboard-layout "de" "bone"))
   (host-name "T450s")
 
+  ;; Suspend/resume reliability on the T450s (Broadwell + i915).
+  ;; mem_sleep_default=deep forces real S3 suspend (not the lighter s2idle
+  ;; that leaves the machine warm), and i915.enable_psr=0 disables panel
+  ;; self-refresh, which is the usual cause of the display wedging on resume.
+  ;; T450s-specific: leave X1 on the default kernel arguments.
+  (kernel-arguments (append '("mem_sleep_default=deep" "i915.enable_psr=0")
+                            %default-kernel-arguments))
+
   ;; Add minde system-wide so SDDM finds its wayland-session entry in
   ;; /run/current-system/profile/share/wayland-sessions.
   (packages (cons minde (operating-system-packages base-system)))

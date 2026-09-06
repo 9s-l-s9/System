@@ -1,12 +1,18 @@
 #!/usr/bin/env guile
 !#
-;;; voice-dictate.scm --- System-wide push-to-talk dictation for StumpWM
+;;; voice-dictate.scm --- System-wide push-to-talk dictation
 ;;;
 ;;; Toggle: first invocation records the mic with ffmpeg; second invocation
 ;;; stops, transcribes locally with whisper.cpp, and types the result into the
-;;; focused window (clipboard fallback via xsel).  Fully local — no API key.
+;;; focused window.  Fully local — no API key.
 ;;;
-;;; Bound in home/services/stumpwm.scm as `voice-dictate' (Print w).
+;;; Works under both sessions: on Wayland (WAYLAND_DISPLAY set, the minde
+;;; session) notifications go through notify-send/mako, clipboard through
+;;; wl-copy, and typing through wtype; on X11 (StumpWM) it uses the original
+;;; dunstify/xsel/xdotool path.
+;;;
+;;; Bound in home/services/stumpwm.scm as `voice-dictate' (Print w) and in
+;;; minde as prefix V.
 
 (use-modules (ice-9 popen)
              (ice-9 rdelim)
@@ -28,11 +34,16 @@
 ;; Mic source from `pactl list sources short' (T450s built-in analog input).
 (define mic-source "alsa_input.pci-0000_00_1b.0.analog-stereo")
 
+;; ── Session detection ──────────────────────────────────────────────────────
+(define wayland? (and (getenv "WAYLAND_DISPLAY") #t))
+
 ;; ── Helpers ────────────────────────────────────────────────────────────────
 (define (notify summary . body)
   "Transient desktop notification (replaces id 9001), best-effort."
   (false-if-exception
-   (apply system* "dunstify" "-r" "9001" "-t" "4000" summary body)))
+   (if wayland?
+       (apply system* "notify-send" "-r" "9001" "-t" "4000" summary body)
+       (apply system* "dunstify" "-r" "9001" "-t" "4000" summary body))))
 
 (define (process-alive? pid)
   "True if PID exists (signal 0 probe)."
@@ -93,10 +104,16 @@
 
 (define (deliver text)
   "Put TEXT on the clipboard, then type it into the focused window."
-  (let ((p (open-pipe* OPEN_WRITE "xsel" "--clipboard" "--input")))
-    (display text p)
-    (close-pipe p))
-  (system* "xdotool" "type" "--clearmodifiers" "--" text)
+  (if wayland?
+      (let ((p (open-pipe* OPEN_WRITE "wl-copy")))
+        (display text p)
+        (close-pipe p))
+      (let ((p (open-pipe* OPEN_WRITE "xsel" "--clipboard" "--input")))
+        (display text p)
+        (close-pipe p)))
+  (if wayland?
+      (system* "wtype" "--" text)
+      (system* "xdotool" "type" "--clearmodifiers" "--" text))
   (notify "✅ Eingefügt" text))
 
 (define (stop-and-transcribe pid)

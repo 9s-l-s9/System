@@ -27,8 +27,9 @@
   (setq whisper-install-whispercpp nil)
 
   (setq whisper--ffmpeg-input-format "pulse"
-        ;; Mic source from `pactl list sources short' (T450s built-in analog in).
-        whisper--ffmpeg-input-device "alsa_input.pci-0000_00_1b.0.analog-stereo"
+        ;; Use PulseAudio's default source instead of hardcoding a specific
+        ;; device name, so this keeps working across different machines/mics.
+        whisper--ffmpeg-input-device "default"
         whisper-language "auto"          ; multilingual auto-detect
         whisper-translate nil            ; transcribe verbatim, don't translate
         whisper-use-threads 4)
