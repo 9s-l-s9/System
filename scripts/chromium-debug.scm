@@ -3,7 +3,7 @@
 
 ;; Startet Chromium mit offenem DevTools-Port + persistentem Profil, damit sich
 ;; der Playwright-MCP (--cdp-endpoint http://localhost:9222) andocken kann.
-;; Siehe scripts/playwright-real-browser.org (Option B).
+;; Alternative zum headed Start durch den MCP selbst (pw-mcp-gen-config.scm).
 
 (use-modules (ice-9 format)
              (srfi srfi-1))
