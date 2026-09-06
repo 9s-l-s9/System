@@ -40,19 +40,19 @@
             #~"(add-group (current-screen) \" III \")"
             #~"(defcommand terminal-dashboard () ()"
             #~"(run-shell-command \"~/Projects/System/scripts/terminal-dashboard.scm\" t))"
-            #~"(defcommand dashboard () ()"
-            #~"(run-shell-command \"~/Projects/System/scripts/dashboard.scm\" t))"
             #~"(defcommand add-todo (todo-text) ((:string \"Enter TODO: \"))"
             #~"(run-shell-command (concatenate 'string \"~/Projects/System/scripts/add-todo.scm \\\"\" todo-text \"\\\" ~/Projects/WorkingMemory/wm.org\"))"
             #~"(format t \"Added TODO: ~A~%\" todo-text))"
             #~"(defcommand codex-agent () ()"
-            #~"(run-shell-command \"alacritty -e ~/Projects/System/scripts/codex-guix.scm\"))"
+            #~"(run-shell-command \"konsole -e ~/Projects/System/scripts/codex-guix.scm\"))"
             #~"(defcommand claude-agent () ()"
-            #~"(run-shell-command \"alacritty -e ~/Projects/System/scripts/claude-guix.scm\"))"
+            #~"(run-shell-command \"konsole -e ~/Projects/System/scripts/claude-guix.scm\"))"
+            #~"(defcommand deepseek-agent () ()"
+            #~"(run-shell-command \"konsole -e ~/Projects/System/scripts/dsh-guix.scm\"))"
             #~"(defcommand opencode-agent () ()"
-            #~"(run-shell-command \"alacritty -e ~/Projects/System/scripts/open-code-guix.scm\"))"
+            #~"(run-shell-command \"konsole -e ~/Projects/System/scripts/open-code-guix.scm\"))"
             #~"(defcommand pi-agent () ()"
-            #~"(run-shell-command \"alacritty -e ~/Projects/System/scripts/pi-guix.scm\"))"
+            #~"(run-shell-command \"konsole -e ~/Projects/System/scripts/pi-guix.scm\"))"
             #~"(defcommand voice-dictate () ()"
             #~"(run-shell-command \"~/Projects/System/scripts/voice-dictate.scm\"))"
             #~"(defcommand zen () ()"
@@ -186,7 +186,7 @@
              (bindings
               (list
                ;; Applications
-               (stumpwm-keybinding (key "Return") (command "exec alacritty"))
+               (stumpwm-keybinding (key "Return") (command "exec konsole"))
                (stumpwm-keybinding (key "a") (command "ask-ai"))
                (stumpwm-keybinding (key "b") (command "exec nyxt"))
                (stumpwm-keybinding (key "e") (command "exec lem -i sdl2"))
@@ -217,7 +217,6 @@
                (stumpwm-keybinding (key "Q") (command "shutdown"))
                
                ;; Custom commands
-               (stumpwm-keybinding (key "D") (command "dashboard"))
                (stumpwm-keybinding (key "t") (command "terminal-dashboard"))
                (stumpwm-keybinding (key "T") (command "add-todo"))
                (stumpwm-keybinding (key "w") (command "voice-dictate"))
@@ -241,6 +240,7 @@
               (list
                (stumpwm-keybinding (key "c") (command "codex-agent"))
                (stumpwm-keybinding (key "d") (command "claude-agent"))
+               (stumpwm-keybinding (key "h") (command "deepseek-agent"))
                (stumpwm-keybinding (key "o") (command "opencode-agent"))
                (stumpwm-keybinding (key "p") (command "pi-agent")))))
             
