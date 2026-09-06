@@ -12,6 +12,7 @@
 
 ;; ── UI ────────────────────────────────────────────────────────────────────────
 (require 'general-ui-conf)
+(require 'modus-buffer-theme-conf)
 (require 'modeline-conf)
 
 (use-package highlight-indent-guides
