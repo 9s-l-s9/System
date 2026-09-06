@@ -1,14 +1,10 @@
 (define-module (manifests pi)
   #:use-module (gnu packages))
 
-;; Shared base (bash/git/guix/uv/python/... — see agent-base.scm).
+;; Shared base (bash/git/guix/d2/uv/python/... — see agent-base.scm).
 (define base-specs
   (primitive-load
    "/home/samuel/Projects/System/home/manifests/agent-base.scm"))
 
-(specifications->manifest
- (append base-specs
-         '("node"
-           "pnpm"
-           "ripgrep"   ; pi uses rg for file search (else downloads a binary)
-           "fd")))     ; pi uses fd for file listing
+;; node/pnpm/ripgrep/fd all come from agent-base.scm now.
+(specifications->manifest base-specs)
