@@ -1,5 +1,6 @@
 (define-module (services lem)
-  #:use-module (gnu)
+  #:use-module (gnu services)
+  #:use-module (guix gexp)
   #:use-module (lem-home-service)
   #:use-module (gnu packages text-editors)
   #:export (lem-service))
