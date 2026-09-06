@@ -30,8 +30,7 @@ end
                 . "$XDG_CONFIG_HOME/guix/current/share/guile/site/3.0:$HOME/.guix-home/profile/share/guile/site/3.0")
                ("GUILE_LOAD_COMPILED_PATH"
                 . "$HOME/.guix-home/profile/lib/guile/3.0/site-ccache:$XDG_CONFIG_HOME/guix/current/lib/guile/3.0/site-ccache")
-               ("GUIX_LOCPATH" . "$HOME_ENVIRONMENT/profile/lib/locales")
-               ("LD_LIBRARY_PATH" . "/usr/lib/cuda-11.2/lib64:$LD_LIBRARY_PATH")))
+               ("GUIX_LOCPATH" . "$HOME_ENVIRONMENT/profile/lib/locales")))
             (aliases
              '(("ls" . "ls -p --color=auto")
                ("ll" . "ls -l")
@@ -39,14 +38,16 @@ end
                ("gh" . "guix home reconfigure ~/Projects/System/home/samuel-home-configuration.scm")
                ("gs" . "sudo guix system reconfigure ~/Projects/System/systems/$(hostname).scm")
                ("reload-emacs" . "herd restart emacs-daemon")
-               ("codex" . "~/Projects/System/scripts/codex-guix.scm")
-               ("codex-full" . "~/Projects/System/scripts/codex-guix.scm --full")
-               ("claude" . "~/Projects/System/scripts/claude-guix.scm")
-               ("claude-full" . "~/Projects/System/scripts/claude-guix.scm --full")
+               ;; Short names for the launcher executables that
+               ;; agent-launchers installs into ~/.local/bin.
+               ("codex" . "codex-guix")
+               ("claude" . "claude-guix")
+               ("claude-host" . "claude-guix --host")   ; no container: sudo, /sys, herd
+               ("deepseek" . "dsh-guix")
+               ("dsh" . "dsh-guix")
                ("drawio-render" . "~/.local/bin/drawio-render")
                ("drawio-export" . "~/.local/bin/drawio-render")
-               ("opencode" . "~/Projects/System/scripts/open-code-guix.scm")
-               ("pi" . "~/Projects/System/scripts/pi-guix.scm")
-               ("pi-full" . "~/Projects/System/scripts/pi-guix.scm --full")
+               ("opencode" . "opencode-guix")
+               ("pi" . "pi-guix")
                ("alire-shell" . "guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME")))
             (config (list %konsole-random-scheme)))))
