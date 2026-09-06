@@ -2,6 +2,7 @@
   #:use-module (gnu packages)
   #:use-module (packages anki)
   #:use-module (packages eca)
+  #:use-module (packages font-ia-writer)
   #:use-module (packages font-space-mono)
   #:use-module (packages whisper)
   #:export (all-packages)
@@ -26,6 +27,7 @@
         "python-mypy"          ; static type checker
         "tree-sitter-python"   ; grammar for python-ts-mode
         "openjdk"              ; ECA server runtime (JVM)
+        "parinfer-rust"        ; helix.scm formatter for scheme files
         ;"r"
         ;"sqlite"
         ;"duckdb"
@@ -37,9 +39,10 @@
 (define cli-utilities-packages
   (list "tree" "curl"
         "rsync" "zip" "unzip"
-        "glibc-locales" "mpv" "ripgrep" "git-lfs" "yt-dlp"
+        "glibc-locales" "mpv" "ripgrep" "git-lfs" "yt-dlp" "d2"
         "guile-json"                 ; scripts/ask-ai.scm
-        "whisper-cpp" "ffmpeg"))   ; local speech-to-text (whisper.el)
+        "whisper-cpp" "ffmpeg"       ; local speech-to-text (whisper.el)
+        "github-cli"))               ; `gh`, used as services/git.scm's credential helper
 
 ;; System utilities (hardware / desktop daemons)
 
@@ -58,12 +61,13 @@
   (append cli-utilities-packages
           system-utilities-packages))
 
-;; Fonts (portable: needed for Emacs all-the-icons)
+;; Fonts (portable). font-nerd-symbols supplies the glyphs for Emacs nerd-icons.
 
 (define fonts-packages
   (list "font-ipa-ex" "font-fira-code" "font-jetbrains-mono" "font-iosevka"
         "font-google-roboto" "font-lato" "font-inconsolata" "font-victor-mono"
         "font-fantasque-sans"
+        "font-nerd-symbols"           ; icon glyphs for emacs-nerd-icons
         ;; design-skill manual aesthetic: Plex Mono body; Space Mono is custom.
         "font-ibm-plex"))
 
@@ -71,9 +75,6 @@
 
 (define emacs-packages
   (list
-   "emacs-all-the-icons"
-   "emacs-all-the-icons-completion"
-   "emacs-all-the-icons-dired"
    "emacs-avy"
    "emacs-cape"
    "emacs-consult"
@@ -87,11 +88,9 @@
    ;"emacs-ebib"
    ;"emacs-ef-themes"
    ;"emacs-elisp-demos"
-   "emacs-engrave-faces"
    ;;"emacs-eshell-did-you-mean"
    ;;"emacs-eshell-prompt-extras"
    ;;"emacs-eshell-syntax-highlighting"
-   "emacs-flycheck"
    "emacs-focus"
    "emacs-gptel"
    "emacs-helpful"
@@ -102,6 +101,9 @@
    "emacs-marginalia"
    ;"emacs-markdown-preview-mode"
    "emacs-meow"
+   "emacs-nerd-icons"
+   "emacs-nerd-icons-completion"
+   "emacs-nerd-icons-dired"
    ;; "emacs-minuet"       ; AI inline completion; disabled until an API key exists
 
    ;; "emacs-nano-modeline"
@@ -110,7 +112,6 @@
    ;;"emacs-org-present"
    ;;"emacs-org-transclusion"
    ;;"emacs-pdf-tools"
-   "emacs-popper"
    "emacs-rg"
    "emacs-sudo-edit"
    ;;"emacs-telega"
@@ -118,11 +119,17 @@
    "emacs-vundo"))
 
 ;; Custom packages missing from upstream Guix (package objects, not specs).
+;; emacs-modus-buffer-theme is #f on machines without the owner's personal
+;; /home/samuel/Projects/emacs-buffer-theme checkout (see packages/modus-buffer-theme.scm);
+;; filter it out rather than including a #f in the package list.
 (define custom-home-packages
-  (list anki-bin
-        emacs-eca
-        emacs-whisper
-        font-space-mono))
+  (filter identity
+          (list anki-bin
+                emacs-eca
+                emacs-modus-buffer-theme
+                emacs-whisper
+                font-ia-writer
+                font-space-mono)))
 
 ;; Editors
 
@@ -134,11 +141,6 @@
 
 (define shell-packages
   (list "fish"))
-
-;; Terminal emulator (desktop only)
-
-(define terminal-packages
-  (list "alacritty"))
 
 ;; Typesetting
 
@@ -162,6 +164,9 @@
 
 (define wayland-packages
   (list "gammastep" "mako" "fuzzel" "swaybg" "wl-clipboard"
+        "foot"                        ; terminal (konsole from kde-packages is the fallback)
+        "wtype" "libnotify"           ; scripts/voice-dictate.scm on Wayland: typing + notify-send
+        "grim" "slurp"                ; Wayland screenshots (grim + region select)
         "eww"                         ; Minde bar and sysinfo widgets
         "brightnessctl"
         "xdg-desktop-portal-wlr"
@@ -222,7 +227,6 @@
             emacs-packages
             editors-packages
             shell-packages
-            terminal-packages
             gui-app-packages
             typesetting-packages))
    custom-home-packages))
