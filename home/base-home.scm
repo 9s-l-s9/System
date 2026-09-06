@@ -4,8 +4,11 @@
 ;;; `home-environment' on top of the helpers exported here:
 ;;;
 ;;;   - `base-services'  returns the services every user shares
-;;;     (Minde, git, Emacs, agent integration, dotfiles tree).
-;;;   - per-user files add their user-specific services on top.
+;;;     (Minde, git, Emacs, dotfiles tree).
+;;;   - per-user files add their user-specific services on top. Agent
+;;;     integration (agent-skills, agent-launchers) is NOT here: both exit 1
+;;;     when ~/Projects/System is missing, which levi's config cannot
+;;;     guarantee, so they live only in samuel-home-configuration.scm.
 
 (define-module (base-home)
   #:use-module (gnu home services)
@@ -15,8 +18,6 @@
   #:use-module (services minde)
   #:use-module (services git)
   #:use-module (services emacs)
-  #:use-module (services agent-skills)
-  #:use-module (services agent-launchers)
   #:export (base-services))
 
 (define (base-services)
@@ -33,9 +34,7 @@
    (service home-pipewire-service-type)
    (git-service)
    (emacs-daemon-service)
-   (agent-skills-service)
    (service home-dotfiles-service-type
             (home-dotfiles-configuration
              (directories '("./files")))))
-   (agent-launcher-services)
    (minde-services)))
