@@ -2,7 +2,7 @@
 ;;; Code:
 
 (setq user-full-name "Samuel Levi Schmidt"
-      user-email-address (concat "schmidt.l.samuel" "@" "gmail.com")
+      user-mail-address (concat "schmidt.l.samuel" "@" "gmail.com")
       copyright-names-regexp (format "%s <%s>"
                                      user-full-name
                                      user-mail-address))
@@ -81,7 +81,7 @@
           (unless (= (point-min) (point-max))
             (buffer-string)))))))
 
-(when (and (eq window-system 'pgtk)
+(when (and (featurep 'pgtk)
            (executable-find "wl-copy")
            (executable-find "wl-paste"))
   (setq interprogram-cut-function #'sls-wayland-clipboard-copy
@@ -101,7 +101,7 @@
 ;; Don't fontify during a keystroke burst; catch up when input pauses.
 (setq redisplay-skip-fontification-on-input t)
 
-;; Icon fonts (all-the-icons) trigger font-cache compaction while
+;; Icon fonts (nerd-icons) trigger font-cache compaction while
 ;; scrolling, causing stutter; keep the caches instead.
 (setq inhibit-compacting-font-caches t)
 
