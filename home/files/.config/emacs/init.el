@@ -33,7 +33,6 @@
         ediff-window-setup-function 'ediff-setup-windows-plain))
 
 (require 'focus-conf)
-(require 'imenu-list-conf)
 (require 'window-conf)
 
 ;; ── Completion ────────────────────────────────────────────────────────────────
@@ -45,16 +44,18 @@
 (require 'vertico-conf)
 (require 'marginalia-conf)
 
-(use-package all-the-icons-completion
-  :hook ((after-init        . all-the-icons-completion-mode)
-         (marginalia-mode   . all-the-icons-completion-marginalia-setup)))
+;; marginalia-mode is already on (marginalia-conf), so a marginalia-mode-hook
+;; would never fire; run the setup directly once the mode is enabled.
+(use-package nerd-icons-completion
+  :hook (after-init . nerd-icons-completion-mode)
+  :config (nerd-icons-completion-marginalia-setup))
 
 ;; ── Programming ───────────────────────────────────────────────────────────────
 (require 'eglot-conf)
 (require 'python-conf)
 (require 'dap-conf)
 (require 'gptel-conf)   ; chat / rewrite, user-in-the-loop
-(require 'eca-conf)     ; autonomous agent (no-op until emacs-eca is installed)
+(require 'eca-conf)     ; autonomous agent (emacs-eca)
 ;; (require 'minuet-conf)  ; AI inline completion; disabled (needs API key)
 (require 'whisper-conf)  ; local speech-to-text (no-op until emacs-whisper installed)
 
