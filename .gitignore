@@ -1,2 +1,7 @@
 .codex
 scripts/.codex
+pw-stealth/
+minde-console-continue.log
+minde-console-continue-result.png
+*.elc
+*.go
