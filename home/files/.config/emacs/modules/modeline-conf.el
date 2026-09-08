@@ -112,7 +112,7 @@ bails out on a TTY where they are unspecified (see `sls--default-color')."
       (when (facep 'header-line-inactive)
         (set-face-attribute 'header-line-inactive nil
                             :underline  `(:color ,fg :position 5)
-                            :foreground (face-foreground 'shadow nil t)
+                            :foreground (or (face-foreground 'shadow nil t) 'unspecified)
                             :background bg
                             :box        `(:line-width (1 . 10) :color ,bg)
                             :inherit    nil))
