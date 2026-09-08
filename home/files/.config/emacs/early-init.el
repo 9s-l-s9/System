@@ -26,6 +26,11 @@
 ;; Relocate runtime files out of ~/.config/emacs/ early, before recentf,
 ;; savehist, url, etc. capture the original `user-emacs-directory'.
 (setq user-emacs-directory "~/.cache/emacs/")
+
+;; Guix wires package autoloads through site-start.el, so package.el is not
+;; needed at startup.  Leaving it on makes it scan every site-lisp dir and
+;; log "Unable to activate package" for Guix version strings it can't parse.
+(setq package-enable-at-startup nil)
 (setq url-history-file (expand-file-name "url/history" user-emacs-directory))
 
 ;; I do not use those graphical elements by default, but I do enable
