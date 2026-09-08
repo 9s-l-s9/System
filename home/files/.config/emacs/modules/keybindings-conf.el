@@ -103,19 +103,21 @@
   (meow-global-mode 1))
 (require 'meow)
 
-;; ── dap-mode: debugging (C-c d prefix) ──────────────────────────────────────
-(global-set-key (kbd "C-c d d") #'dap-debug)
-(global-set-key (kbd "C-c d b") #'dap-breakpoint-toggle)
-(global-set-key (kbd "C-c d B") #'dap-breakpoint-condition)
-(global-set-key (kbd "C-c d c") #'dap-continue)
-(global-set-key (kbd "C-c d n") #'dap-next)
-(global-set-key (kbd "C-c d i") #'dap-step-in)
-(global-set-key (kbd "C-c d o") #'dap-step-out)
-(global-set-key (kbd "C-c d r") #'dap-restart-frame)
-(global-set-key (kbd "C-c d q") #'dap-disconnect)
-(global-set-key (kbd "C-c d l") #'dap-ui-locals)
-(global-set-key (kbd "C-c d s") #'dap-ui-sessions)
-(global-set-key (kbd "C-c d e") #'dap-eval-thing-at-point)
+;; ── dap-mode: debugging (C-c C-d prefix) ────────────────────────────────────
+;; `meow-leader-define-key' installs the leader into `mode-specific-map',
+;; so `C-c d' is already the dired sidebar toggle (SPC d).  Use C-c C-d.
+(global-set-key (kbd "C-c C-d d") #'dap-debug)
+(global-set-key (kbd "C-c C-d b") #'dap-breakpoint-toggle)
+(global-set-key (kbd "C-c C-d B") #'dap-breakpoint-condition)
+(global-set-key (kbd "C-c C-d c") #'dap-continue)
+(global-set-key (kbd "C-c C-d n") #'dap-next)
+(global-set-key (kbd "C-c C-d i") #'dap-step-in)
+(global-set-key (kbd "C-c C-d o") #'dap-step-out)
+(global-set-key (kbd "C-c C-d r") #'dap-restart-frame)
+(global-set-key (kbd "C-c C-d q") #'dap-disconnect)
+(global-set-key (kbd "C-c C-d l") #'dap-ui-locals)
+(global-set-key (kbd "C-c C-d s") #'dap-ui-sessions)
+(global-set-key (kbd "C-c C-d e") #'dap-eval-thing-at-point)
 
 ;; ── gptel: chat / rewrite ───────────────────────────────────────────────────
 ;; Open/menu are on the meow leader (SPC a / SPC A); `C-c a' / `C-c A' are
