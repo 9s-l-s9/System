@@ -17,6 +17,12 @@
 
 ;; Batch didChange notifications instead of sending one per keystroke.
 (setq eglot-send-changes-idle-time 0.5)
+;; Don't let the server touch the buffer while typing.
+(setq eglot-ignored-server-capabilities
+      '(:inlayHintProvider :documentOnTypeFormattingProvider))
+;; Eldoc: fewer echo-area redraws while typing.
+(setq eldoc-idle-delay 0.8
+      eldoc-echo-area-use-multiline-p nil)
 
 ;; ── Server programs ───────────────────────────────────────────────────────────
 
@@ -35,11 +41,8 @@
 
 ;; ── UI integration ────────────────────────────────────────────────────────────
 
-;; Show LSP docs in eldoc (already the default, but be explicit)
-(add-hook 'eglot-managed-mode-hook
-          (lambda ()
-            (setq-local eldoc-documentation-strategy
-                        #'eldoc-documentation-compose-eagerly)))
+;; Eldoc keeps the default strategy: `compose-eagerly' asks the server for
+;; hover + signature on every idle pause and redraws the echo area each time.
 
 ;; Symbol-under-point highlighting is provided automatically by
 ;; `eglot-managed-mode` when the server reports textDocument/documentHighlight,
