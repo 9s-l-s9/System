@@ -17,10 +17,15 @@
 (set-face-attribute 'default nil :family "iA Writer Mono S" :height 140)
 
 ;; Indentation lines
-(setq highlight-indent-guides-method 'character)
-(setq highlight-indent-guides-auto-character-face-perc '70)
+;; `bitmap' is the cheapest method; `character' re-fontifies noticeably on
+;; every edit in large buffers.  `responsive' nil skips per-cursor-move work.
+(setq highlight-indent-guides-method 'bitmap
+      highlight-indent-guides-responsive nil
+      highlight-indent-guides-auto-character-face-perc 70)
 
 (global-hl-line-mode +1)
+(setq hl-line-sticky-flag nil
+      global-hl-line-sticky-flag nil)
 
 ;; Theme — modus-vivendi retinted to the "design skill" dark-substrate
 ;; register: a fully inverted typeset-document look. Near-monochrome by
@@ -124,10 +129,10 @@
 
 (show-paren-mode t)
 
-;; Relative line numbers
-(setq display-line-numbers-current-absolute t
-      display-line-numbers-grow-only        t
-      display-line-numbers-type             'relative
+;; Absolute line numbers: relative numbers re-render the whole gutter on every
+;; line change, which is a measurable per-keystroke cost under PGTK.
+(setq display-line-numbers-grow-only        t
+      display-line-numbers-type             t
       display-line-numbers-width            4
       display-line-numbers-width-start      t)
 (global-display-line-numbers-mode)
