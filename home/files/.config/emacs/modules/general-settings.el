@@ -20,7 +20,9 @@
 
 ;; Reload files changed on disk automatically
 (global-auto-revert-mode 1)
-(setq auto-revert-verbose nil)
+(setq auto-revert-verbose nil
+      auto-revert-use-notify t
+      auto-revert-avoid-polling t)  ; inotify instead of a 5 s timer
 
 ;; `user-emacs-directory' is set in early-init.el so recentf/savehist/url
 ;; capture the relocated value at load time.
@@ -73,6 +75,7 @@
 
 ;; Larger process read buffer (benefits LSP and subprocesses)
 (setq read-process-output-max (* 1024 1024))
+(setq process-adaptive-read-buffering nil)   ; hand LSP output to Emacs promptly
 
 ;; Persist minibuffer history across sessions
 (savehist-mode 1)
