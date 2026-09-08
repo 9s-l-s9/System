@@ -1,4 +1,7 @@
 ;;; cape-conf.el --- -*- lexical-binding: t -*-
+;; dabbrev scanning every buffer on each popup is the expensive part.
+(setq cape-dabbrev-check-other-buffers 'some)
+
 ;; cape functions are all autoloaded (see cape-autoloads.el), so this file
 ;; never needs to `require' cape eagerly.
 
