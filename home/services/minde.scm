@@ -58,6 +58,10 @@ name = \"laptop-only\"
 (primitive-load (string-append (getenv \"MINDE_SCHEME_DIR\") \"/init.scm\"))
 
 ;; Samuel's policy, layered over minde's portable C-t defaults.
+;; StumpWM-style padding: each window edge, outer edges, and the head.
+(configure-gaps! #:inner 5 #:outer 10 #:head 20)
+(gaps-on!)
+
 (set-prefix-key! '() \"Print\")
 (setenv \"MINDE_TERMINAL\" \"foot || konsole\")
 
