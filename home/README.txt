@@ -43,6 +43,21 @@ WSL2 Ubuntu (portable packages, no WM):
 Validate before reconfiguring:
   make qa-all
 
+== Agent installations ==
+
+Claude and Pi use separate npm prefixes under ~/.local/share/agent-tools/.
+Their public ~/.local/bin launchers still enter the configured Guix environment;
+do not replace those links with a vendor installer. Authentication and sessions
+remain in ~/.claude, ~/.claude.json, and ~/.pi. Both launchers persist downloads
+in ~/.cache/agent-npm, including in sandbox mode.
+
+Claude installs only when missing. Pi still checks/installs @latest each launch
+and falls back to its installed CLI if an update fails. Pi requires newer Node
+than these Guix pins provide: it reuses dsh's checksummed Node 24 download, but
+keeps a private interpreter-patched executable in its own runtime directory.
+The shared dsh runtime is not modified. DeepSeek still uses pnpm; its manifest
+retains that dependency. Old pnpm installations are not deleted by the launchers.
+
 
 == Desktop Session ==
 
