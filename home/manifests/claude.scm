@@ -7,8 +7,8 @@
   (primitive-load
    "/home/samuel/Projects/System/home/manifests/agent-base.scm"))
 
-;; Claude ships as a Node CLI installed via pnpm (see claude-guix.scm); node/pnpm
-;; come from agent-base.scm now.
+;; Claude's npm package supplies its native CLI (see claude-guix.scm).
+;; Node/npm from agent-base also run the Playwright MCP server.
 (specifications->manifest
  (append base-specs
          '(;; Browser for the Playwright MCP server. Playwright would otherwise

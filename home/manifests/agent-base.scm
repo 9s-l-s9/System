@@ -44,10 +44,9 @@
   "python"
   "nss-certs"
   "ruff"
-  ;; Node/pnpm runtime: every agent CLI (claude/codex/pi/deepseek-harness)
-  ;; needs at least node; pnpm was duplicated in three of the four.
+  ;; Node includes npm for agent installation and npx-based MCP servers.
+  ;; Only DeepSeek still needs pnpm; its manifest adds that separately.
   "node@22"
-  "pnpm@9"
   ;; File search, used generally and specifically by pi/deepseek-harness.
   "ripgrep"
   "fd")

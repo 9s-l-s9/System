@@ -45,12 +45,13 @@
 
 (define (guix-args mode manifest pi-args)
   (ensure-directory (string-append home "/.cache"))
+  (ensure-directory (string-append home "/.cache/agent-npm"))
   (ensure-directory (string-append home "/.pi"))
   (ensure-directory (string-append home "/.local"))
   (ensure-directory (string-append home "/.local/share"))
-  (ensure-directory (string-append home "/.cache/pnpm"))
-  (ensure-directory (string-append home "/.local/share/pnpm"))
-  (ensure-directory (string-append home "/.local/share/pnpm/bin"))
+  (ensure-directory (string-append home "/.local/share/agent-tools"))
+  (ensure-directory (string-append home "/.local/share/agent-tools/pi"))
+  (ensure-directory (string-append home "/.local/share/dsh-node"))
   (append
    (if (eq? mode 'sandbox)
        (append
@@ -61,13 +62,17 @@
         (maybe-mount "--share"
                      (string-append home "/.pi")
                      (string-append home "/.pi"))
-        ;; pnpm package cache (avoids re-downloading @mariozechner/pi-coding-agent)
+        ;; Persistent npm prefix for Pi (including its installed package).
         (maybe-mount "--share"
-                     (string-append home "/.cache/pnpm")
-                     (string-append home "/.cache/pnpm"))
+                     (string-append home "/.cache/agent-npm")
+                     (string-append home "/.cache/agent-npm"))
         (maybe-mount "--share"
-                     (string-append home "/.local/share/pnpm")
-                     (string-append home "/.local/share/pnpm"))
+                     (string-append home "/.local/share/agent-tools/pi")
+                     (string-append home "/.local/share/agent-tools/pi"))
+        ;; Persistent pinned Node runtime (Pi requires newer Node than Guix's).
+        (maybe-mount "--share"
+                     (string-append home "/.local/share/dsh-node")
+                     (string-append home "/.local/share/dsh-node"))
         ;; Host Docker/Podman sockets for container-backed tools.
         (container-socket-mounts)
         ;; XDG runtime (dbus, wayland socket)
@@ -78,18 +83,55 @@
    (list "-m" manifest)
    (list "--"
          "bash" "-c"
-         ;; Allow native build scripts (koffi, protobufjs, @google/genai need them).
-         ;; pnpm 11 blocks these by default; dangerouslyAllowAllBuilds opts out.
          (string-append
+          "set -e -o pipefail; "
           "export SHELL=$(command -v bash); "
           ;; Reuse the manifest's python instead of downloading a standalone one.
           "export UV_PYTHON_PREFERENCE=system; "
-          "export PNPM_HOME=\"$HOME/.local/share/pnpm\"; "
-          "export PATH=\"$PNPM_HOME/bin:$PNPM_HOME:$PATH\"; "
-          "pnpm config set dangerouslyAllowAllBuilds true; "
-          "pnpm remove -g @mariozechner/pi-coding-agent >/dev/null 2>&1 || true; "
-          "pnpm add -g @earendil-works/pi-coding-agent@latest; "
-          "exec pi \"$@\"")
+          ;; Keep Pi in a dedicated prefix so its wrapper cannot resolve back
+          ;; to this launcher through the user's normal PATH.
+          "export PI_PREFIX=\"$HOME/.local/share/agent-tools/pi\"; "
+          ;; Pi requires Node >=22.19; reuse dsh's pinned Node 24 runtime.
+          "NODE_VERSION=24.18.0; "
+          "NODE_ROOT=\"$HOME/.local/share/dsh-node/node-v$NODE_VERSION-linux-x64\"; "
+          "NODE_ARCHIVE=\"$HOME/.local/share/dsh-node/node-v$NODE_VERSION-linux-x64.tar.xz\"; "
+          "RUNTIME_ROOT=\"$PI_PREFIX/runtime\"; "
+          "RUNTIME_NODE=\"$RUNTIME_ROOT/bin/node\"; "
+          "RUNTIME_MARKER=\"$RUNTIME_ROOT/node.marker\"; "
+          "GUIX_NODE=\"$(command -v node)\"; "
+          "GUIX_NODE_REAL=\"$(readlink -f \"$GUIX_NODE\")\"; "
+          "GUIX_INTERP=\"$(patchelf --print-interpreter \"$GUIX_NODE\")\"; "
+          "GUIX_RPATH=\"$(patchelf --print-rpath \"$GUIX_NODE\")\"; "
+          "if [ ! -x \"$NODE_ROOT/bin/node\" ]; then "
+          "curl -fL \"https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz\" "
+          "-o \"$NODE_ARCHIVE\"; "
+          "echo \"55aa7153f9d88f28d765fcdad5ae6945b5c0f98a36881703817e4c450fa76742  $NODE_ARCHIVE\" "
+          "| sha256sum -c -; "
+          "tar -xJf \"$NODE_ARCHIVE\" -C \"$HOME/.local/share/dsh-node\"; "
+          "rm -f \"$NODE_ARCHIVE\"; fi; "
+          "mkdir -p \"$RUNTIME_ROOT/bin\"; "
+          "RUNTIME_SIGNATURE=\"interpreter-only-v1 $NODE_VERSION $GUIX_NODE_REAL\"; "
+          "if [ ! -x \"$RUNTIME_NODE\" ] || [ \"$(cat \"$RUNTIME_MARKER\" 2>/dev/null || true)\" != \"$RUNTIME_SIGNATURE\" ]; then "
+          "RUNTIME_TMP=\"$(mktemp \"$RUNTIME_ROOT/node.XXXXXX\")\"; "
+          "RUNTIME_MARKER_TMP=\"$RUNTIME_TMP.marker\"; "
+          "trap 'rm -f \"$RUNTIME_TMP\" \"$RUNTIME_MARKER_TMP\"' EXIT; "
+          "cp \"$NODE_ROOT/bin/node\" \"$RUNTIME_TMP\"; "
+          ;; Adding an RPATH to this upstream Node ELF crashes at startup.
+          ;; Only change its interpreter; supply Guix libraries at execution.
+          "patchelf --set-interpreter \"$GUIX_INTERP\" \"$RUNTIME_TMP\"; "
+          "chmod +x \"$RUNTIME_TMP\"; "
+          "mv -f \"$RUNTIME_TMP\" \"$RUNTIME_NODE\"; "
+          "printf '%s' \"$RUNTIME_SIGNATURE\" > \"$RUNTIME_MARKER_TMP\"; "
+          "mv -f \"$RUNTIME_MARKER_TMP\" \"$RUNTIME_MARKER\"; "
+          "trap - EXIT; fi; "
+          "export PATH=\"$RUNTIME_ROOT/bin:$NODE_ROOT/bin:$PI_PREFIX/bin:$PATH\"; "
+          "export LD_LIBRARY_PATH=\"$GUIX_RPATH${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"; "
+          ;; Use Pi's documented npm install command and refresh @latest each run.
+          "npm install -g --prefix \"$PI_PREFIX\" --cache \"$HOME/.cache/agent-npm\""
+          " --ignore-scripts @earendil-works/pi-coding-agent@latest"
+          " || { [ -x \"$PI_PREFIX/bin/pi\" ] || exit 1;"
+          " printf '%s\\n' 'pi-guix: update failed; starting installed Pi.' >&2; }; "
+          "exec \"$PI_PREFIX/bin/pi\" \"$@\"")
          "pi-guix")
    pi-args))
 
