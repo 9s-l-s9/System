@@ -6,6 +6,7 @@
   #:use-module (packages font-space-mono)
   #:use-module (packages modus-buffer-theme)
   #:use-module (packages whisper)
+  #:use-module (packages zen)
   #:export (all-packages)
   #:export (wsl2-packages)
   #:export (programming-packages)
@@ -200,8 +201,7 @@
 ;; Browser / passwords
 
 (define browser-packages
-  (list "zen-browser-bin"
-        "bitwarden-desktop"))
+  (list "bitwarden-desktop"))
 
 ;; Network
 
@@ -230,7 +230,7 @@
             shell-packages
             gui-app-packages
             typesetting-packages))
-   custom-home-packages))
+   (cons zen-browser-bin custom-home-packages)))
 
 ;; WSL2: portable development environment (no X11, no desktop, no browsers)
 (define (wsl2-packages)

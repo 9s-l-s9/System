@@ -172,7 +172,13 @@ dead `/tmp` tmpfs block (item 8).
     `cape-conf.el:2`, `imenu-list-conf.el:2`, `eca-conf.el:19`. Convert to
     `use-package :commands` / `with-eval-after-load`. Only meow, corfu,
     vertico, marginalia, orderless and the theme need eager loading.
-16. [safe-fix] `channels.scm`: the audit found no package referenced from
+16. [retracted 2026-09-08] Removing these channels was not safe: Home
+    generation 264 downgraded Zen from Saayix's 1.21.3b to BinaryGuix's
+    1.7.6b, which selected a new browser profile. All five channels have
+    been restored at their previous pins. Equal package names do not imply
+    interchangeable versions or definitions; compare resolved packages before
+    considering channel removal. Original audit finding follows:
+    `channels.scm`: the audit found no package referenced from
     `rde`, `radix`, `rosenthal`, `guix-science`; `saayix` only duplicates
     `zen-browser-bin` (also in `binary-guix`, so the spec is ambiguous);
     `pantherx` is kept solely for `d2`. Each extra channel slows `guix pull`
