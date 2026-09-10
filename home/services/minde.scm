@@ -70,7 +70,9 @@ name = \"laptop-only\"
   \"browser\")
 (bind-prefix-key! \"e\" (lambda () (wm-spawn \"lem -i sdl2\")) \"Lem\")
 (bind-prefix-key! \"E\" (lambda () (wm-spawn \"emacsclient -c -a emacs\")) \"Emacs\")
-(bind-prefix-key! \"i\" (lambda () (wm-spawn \"eww open --toggle sysinfo\")) \"eww widgets\")
+(bind-prefix-key! \"i\"
+  (lambda () (eww-run! (list \"eww open --toggle sysinfo\")))
+  \"eww widgets\")
 (bind-prefix-key! \"A\"
   (make-keymap
    \"c\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/codex-guix.scm\"))
@@ -113,25 +115,60 @@ name = \"laptop-only\"
    \"~/Projects/images/*.jpg ~/Projects/images/*.jpeg); \"
    \"[ -n \\\"$img\\\" ] && exec swaybg -m fill -i \\\"$img\\\"\"))
 
+;; eww's client starts a daemon when none answers, and it detaches
+;; before that daemon listens.  Two `eww open' processes launched
+;; together therefore both conclude \"no daemon\", both try to become
+;; one, and the loser's window request is dropped -- which is how the
+;; bar went missing while sysinfo, spawned a moment earlier, stayed up.
+;; Nothing repaired it afterwards once minde stopped re-firing
+;; handle-output-configured! for a profile shikane re-applied unchanged;
+;; that redundant second sync was what used to open the bar on a second
+;; pass (and, before minde suppressed it, what duplicated bars).  So
+;; every eww command goes through one shell: flock serialises it against
+;; a concurrent output hook, and the batch waits for the daemon to
+;; answer before opening anything. Close fd 9 in the daemon so it
+;; cannot retain the lock after the batch exits; abort on readiness timeout.
+(define (eww-run! commands)
+  (unless (null? commands)
+    (wm-spawn
+     (let loop ((rest commands)
+                (script (string-append
+                         \"exec 9>${XDG_RUNTIME_DIR:-/tmp}/eww-sync.lock; \"
+                         \"flock 9 || exit 1; \"
+                         \"eww ping >/dev/null 2>&1 || eww daemon 9>&-; \"
+                         \"for _ in $(seq 200); do \"
+                         \"eww ping >/dev/null 2>&1 && break; \"
+                         \"sleep 0.05; done; \"
+                         \"eww ping >/dev/null 2>&1 || exit 1\")))
+       (if (null? rest)
+           script
+           (loop (cdr rest) (string-append script \"; \" (car rest))))))))
+
 ;; One eww bar per enabled monitor.  (wm-outputs) entries are
 ;; (id x y w h name); --screen selects the Wayland connector, --id lets
 ;; separate instances of the same bar window coexist.  Re-run after
 ;; every output change so a bar appears on a newly enabled head and the
 ;; bar of a disabled head is closed (its output is gone anyway).
+(define (bar-commands)
+  (let ((opens (map (lambda (output)
+                      (let ((name (list-ref output 5)))
+                        (string-append \"eww open bar --id bar-\" name
+                                       \" --screen \" name)))
+                    (wm-outputs))))
+    (if (defined? 'output-heads)
+        (let loop ((heads (output-heads)) (closes '()))
+          (cond
+           ((null? heads) (append opens (reverse closes)))
+           ((assq-ref (car heads) 'enabled) (loop (cdr heads) closes))
+           (else
+            (loop (cdr heads)
+                  (cons (string-append \"eww close bar-\"
+                                       (assq-ref (car heads) 'name))
+                        closes)))))
+        opens)))
+
 (define (sync-bars!)
-  (for-each
-   (lambda (output)
-     (let ((name (list-ref output 5)))
-       (wm-spawn (string-append \"eww open bar --id bar-\" name
-                                \" --screen \" name))))
-   (wm-outputs))
-  (when (defined? 'output-heads)
-    (for-each
-     (lambda (head)
-       (unless (assq-ref head 'enabled)
-         (wm-spawn (string-append \"eww close bar-\"
-                                  (assq-ref head 'name)))))
-     (output-heads))))
+  (eww-run! (bar-commands)))
 
 ;; Runs after an output-management client (shikane, wlr-randr) or
 ;; configure-output! changed the layout.
@@ -140,13 +177,15 @@ name = \"laptop-only\"
 
 (define (handle-startup!)
   ;; Output layout first: shikane applies the matching profile from
-  ;; ~/.config/shikane/config.toml now and on every hotplug; the bars
-  ;; follow through handle-output-configured!.
+  ;; ~/.config/shikane/config.toml now and on every hotplug.  The bars
+  ;; are opened here rather than left to handle-output-configured!:
+  ;; minde stays silent when a re-applied profile changes nothing, so
+  ;; that hook only covers later layout changes.
   (wm-spawn \"shikane\")
   ;; Wallpaper and widgets -- they are the visible part of startup.
   (wm-spawn %personal-wallpaper)
-  (wm-spawn \"eww open sysinfo\")
-  (sync-bars!)
+  ;; sysinfo rides in the bars' batch rather than racing it: see eww-run!.
+  (eww-run! (cons \"eww open sysinfo\" (bar-commands)))
   ;; Same temperatures/location the old X11 redshift service used before it
   ;; was removed as dead (Wayland-only session now); needs minde's
   ;; wlr-gamma-control support.
