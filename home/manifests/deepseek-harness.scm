@@ -12,6 +12,7 @@
          ;; pnpm runs on Guix's Node 22 (from agent-base.scm).  dsh-guix
          ;; downloads the official prebuilt Node 24 runtime because this
          ;; channel has no substitute and would otherwise compile it locally.
-         '("gcc-toolchain@14"
+         '("pnpm@9"
+           "gcc-toolchain@14"
            "tar"
            "xz")))

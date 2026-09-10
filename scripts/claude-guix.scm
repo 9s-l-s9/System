@@ -29,7 +29,7 @@
 
 (define (parse-args args)
   ;; extra-manifests accumulates user -m paths (in order); the base manifest
-  ;; is always included so bash/node/pnpm/git are present in the profile.
+  ;; is always included so bash/node/npm/git are present in the profile.
   (let loop ((rest args) (mode 'full) (project #f) (extra-manifests '()) (claude-args '()))
     (cond
       ((null? rest)
@@ -63,9 +63,9 @@
 
 (define (guix-args mode extra-manifests project-dir claude-args)
   (ensure-directory (string-append home "/.claude"))
-  (ensure-directory (string-append home "/.cache/pnpm"))
-  (ensure-directory (string-append home "/.local/share/pnpm"))
-  (ensure-directory (string-append home "/.local/share/pnpm/bin"))
+  (for-each (lambda (path) (ensure-directory (string-append home path)))
+            '("/.cache" "/.cache/agent-npm" "/.local" "/.local/share"
+              "/.local/share/agent-tools" "/.local/share/agent-tools/claude"))
   (let ((cmd (string-append
               "export SHELL=$(command -v bash); "
               ;; Reuse the manifest's python instead of letting uv download a
@@ -73,12 +73,16 @@
               "export UV_PYTHON_PREFERENCE=system; "
               ;; Prefer the manifest's ripgrep over the vendored binary.
               "export USE_BUILTIN_RIPGREP=0; "
-              "export PNPM_HOME=\"$HOME/.local/share/pnpm\"; "
-              "export PATH=\"$PNPM_HOME/bin:$PNPM_HOME:$PATH\"; "
+              ;; Keep the package's native executable separate from the public
+              ;; ~/.local/bin/claude Guix launcher; never replace that launcher.
+              "export CLAUDE_NPM_PREFIX=\"$HOME/.local/share/agent-tools/claude\"; "
+              "export PATH=\"$CLAUDE_NPM_PREFIX/bin:$PATH\"; "
               "cd "
               (format #f "~s" project-dir)
-              " && if [ ! -x \"$PNPM_HOME/claude\" ]; then"
-              " pnpm add -g @anthropic-ai/claude-code@latest; fi"
+              " && if [ ! -x \"$CLAUDE_NPM_PREFIX/bin/claude\" ]; then"
+              " npm install --global --prefix \"$CLAUDE_NPM_PREFIX\""
+              " --cache \"$HOME/.cache/agent-npm\""
+              " @anthropic-ai/claude-code@latest; fi"
               ;; Register MCP servers (user scope -> ~/.claude.json, shared into
               ;; the container so it persists). Re-register each launch so the
               ;; baked --executable-path always tracks the current chromium store
@@ -94,14 +98,14 @@
               ;; WebGL-Renderer, den Bot-Erkennung als Tell
               ;; fingerprinten. Fuer reinen SSH/headless-Lauf PW_MCP_HEADLESS=1.
               " && { \"$HOME/Projects/System/scripts/pw-mcp-gen-config.scm\";"
-              " \"$PNPM_HOME/claude\" mcp remove -s user playwright >/dev/null 2>&1;"
-              " \"$PNPM_HOME/claude\" mcp add -s user playwright --"
+              " \"$CLAUDE_NPM_PREFIX/bin/claude\" mcp remove -s user playwright >/dev/null 2>&1;"
+              " \"$CLAUDE_NPM_PREFIX/bin/claude\" mcp add -s user playwright --"
               " npx -y @playwright/mcp@latest"
               " --config \"$HOME/.cache/pw-mcp-config.json\" || true; }"
-              " && exec \"$PNPM_HOME/claude\" --dangerously-skip-permissions \"$@\"")))
+              " && exec \"$CLAUDE_NPM_PREFIX/bin/claude\" --dangerously-skip-permissions \"$@\"")))
     (append
      (if (eq? mode 'host)
-         ;; Host mode: no container at all. The manifest only adds node/pnpm
+         ;; Host mode: no container at all. The manifest only adds node/npm
          ;; and the agent tools to PATH; everything else (sudo, /sys, herd,
          ;; /var/guix/profiles, host processes) is the real system. Claude's
          ;; native binary needs /lib64/ld-linux-x86-64.so.2, which
@@ -126,9 +130,9 @@
            (maybe-mount "--share"
                         (string-append home "/.claude.json")
                         (string-append home "/.claude.json"))
-           ;; pnpm caches (read-write)
-           (list (string-append "--share=" home "/.cache/pnpm=" home "/.cache/pnpm"))
-           (list (string-append "--share=" home "/.local/share/pnpm=" home "/.local/share/pnpm")))
+           ;; Persist the installed CLI and package downloads in sandbox mode.
+           (list (string-append "--share=" home "/.cache/agent-npm=" home "/.cache/agent-npm"))
+           (list (string-append "--share=" home "/.local/share/agent-tools/claude=" home "/.local/share/agent-tools/claude")))
           '())
       ;; Host Docker/Podman sockets for container-backed tools.
       (container-socket-mounts)
