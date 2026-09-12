@@ -14,6 +14,89 @@ window {
   padding: 20px;
 }
 
+/* The bordered panel fills the reserved 20% with no outer padding. */
+window.actions {
+  background-color: transparent;
+  padding: 0;
+}
+
+.actions-box {
+  border: 1px solid #cc241d;
+  padding: 20px 16px;
+  background-color: rgba(0, 0, 0, 0.85);
+  font-family: "EnvyCodeR Nerd Font Mono", monospace;
+  font-size: 15px;
+}
+
+.actions-box * {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.actions-box .actions-title {
+  color: #fbf1c7;
+  font-family: "UDEV Gothic HS", "IBM Plex Sans JP", sans-serif;
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.actions-box .actions-subtitle {
+  color: #a89984;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.actions-box .actions-heading {
+  color: #d79921;
+  font-weight: bold;
+}
+
+.actions-box .action-button {
+  padding: 12px 10px;
+  border: 1px solid #3c3836;
+  border-left: 2px solid #cc241d;
+  background-color: rgba(0, 0, 0, 0.2);
+  color: #ebdbb2;
+}
+
+.actions-box .action-button:hover {
+  border-color: #d79921;
+  background-color: rgba(80, 73, 69, 0.65);
+  color: #fbf1c7;
+}
+
+.actions-box .action-button:active {
+  background-color: rgba(152, 151, 26, 0.25);
+}
+
+.actions-box .action-power,
+.actions-box .action-power:hover {
+  color: #fb4934;
+}
+
+.actions-box .action-button label,
+.actions-box .actions-close label {
+  color: inherit;
+  font-size: inherit;
+}
+
+.actions-box .actions-close {
+  padding: 0 8px;
+  font-size: 22px;
+  color: #a89984;
+}
+
+.actions-box .actions-close:hover {
+  color: #fb4934;
+}
+
+.actions-box .actions-hint {
+  color: #928374;
+  font-size: 12px;
+}
+
 .nameinfo {
   font-family: "EnvyCodeR Nerd Font Mono";
   font-weight: bold;

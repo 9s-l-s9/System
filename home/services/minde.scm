@@ -73,6 +73,9 @@ name = \"laptop-only\"
 (bind-prefix-key! \"i\"
   (lambda () (eww-run! (list \"eww open --toggle sysinfo\")))
   \"eww widgets\")
+(bind-prefix-key! \"a\"
+  (lambda () (toggle-actions!))
+  \"command center\")
 (bind-prefix-key! \"A\"
   (make-keymap
    \"c\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/codex-guix.scm\"))
@@ -107,13 +110,22 @@ name = \"laptop-only\"
 
 ;; Pick by extension instead of sniffing magic bytes: the old loop forked
 ;; head+od per file (~340 processes over 170 images) and delayed swaybg by
-;; ~3 s on a cold cache.  exec replaces the shell so swaybg is the direct
-;; child.
+;; ~3 s on a cold cache.  Only replace swaybg after finding a real image.
+;; Serialize requests so rapid clicks cannot leave multiple backgrounds.
+;; Close the lock fd on exec so the new swaybg does not retain it.
 (define %personal-wallpaper
   (string-append
-   \"img=$(shuf -e -n1 ~/Projects/images/*.png \"
-   \"~/Projects/images/*.jpg ~/Projects/images/*.jpeg); \"
-   \"[ -n \\\"$img\\\" ] && exec swaybg -m fill -i \\\"$img\\\"\"))
+   \"exec 9>${XDG_RUNTIME_DIR:-/tmp}/minde-wallpaper-$(id -u).lock; \"
+   \"flock 9 || exit 1; \"
+   \"img=$(find \\\"$HOME/Projects/images\\\" -maxdepth 1 -type f \"
+   \"\\\\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \\\\) \"
+   \"-print | shuf -n1); \"
+   \"[ -f \\\"$img\\\" ] || exit 1; \"
+   \"pkill -u \\\"$(id -u)\\\" -x swaybg || true; \"
+   \"exec swaybg -m fill -i \\\"$img\\\" 9>&-\"))
+
+(define (next-wallpaper!)
+  (wm-spawn %personal-wallpaper))
 
 ;; eww's client starts a daemon when none answers, and it detaches
 ;; before that daemon listens.  Two `eww open' processes launched
@@ -126,23 +138,43 @@ name = \"laptop-only\"
 ;; pass (and, before minde suppressed it, what duplicated bars).  So
 ;; every eww command goes through one shell: flock serialises it against
 ;; a concurrent output hook, and the batch waits for the daemon to
-;; answer before opening anything. Close fd 9 in the daemon so it
-;; cannot retain the lock after the batch exits; abort on readiness timeout.
+;; answer before opening anything. Close fd 9 in every Eww subprocess so
+;; even an automatically started daemon cannot retain the batch lock.
+;; Bound both lock acquisition and readiness waits.
 (define (eww-run! commands)
   (unless (null? commands)
     (wm-spawn
      (let loop ((rest commands)
                 (script (string-append
                          \"exec 9>${XDG_RUNTIME_DIR:-/tmp}/eww-sync.lock; \"
-                         \"flock 9 || exit 1; \"
-                         \"eww ping >/dev/null 2>&1 || eww daemon 9>&-; \"
+                         \"flock -w 10 9 || exit 1; \"
+                         \"eww ping 9>&- >/dev/null 2>&1 || eww daemon 9>&-; \"
                          \"for _ in $(seq 200); do \"
-                         \"eww ping >/dev/null 2>&1 && break; \"
+                         \"eww ping 9>&- >/dev/null 2>&1 && break; \"
                          \"sleep 0.05; done; \"
-                         \"eww ping >/dev/null 2>&1 || exit 1\")))
+                         \"eww ping 9>&- >/dev/null 2>&1 || exit 1\")))
        (if (null? rest)
            script
-           (loop (cdr rest) (string-append script \"; \" (car rest))))))))
+           (loop (cdr rest)
+                 (string-append script \"; ( \" (car rest) \" ) 9>&-\")))))))
+
+(define (personal-shell-quote text)
+  (string-append \"'\"
+                 (string-join (string-split text (integer->char 39)) \"'\\\\''\")
+                 \"'\"))
+
+;; wm-outputs reports usable height below the bar.  Width stays a monitor
+;; percentage in Eww because opening the pane changes the usable width.
+(define (toggle-actions!)
+  (let* ((outputs (wm-outputs))
+         (output (or (assv (current-head-id) outputs)
+                     (and (pair? outputs) (car outputs)))))
+    (when output
+      (eww-run!
+       (list (string-append
+              \"eww open --toggle actions --screen \"
+              (personal-shell-quote (list-ref output 5))
+              \" --arg pane-height=\" (number->string (list-ref output 4))))))))
 
 ;; One eww bar per enabled monitor.  (wm-outputs) entries are
 ;; (id x y w h name); --screen selects the Wayland connector, --id lets
@@ -183,7 +215,7 @@ name = \"laptop-only\"
   ;; that hook only covers later layout changes.
   (wm-spawn \"shikane\")
   ;; Wallpaper and widgets -- they are the visible part of startup.
-  (wm-spawn %personal-wallpaper)
+  (next-wallpaper!)
   ;; sysinfo rides in the bars' batch rather than racing it: see eww-run!.
   (eww-run! (cons \"eww open sysinfo\" (bar-commands)))
   ;; Same temperatures/location the old X11 redshift service used before it
