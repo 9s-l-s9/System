@@ -217,6 +217,59 @@
 	:exclusive false
 	(sysinfo-widget)
 )
+
+;; A right-edge exclusive surface gives the command pane its own space;
+;; minde reflows the current frame tree when it opens or closes.
+(defwidget actions-widget []
+	(box :orientation "v" :space-evenly false :spacing 24 :class "actions-box"
+		(box :orientation "h" :space-evenly false
+			(box :orientation "v" :space-evenly false :spacing 4 :hexpand true
+				(label :class "actions-title" :halign "start" :text "操作")
+				(label :class "actions-subtitle" :halign "start" :text "[ COMMANDS ]"))
+			(button :class "actions-close" :tooltip "Close (Print a)"
+				:onclick "${EWW_CMD} close actions" "×"))
+		(box :orientation "v" :space-evenly false :spacing 8
+			(label :class "actions-heading" :halign "start" :text "01 / DESKTOP")
+			(button :class "action-button"
+				:onclick "${EWW_CMD} close actions; mindectl eval '(next-wallpaper!)'"
+				(label :halign "start" :text "Change wallpaper")))
+		(box :orientation "v" :space-evenly false :spacing 8
+			(label :class "actions-heading" :halign "start" :text "02 / GUIX")
+			(button :class "action-button"
+				:onclick "${EWW_CMD} close actions; foot --hold -e make -C /home/samuel/Projects/System reconfigure-home"
+				(label :halign "start" :text "Reconfigure home"))
+			(button :class "action-button"
+				:onclick "${EWW_CMD} close actions; foot --hold -e make -C /home/samuel/Projects/System reconfigure-system"
+				(label :halign "start" :text "Reconfigure system")))
+		(box :orientation "v" :space-evenly false :spacing 8
+			(label :class "actions-heading" :halign "start" :text "03 / SESSION")
+			(button :class "action-button"
+				:onclick "${EWW_CMD} close actions; mindectl eval '(lock-screen!)'"
+				(label :halign "start" :text "Lock"))
+			(button :class "action-button"
+				:onclick "${EWW_CMD} close actions; mindectl eval '(suspend!)'"
+				(label :halign "start" :text "Suspend"))
+			(button :class "action-button action-power"
+				:onclick "${EWW_CMD} close actions; loginctl reboot"
+				(label :halign "start" :text "Reboot"))
+			(button :class "action-button action-power"
+				:onclick "${EWW_CMD} close actions; loginctl poweroff"
+				(label :halign "start" :text "Shutdown")))
+		(box :vexpand true)
+		(label :class "actions-hint" :halign "start" :text "Print a · close"))
+)
+
+;; Minde supplies usable output height, accounting for the bar's exclusive zone.
+(defwindow actions [pane-height]
+	:monitor 0
+	:namespace "eww-actions"
+	:geometry (geometry :x "0" :y "0" :width "20%" :height "${pane-height}px"
+		:anchor "center right")
+	:stacking "fg"
+	:exclusive true
+	(actions-widget)
+)
+
 ;; ---- minde top bar ----
 ;; minde writes "[I]  II  III | window title" to
 ;; $XDG_RUNTIME_DIR/minde-status whenever it changes; the exclusive
