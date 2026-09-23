@@ -255,6 +255,10 @@ name = \"laptop-only\"
   ;; minde stays silent when a re-applied profile changes nothing, so
   ;; that hook only covers later layout changes.
   (wm-spawn \"shikane\")
+  ;; Minimal sessions do not start a desktop environment's Polkit agent.
+  ;; This one supplies the password dialog used by the internal-keyboard
+  ;; toggle; it grants no privileges by itself.
+  (wm-spawn \"~/.guix-home/profile/libexec/polkit-gnome-authentication-agent-1\")
   ;; Wallpaper and widgets -- they are the visible part of startup.
   (next-wallpaper!)
   ;; sysinfo rides in the bars' batch rather than racing it: see eww-run!.
