@@ -168,8 +168,8 @@
 ;; Wayland (defined but not assembled by default)
 
 (define wayland-packages
-  (list "gammastep" "mako" "fuzzel" "swaybg" "wl-clipboard"
-        "foot"                        ; terminal (konsole from kde-packages is the fallback)
+  (list "gammastep" "mako" "fuzzel" "swaybg"
+        "foot"                        ; terminal
         "wtype" "libnotify"           ; scripts/voice-dictate.scm on Wayland: typing + notify-send
         "grim" "slurp"                ; Wayland screenshots (grim + region select)
         "eww"                         ; Minde bar and sysinfo widgets
@@ -233,7 +233,11 @@
             shell-packages
             gui-app-packages
             typesetting-packages))
-   (cons zen-browser-bin custom-home-packages)))
+   ;; Resolve this package explicitly: another active channel also exports a
+   ;; package named wl-clipboard, making a string specification ambiguous.
+   (cons zen-browser-bin
+         (append (list (@ (gnu packages xdisorg) wl-clipboard))
+                 custom-home-packages))))
 
 ;; WSL2: portable development environment (no X11, no desktop, no browsers)
 (define (wsl2-packages)
