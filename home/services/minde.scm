@@ -1,5 +1,6 @@
 (define-module (services minde)
   #:use-module (gnu home services)
+  #:use-module (gnu packages)
   #:use-module (guix gexp)
   #:export (minde-services))
 
@@ -296,7 +297,9 @@ name = \"laptop-only\"
   (list
    (simple-service 'minde-package
                    home-profile-service-type
-                   (list minde-package shikane-package))
+                   (list minde-package
+                         shikane-package
+                         (specification->package "polkit-gnome")))
    (simple-service 'minde-config
                    home-xdg-configuration-files-service-type
                    `(("minde/init.scm" ,personal-init)
@@ -308,4 +311,10 @@ name = \"laptop-only\"
                    ;; and plain us for the Corne; Print X switches (see
                    ;; personal-init), so no grp:* chord is configured.
                    '(("XKB_DEFAULT_LAYOUT" . "de,us")
-                     ("XKB_DEFAULT_VARIANT" . "bone,")))))
+                     ("XKB_DEFAULT_VARIANT" . "bone,")
+                     ;; Firefox-based browsers (Zen) keep one profile per
+                     ;; install *path*; every Guix update moves the store
+                     ;; path and would start a fresh empty profile.  Legacy
+                     ;; mode uses the Default=1 profile from profiles.ini
+                     ;; regardless of where the binary lives.
+                     ("MOZ_LEGACY_PROFILES" . "1")))))
