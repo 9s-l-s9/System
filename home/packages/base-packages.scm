@@ -33,7 +33,10 @@
         ;"r"
         ;"sqlite"
         ;"duckdb"
-        ;"gcc-toolchain"
+        ;; Emacs native compilation needs a C driver for libgccjit.  Without
+        ;; it `native-comp-available-p' still reports #t, but every
+        ;; compilation fails and Emacs silently runs byte-code only.
+        "gcc-toolchain"
         ))
 
 ;; CLI utilities (portable: work everywhere)

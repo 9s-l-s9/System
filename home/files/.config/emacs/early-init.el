@@ -69,6 +69,26 @@
 ;; which sits on `load-path' and is edited in place).
 (setq load-prefer-newer t)
 
+;; Native compilation.  Guix ships Emacs Lisp packages byte-compiled only
+;; and disables just-in-time native compilation, so without this every
+;; package -- Emacs' own Lisp aside -- runs as byte-code.  Turning JIT on
+;; makes Emacs compile each library to native code the first time it is
+;; loaded and reuse the result from `~/.config/emacs/eln-cache' forever
+;; after; allocation-heavy Lisp typically runs several times faster.
+;;
+;; This needs a C driver for libgccjit, which is why `gcc-toolchain' is in
+;; the home profile.  Without it `native-comp-available-p' still reports t
+;; while every compilation fails silently.
+;;
+;; Cost: a one-time burst of background compilation after this lands, and
+;; again after every Emacs version upgrade (the cache is keyed by ABI, so
+;; an upgrade invalidates all of it).  Two jobs keeps that burst off the
+;; other two cores of this machine.
+(when (and (fboundp 'native-comp-available-p) (native-comp-available-p))
+  (setq native-comp-jit-compilation t
+        native-comp-async-jobs-number 2
+        native-comp-async-report-warnings-errors 'silent))
+
 (add-hook 'emacs-startup-hook
           (lambda ()
             ;; 100 MB: fewer, batched collections. 8 MB caused visible
