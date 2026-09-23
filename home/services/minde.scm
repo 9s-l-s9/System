@@ -67,7 +67,7 @@ name = \"laptop-only\"
 ;; Super, Ctrl, Alt, or any other modifier chord — prefix + plain key
 ;; (or Shift-key, or a sub-keymap) only.
 (set-prefix-key! '() \"Print\")
-(setenv \"MINDE_TERMINAL\" \"foot || konsole\")
+(setenv \"MINDE_TERMINAL\" \"foot\")
 
 (bind-prefix-key! \"b\"
   (lambda () (wm-spawn \"MOZ_ENABLE_WAYLAND=1 zen || chromium --ozone-platform-hint=auto\"))
