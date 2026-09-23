@@ -214,13 +214,17 @@ name = \"laptop-only\"
 
 ;; One eww bar per enabled monitor.  (wm-outputs) entries are
 ;; (id x y w h name); --screen selects the Wayland connector, --id lets
-;; separate instances of the same bar window coexist.  Re-run after
+;; separate instances of the same bar window coexist.  Close a connector's
+;; existing ID before opening it: shikane may report the same applied profile
+;; more than once, and Eww otherwise leaves duplicate exclusive layer surfaces
+;; behind even though `eww active-windows` shows only the newest ID.  Re-run after
 ;; every output change so a bar appears on a newly enabled head and the
 ;; bar of a disabled head is closed (its output is gone anyway).
 (define (bar-commands)
   (let ((opens (map (lambda (output)
                       (let ((name (list-ref output 5)))
-                        (string-append \"eww open bar --id bar-\" name
+                        (string-append \"eww close bar-\" name \"; \"
+                                       \"eww open bar --id bar-\" name
                                        \" --screen \" name)))
                     (wm-outputs))))
     (if (defined? 'output-heads)
