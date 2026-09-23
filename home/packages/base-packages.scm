@@ -1,5 +1,8 @@
 (define-module (packages base-packages)
   #:use-module (gnu packages)
+  #:use-module (packages emacs-build)
+  #:use-module (guix packages)
+  #:use-module (guix utils)
   #:use-module (packages anki)
   #:use-module (packages eca)
   #:use-module (packages font-ia-writer)
@@ -12,6 +15,7 @@
   #:export (programming-packages)
   #:export (utilities-packages)
   #:export (emacs-packages)
+  #:export (for-emacs-next)
   #:export (fonts-packages)
   #:export (xorg-packages))
 
@@ -123,6 +127,64 @@
    "emacs-vertico"
    "emacs-vundo"))
 
+;; Build every Emacs Lisp package with the Emacs that actually runs it.
+;;
+;; Guix compiles Emacs packages with `emacs-minimal' (stable, 30.x) while
+;; this configuration runs `emacs-next-pgtk' (31.x).  The mismatch has two
+;; costs.  Correctness: macros whose expansion changed between releases --
+;; `define-globalized-minor-mode' is one -- leave the .elc and the runtime
+;; disagreeing (seen as "Symbol's value as variable is void:
+;; diredfl-mode--set-explicitly").  Speed: the .eln files Guix ships in
+;; lib/emacs/native-site-lisp carry Emacs 30's ABI hash, so Emacs 31 ignores
+;; them and recompiles everything into ~/.config/emacs/eln-cache on first
+;; load.  Rewriting the build-system input to the very `emacs-next-pgtk' we
+;; run makes the store .eln match ahead of time (`emacs-next-minimal' would
+;; fix the macros but is built without native compilation).  `#:deep? #t'
+;; reaches the implicit build-system input.  Cost: no substitutes for the
+;; rewritten packages; they are built locally and rebuilt whenever emacs-next
+;; moves in the channel.
+
+;; Packages whose *test suites* do not pass under Emacs 31 although the
+;; packages themselves work.  Only their tests are switched off; the code is
+;; still built with the rewritten Emacs.  Re-check each entry when the
+;; package or emacs-next is updated.
+;;
+;; - emacs-eat: eat-test-character-sets stores a non-byte value into a
+;;   unibyte string, which Emacs 31 rejects (one of 57 tests).
+(define %tests-broken-on-emacs-next
+  '("emacs-eat"))
+
+(define (without-tests pkg)
+  (package
+    (inherit pkg)
+    (arguments
+     (substitute-keyword-arguments (package-arguments pkg)
+       ((#:tests? _ #f) #f)))))
+
+;; Emacsen the build system may be handed: the default `emacs-minimal' and
+;; the full `emacs' some packages request via `#:emacs' (emacs-sudo-edit).
+(define %build-emacs-names
+  '("emacs-minimal" "emacs"))
+
+(define (emacs-next-mapping pkg)
+  (cond ((member (package-name pkg) %build-emacs-names)
+         emacs-next-pgtk-for-build)
+        ((member (package-name pkg) %tests-broken-on-emacs-next)
+         (without-tests pkg))
+        (else pkg)))
+
+;; `package-mapping' rather than `package-input-rewriting/spec' so the test
+;; exceptions above apply to every occurrence in the graph, including a
+;; package pulled in as somebody else's dependency.  The cut stops the walk
+;; at the build Emacs itself; its own graph has nothing to rewrite.
+(define for-emacs-next
+  (package-mapping emacs-next-mapping
+                   (lambda (pkg) (member (package-name pkg) %build-emacs-names))
+                   #:deep? #t))
+
+;; Name used at the call sites below.
+(define emacs-package-for-next for-emacs-next)
+
 ;; Custom packages missing from upstream Guix (package objects, not specs).
 ;; emacs-modus-buffer-theme is #f on machines without the owner's personal
 ;; /home/samuel/Projects/emacs-buffer-theme checkout (see packages/modus-buffer-theme.scm);
@@ -130,9 +192,10 @@
 (define custom-home-packages
   (filter identity
           (list anki-bin
-                emacs-eca
-                emacs-modus-buffer-theme
-                emacs-whisper
+                (for-emacs-next emacs-eca)
+                (and emacs-modus-buffer-theme
+                     (for-emacs-next emacs-modus-buffer-theme))
+                (for-emacs-next emacs-whisper)
                 font-ia-writer
                 font-space-mono)))
 
@@ -228,11 +291,11 @@
             browser-packages
             network-packages
             fonts-packages
-            emacs-packages
             editors-packages
             shell-packages
             gui-app-packages
             typesetting-packages))
+   (map (compose emacs-package-for-next specification->package) emacs-packages)
    ;; Resolve this package explicitly: another active channel also exports a
    ;; package named wl-clipboard, making a string specification ambiguous.
    (cons zen-browser-bin
@@ -246,8 +309,8 @@
     (append programming-packages
             cli-utilities-packages
             fonts-packages
-            emacs-packages
             editors-packages
             shell-packages
             typesetting-packages))
+   (map (compose emacs-package-for-next specification->package) emacs-packages)
    custom-home-packages))

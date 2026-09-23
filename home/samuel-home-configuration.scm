@@ -11,7 +11,8 @@
 
 (home-environment
  (packages
-  (cons (@ (packages valsi) emacs-valsi)
+  (cons ((@ (packages base-packages) for-emacs-next)
+         (@ (packages valsi) emacs-valsi))
         ((@ (packages base-packages) all-packages))))
  (services
   (append (base-services)
