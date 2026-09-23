@@ -5,6 +5,7 @@
   #:use-module (base-home)
   #:use-module (services fish)
   #:use-module (services starship)
+  #:use-module (services konsole)
   #:use-module (services helix)
   #:use-module (services lem)
   #:use-module (services agent-skills)
@@ -22,4 +23,5 @@
                 (helix-service)
                 (lem-service)
                 (agent-skills-service))
+          (konsole-services)
           (agent-launcher-services))))
