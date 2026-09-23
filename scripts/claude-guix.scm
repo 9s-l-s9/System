@@ -116,7 +116,11 @@
               " \"$CLAUDE_NPM_PREFIX/bin/claude\" mcp add -s user playwright --"
               " npx -y @playwright/mcp@latest"
               " --config \"$HOME/.cache/pw-mcp-config.json\" || true; }"
-              " && exec \"$CLAUDE_NPM_PREFIX/bin/claude\" --dangerously-skip-permissions \"$@\"")))
+              ;; Declarative settings from home/services/claude.scm (installed by
+              ;; Guix Home); flag settings outrank ~/.claude/settings.json.
+              " && S=\"${XDG_CONFIG_HOME:-$HOME/.config}/claude-code/settings.json\";"
+              " if [ -f \"$S\" ]; then set -- --settings \"$S\" \"$@\"; fi;"
+              " exec \"$CLAUDE_NPM_PREFIX/bin/claude\" --dangerously-skip-permissions \"$@\"")))
     (append
      (if (eq? mode 'host)
          ;; Host mode: no container at all. The manifest only adds node/npm

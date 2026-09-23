@@ -9,7 +9,8 @@
   #:use-module (services helix)
   #:use-module (services lem)
   #:use-module (services agent-skills)
-  #:use-module (services agent-launchers))
+  #:use-module (services agent-launchers)
+  #:use-module (services claude))
 
 (home-environment
  (packages
@@ -22,6 +23,7 @@
                 (starship-service)
                 (helix-service)
                 (lem-service)
-                (agent-skills-service))
+                (agent-skills-service)
+                (claude-service))
           (konsole-services)
           (agent-launcher-services))))
