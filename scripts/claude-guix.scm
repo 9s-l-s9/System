@@ -76,9 +76,22 @@
               ;; Keep the package's native executable separate from the public
               ;; ~/.local/bin/claude Guix launcher; never replace that launcher.
               "export CLAUDE_NPM_PREFIX=\"$HOME/.local/share/agent-tools/claude\"; "
+              ;; Hand the same prefix (and cache) to npm's own configuration,
+              ;; so every `npm install --global' in the session lands there too
+              ;; -- above all the one Claude Code's auto-updater runs by itself.
+              ;; Without it npm's prefix is the read-only node store path, every
+              ;; update fails ("Can't auto-update: npm global folder isn't
+              ;; writable" in `claude doctor') and the CLI silently stays at its
+              ;; install-time version, which locks out newer models.  Do not
+              ;; follow the doctor's `claude install' hint: the native installer
+              ;; would overwrite ~/.local/bin/claude, the Guix launcher.
+              "export npm_config_prefix=\"$CLAUDE_NPM_PREFIX\"; "
+              "export npm_config_cache=\"$HOME/.cache/agent-npm\"; "
               "export PATH=\"$CLAUDE_NPM_PREFIX/bin:$PATH\"; "
               "cd "
               (format #f "~s" project-dir)
+              ;; First install only; afterwards Claude Code keeps itself
+              ;; current through its own auto-updater (see npm_config_prefix).
               " && if [ ! -x \"$CLAUDE_NPM_PREFIX/bin/claude\" ]; then"
               " npm install --global --prefix \"$CLAUDE_NPM_PREFIX\""
               " --cache \"$HOME/.cache/agent-npm\""
