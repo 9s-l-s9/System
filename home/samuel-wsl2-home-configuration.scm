@@ -4,6 +4,7 @@
   #:use-module (gnu home services dotfiles)
   #:use-module (packages base-packages)
   #:use-module (services fish)
+  #:use-module (services starship)
   #:use-module (services helix)
   #:use-module (services git))
   ;; Omitted vs samuel-home-configuration.scm:
@@ -15,6 +16,7 @@
  (services
   (list
    (fish-service)
+   (starship-service)
    (helix-service)
    (git-service)
    (service home-dotfiles-service-type

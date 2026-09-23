@@ -4,6 +4,7 @@
   #:use-module (gnu home services shells)
   #:use-module (base-home)
   #:use-module (services fish)
+  #:use-module (services starship)
   #:use-module (services helix)
   #:use-module (services lem)
   #:use-module (services agent-skills)
@@ -17,6 +18,7 @@
  (services
   (append (base-services)
           (list (fish-service)
+                (starship-service)
                 (helix-service)
                 (lem-service)
                 (agent-skills-service))
