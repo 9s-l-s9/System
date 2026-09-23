@@ -62,6 +62,10 @@ name = \"laptop-only\"
 (configure-gaps! #:inner 5 #:outer 10 #:head 20)
 (gaps-on!)
 
+;;
+;; RULE: all keybindings go through the Print prefix key.  Never bind
+;; Super, Ctrl, Alt, or any other modifier chord — prefix + plain key
+;; (or Shift-key, or a sub-keymap) only.
 (set-prefix-key! '() \"Print\")
 (setenv \"MINDE_TERMINAL\" \"foot || konsole\")
 
