@@ -19,6 +19,7 @@
    "zen-launcher"
    #~(begin
        (use-modules (ice-9 rdelim)
+                    (ice-9 threads)
                     (ice-9 format)
                     (srfi srfi-1)
                     (srfi srfi-13))
@@ -69,10 +70,72 @@
                               (loop (read-line port) in-profile?
                                     path relative? default? result)))))))))))
 
+       ;; Hardware video decoding.  Firefox only uses VA-API when a driver
+       ;; is reachable through libva, and Guix's libva has no drivers in its
+       ;; own lib/dri.  Hosts that need it install the driver system-wide
+       ;; (see systems/T450s.scm); everything below is a no-op elsewhere.
+       (define system-dri "/run/current-system/profile/lib/dri")
+
+       (define vaapi-driver
+         (cond ((file-exists? (string-append system-dri "/i965_drv_video.so"))
+                "i965")
+               ((file-exists? (string-append system-dri "/iHD_drv_video.so"))
+                "iHD")
+               (else #f)))
+
+       ;; Prefs that Firefox needs to actually hand decoding to VA-API.
+       ;; VP9 is disabled because the i965 driver has no VP9 decoder on
+       ;; Broadwell; sites then fall back to H.264, which it does decode.
+       (define vaapi-prefs
+         '(("media.ffmpeg.vaapi.enabled" . "true")
+           ("media.hardware-video-decoding.force-enabled" . "true")
+           ("media.mediasource.vp9.enabled" . "false")))
+
+       ;; Host-independent prefs.  Autoplay: 5 blocks audio and video,
+       ;; blocking_policy 2 extends that to muted video, which is what
+       ;; feeds like Pinterest use to burn CPU in the background.
+       ;; processCount: one content process per core instead of the default
+       ;; 8, which is more than a 4-core, 8 GB laptop wants.
+       (define general-prefs
+         `(("media.autoplay.default" . "5")
+           ("media.autoplay.blocking_policy" . "2")
+           ("dom.ipc.processCount"
+            . ,(number->string (min 8 (max 2 (current-processor-count)))))))
+
+       ;; Append the PREFS missing from PROFILE's user.js.  Existing entries
+       ;; are left alone so manual overrides survive.
+       (define (ensure-prefs! profile prefs)
+         (let* ((file (string-append profile "/user.js"))
+                (existing (if (file-exists? file)
+                              (call-with-input-file file
+                                (lambda (port)
+                                  (let loop ((line (read-line port)) (acc '()))
+                                    (if (eof-object? line)
+                                        (reverse acc)
+                                        (loop (read-line port) (cons line acc))))))
+                              '()))
+                (has-pref? (lambda (name)
+                             (any (lambda (line)
+                                    (string-contains line
+                                                     (string-append "\"" name "\"")))
+                                  existing)))
+                (missing (filter (lambda (pref) (not (has-pref? (car pref))))
+                                 prefs)))
+           (unless (null? missing)
+             (let ((port (open-file file "a")))
+               (for-each (lambda (pref)
+                           (format port "user_pref(~s, ~a);~%"
+                                   (car pref) (cdr pref)))
+                         missing)
+               (close-port port)))))
+
        (define arguments (cdr (command-line)))
        ;; Keep Firefox's profile downgrade protection, even if this variable
        ;; was inherited from a shell or an older browser launcher.
        (unsetenv "MOZ_ALLOW_DOWNGRADE")
+       (when vaapi-driver
+         (setenv "LIBVA_DRIVERS_PATH" system-dri)
+         (setenv "LIBVA_DRIVER_NAME" vaapi-driver))
        (define home (getenv "HOME"))
        (define profile
          (and home
@@ -84,7 +147,11 @@
                      (false-if-exception (file-is-directory? directory))
                      directory))))
        (if profile
-           (apply execl zen (append (list zen "--profile" profile) arguments))
+           (begin
+             (when vaapi-driver
+               (false-if-exception (ensure-prefs! profile vaapi-prefs)))
+             (false-if-exception (ensure-prefs! profile general-prefs))
+             (apply execl zen (append (list zen "--profile" profile) arguments)))
            ;; Never refuse to start: let Zen choose its own profile.
            (apply execl zen (cons zen arguments))))))
 
