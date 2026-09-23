@@ -125,9 +125,32 @@ window.actions {
   padding: 50px;
 }
 
-/* minde top bar (gruvbox, matches the message area) */
+/* minde top bar (gruvbox, matches the message area).  Sized against
+   the 20px head + 10px outer + 5px inner gap: 15px bold type in a 32px
+   strip, and side margins that line the text up with the window edges. */
+.minde-status,
+.bar-bat,
+.bar-clock {
+  font-family: "EnvyCodeR Nerd Font Mono";
+  font-weight: bold;
+  font-size: 15px;
+}
+
 .minde-status {
-  margin-left: 8px;
+  margin-left: 36px;
+  color: #d79921;
+}
+
+.group {
+  padding: 0 4px;
+  color: #a89984;
+}
+
+.group:hover {
+  color: #fbf1c7;
+}
+
+.group.focused {
   color: #d79921;
 }
 
@@ -136,5 +159,5 @@ window.actions {
 }
 
 .bar-clock {
-  margin-right: 8px;
+  margin-right: 36px;
 }
