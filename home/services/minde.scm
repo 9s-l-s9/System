@@ -230,6 +230,10 @@ name = \"laptop-only\"
   ;; wlr-gamma-control support.
   (wm-spawn \"gammastep -m wayland -l 35.81:-0.80 -t 3500:3000\")
   (wm-spawn \"[ $(brightnessctl get) -lt 100 ] && brightnessctl set 80% || true\")
+  ;; A reboot mid-eco leaves Bluetooth rfkill-blocked (firmware remembers
+  ;; the switch) plus a stale state file; clear both so Print h and the
+  ;; Bluetooth mouse behave. Idempotent when eco mode is not on.
+  (wm-spawn \"~/Projects/System/scripts/eco-toggle.scm off\")
   ;; KDE Connect has no Plasma session to D-Bus-activate its daemon, so start
   ;; it here; without a running kdeconnectd the phone never discovers this PC.
   ;; The indicator gives a tray entry for pairing/sending files.
