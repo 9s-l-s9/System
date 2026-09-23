@@ -1,0 +1,106 @@
+# Gruvbox segments, inspired by https://starship.rs/presets/gruvbox-rainbow.html
+# Each optional module owns its separators, so absent environments leave no
+# empty colored segments. Typography and terminal colors belong to Konsole.
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = true
+palette = 'gruvbox'
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$guix_shell\
+$python\
+$rust\
+$nodejs\
+$java\
+$status\
+$line_break\
+$character"""
+right_format = '$cmd_duration'
+
+[palettes.gruvbox]
+background = '#282828'
+foreground = '#ebdbb2'
+muted = '#a89984'
+yellow = '#d79921'
+green = '#b8bb26'
+aqua = '#8ec07c'
+blue = '#83a598'
+purple = '#d3869b'
+orange = '#fe8019'
+red = '#fb4934'
+
+[username]
+show_always = false
+style_user = 'orange'
+style_root = 'bold red'
+format = '[$user]($style) '
+
+[hostname]
+ssh_only = true
+style = 'orange'
+format = '[@$hostname]($style) '
+
+[directory]
+style = 'fg:background bg:yellow'
+format = '[](yellow)[ $path($read_only) ]($style)[](yellow)'
+truncation_length = 4
+truncation_symbol = '…/'
+truncate_to_repo = false
+read_only = ' ro'
+
+[git_branch]
+symbol = ''
+style = 'fg:background bg:aqua'
+format = ' [](aqua)[ $symbol $branch ]($style)[](aqua)'
+
+[git_status]
+style = 'yellow'
+format = '([ $all_status$ahead_behind]($style))'
+
+[guix_shell]
+symbol = 'guix'
+style = 'fg:background bg:purple'
+format = ' [](purple)[ $symbol ]($style)[](purple)'
+
+[python]
+symbol = 'py'
+style = 'fg:background bg:blue'
+format = ' [](blue)[ $symbol $version( · $virtualenv) ]($style)[](blue)'
+
+[rust]
+symbol = 'rs'
+style = 'fg:background bg:blue'
+format = ' [](blue)[ $symbol $version ]($style)[](blue)'
+
+[nodejs]
+symbol = 'node'
+style = 'fg:background bg:blue'
+format = ' [](blue)[ $symbol $version ]($style)[](blue)'
+
+[java]
+symbol = 'java'
+style = 'fg:background bg:blue'
+format = ' [](blue)[ $symbol $version ]($style)[](blue)'
+
+[cmd_duration]
+min_time = 2000
+style = 'muted'
+format = '[$duration]($style)'
+
+[status]
+disabled = false
+symbol = '✘'
+style = 'bold red'
+format = ' [ $symbol $status]($style)'
+
+[character]
+success_symbol = '[❯](bold green)'
+error_symbol = '[❯](bold red)'
+vimcmd_symbol = '[❮](bold green)'
+vimcmd_replace_one_symbol = '[❮](bold purple)'
+vimcmd_replace_symbol = '[❮](bold purple)'
+vimcmd_visual_symbol = '[❮](bold yellow)'
