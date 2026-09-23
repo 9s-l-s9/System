@@ -281,28 +281,41 @@
 )
 
 ;; ---- minde top bar ----
-;; minde writes "[I]  II  III | window title" to
-;; $XDG_RUNTIME_DIR/minde-status whenever it changes; the exclusive
-;; zone makes minde's frame tree tile below the bar automatically.
-;; Same daemon as sysinfo: `eww open bar` / `eww open sysinfo` coexist.
+;; minde publishes a JSON status document (groups, focused window,
+;; outputs) on every change; `mindectl subscribe --json` prints the
+;; current document once and then one line per update.  The group
+;; names become buttons that switch groups through `mindectl eval`.
+;; The exclusive zone makes minde's frame tree tile below the bar
+;; automatically.  Same daemon as sysinfo: `eww open bar` /
+;; `eww open sysinfo` coexist.
 
-(deflisten minde-status
-	:initial "…"
-	"tail -F $XDG_RUNTIME_DIR/minde-status 2>/dev/null")
+(deflisten minde-state
+	:initial "{\"groups\":[],\"focused_window\":null}"
+	"mindectl subscribe --json 2>/dev/null")
 
+(defwidget group-buttons []
+	(box :class "groups" :space-evenly false :spacing 2
+		(for g in {minde-state.groups}
+			(button :class {g.focused ? "group focused" : "group"}
+				:onclick "mindectl eval '(switch-to-group! \"${g.name}\")'"
+				{g.focused ? "[${g.name}]" : g.name})))
+)
 
 (defwindow bar
 	:monitor 0
 	:geometry 	(geometry 	:x "0"
 					:y "0"
 					:width "100%"
-					:height "28px"
+					:height "32px"
 					:anchor "top center"
 			)
 	:stacking "fg"
 	:exclusive true
 	(centerbox
-		(box :halign "start" :class "minde-status" minde-status)
+		(box :halign "start" :class "minde-status" :space-evenly false :spacing 8
+			(group-buttons)
+			(label :text "|")
+			(label :text {minde-state.focused_window?.title ?: ""}))
 		(box)
 		(box :halign "end" :space-evenly false :spacing 12
 			(label :class "bar-bat" :text {stats.bat})
