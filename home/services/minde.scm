@@ -31,6 +31,9 @@ name = \"samsung-only\"
     [[profile.output]]
     search = [\"m=LC32G7xT\", \"s=H4ZT101963\"]
     enable = true
+    # minde applies this for real since da12c1f.  Native 4K only reaches
+    # 24Hz over this HDMI 1.4 link, which feels laggy and renders tiny at
+    # scale 1.0; 1440p@60 is the usable compromise until DisplayPort.
     mode = \"2560x1440@59.951Hz\"
     position = \"0,0\"
     scale = 1.0
