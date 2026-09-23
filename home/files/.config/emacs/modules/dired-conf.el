@@ -13,6 +13,12 @@
 ;; load them lazily instead of paying their cost at startup.
 (with-eval-after-load 'dired
   (add-hook 'dired-mode-hook 'nerd-icons-dired-mode)
+  ;; `define-globalized-minor-mode' makes `diredfl-mode' set this flag from
+  ;; its after-hook, but the natively compiled diredfl.eln runs that hook
+  ;; before the variable's defvar has been evaluated, so every dired buffer
+  ;; fails with "Symbol's value as variable is void".  Predefining it is
+  ;; harmless when the ordering is right and fixes it when it is not.
+  (defvar diredfl-mode--set-explicitly nil)
   (diredfl-global-mode 1))
 
 (provide 'dired-conf)
