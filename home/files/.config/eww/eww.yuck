@@ -242,7 +242,17 @@
 				:onclick "${EWW_CMD} close actions; foot --hold -e make -C /home/samuel/Projects/System reconfigure-system"
 				(label :halign "start" :text "Reconfigure system")))
 		(box :orientation "v" :space-evenly false :spacing 8
-			(label :class "actions-heading" :halign "start" :text "03 / SESSION")
+			(label :class "actions-heading" :halign "start" :text "03 / HARDWARE")
+			(button :class "action-button"
+				:tooltip "Unbind/bind the i8042 controller (Print K)"
+				:onclick "${EWW_CMD} close actions; sudo -n /run/current-system/profile/bin/guile -s /home/samuel/Projects/System/scripts/toggle-internal-keyboard.scm && notify-send 'Internal keyboard' toggled"
+				(label :halign "start" :text "Toggle internal keyboard"))
+			(button :class "action-button"
+				:tooltip "Put the mouse in pairing mode first"
+				:onclick "${EWW_CMD} close actions; /home/samuel/Projects/System/scripts/pair-ergo-mouse.scm"
+				(label :halign "start" :text "Re-pair ERGO mouse")))
+		(box :orientation "v" :space-evenly false :spacing 8
+			(label :class "actions-heading" :halign "start" :text "04 / SESSION")
 			(button :class "action-button"
 				:onclick "${EWW_CMD} close actions; mindectl eval '(lock-screen!)'"
 				(label :halign "start" :text "Lock"))
