@@ -74,7 +74,7 @@ end
                ;; agent-launchers installs into ~/.local/bin.
                ("codex" . "codex-guix")
                ("claude" . "claude-guix")
-               ("claude-host" . "claude-guix --host")   ; no container: sudo, /sys, herd
+               ("claude-full" . "claude-guix --full")   ; FHS container (host is the default)
                ("deepseek" . "dsh-guix")
                ("dsh" . "dsh-guix")
                ("drawio-render" . "~/.local/bin/drawio-render")

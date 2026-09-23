@@ -19,7 +19,8 @@
 (define (usage)
   (format #t "Usage: claude-guix [--full|--sandbox|--host] [PROJECT-DIR] [-m MANIFEST-PATH]... [-- CLAUDE-ARGS...]~%")
   (format #t "       claude-guix --resume SESSION-ID~%")
-  (format #t "  Default mode: full. Pass --sandbox for a project-only Guix shell.~%")
+  (format #t "  Default mode: host (plain guix shell, no container -- like codex-guix).~%")
+  (format #t "  Pass --full for the FHS container, --sandbox for a project-only one.~%")
   (format #t "  --host runs Claude in a plain guix shell (no container): full host~%")
   (format #t "     access incl. sudo, /sys, herd and guix generations.~%")
   (format #t "  PROJECT-DIR defaults to the current directory.~%")
@@ -30,7 +31,7 @@
 (define (parse-args args)
   ;; extra-manifests accumulates user -m paths (in order); the base manifest
   ;; is always included so bash/node/npm/git are present in the profile.
-  (let loop ((rest args) (mode 'full) (project #f) (extra-manifests '()) (claude-args '()))
+  (let loop ((rest args) (mode 'host) (project #f) (extra-manifests '()) (claude-args '()))
     (cond
       ((null? rest)
        (values mode (or project (getcwd)) (reverse extra-manifests)
