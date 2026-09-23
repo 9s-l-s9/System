@@ -221,23 +221,23 @@
                  (subuids (list (subid-range (name "samuel"))))))
 
        ;; TLP had been a package (inert) since the beginning; the service is
-       ;; what applies a policy. Intent here: full performance on AC and *no
-       ;; performance regression on battery* -- every TLP default that trades
-       ;; performance for runtime is overridden (core parking, EPB powersave,
-       ;; SATA min_power, wifi/sound powersave, USB autosuspend). Remaining
-       ;; battery savings come only from knobs whose latency cost is below
-       ;; perception (SATA DIPM, PCIe ASPM).
+       ;; what applies a policy. intel_pstate's "powersave" governor is a
+       ;; dynamic policy, not a low-frequency cap: turbo remains available,
+       ;; while balance_performance avoids the needless heat and fan noise of
+       ;; pinning the energy preference to performance. Defaults that add
+       ;; perceptible latency (core parking, SATA min_power, wifi/sound power
+       ;; saving, USB autosuspend) remain overridden.
        (service tlp-service-type
                 (tlp-configuration
-                 (cpu-scaling-governor-on-ac (list "performance"))
-                 ;; Performance over battery life is a hard preference here,
-                 ;; so battery gets the same governor as AC.
-                 (cpu-scaling-governor-on-bat (list "performance"))
+                 (cpu-scaling-governor-on-ac (list "powersave"))
+                 ;; intel_pstate "powersave" is the kernel default this
+                 ;; machine already runs: dynamic scaling, instant ramp-up.
+                 (cpu-scaling-governor-on-bat (list "powersave"))
                  (cpu-boost-on-ac? #t)
                  (cpu-boost-on-bat? #t)
                  (sched-powersave-on-bat? #f)   ;; default #t parks cores on battery
                  (energy-perf-policy-on-bat "performance") ;; default "powersave"
-                 (cpu-energy-perf-policy-on-ac "performance")
+                 (cpu-energy-perf-policy-on-ac "balance_performance")
                  (cpu-energy-perf-policy-on-bat "performance")
                  (sata-linkpwr-on-bat "med_power_with_dipm") ;; default min_power adds I/O latency
                  (disk-apm-level-on-bat (list "254" "254"))  ;; default 128; moot on SSDs but explicit
@@ -245,9 +245,9 @@
                  (sound-power-save-on-bat 0)    ;; default 1s HDA suspend pops/delays audio
                  (runtime-pm-on-bat "on")       ;; default "auto" adds PCIe wake latency
                  (usb-autosuspend? #f)))        ;; external keyboard/BT must never sleep
-       ;; The 15 W Broadwell in this thin chassis thermal-throttles under
-       ;; sustained load; thermald manages the envelope proactively so turbo
-       ;; degrades gradually instead of collapsing at the trip point.
+       ;; The 15 W Broadwell/Skylake CPUs in these thin chassis thermal-throttle
+       ;; under sustained load; thermald manages the envelope proactively so
+       ;; turbo degrades gradually instead of collapsing at the trip point.
        (service thermald-service-type)
        (service bluetooth-service-type
 		(bluetooth-configuration
