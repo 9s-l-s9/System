@@ -83,6 +83,35 @@ name = \"laptop-only\"
 (bind-prefix-key! \"a\"
   (lambda () (toggle-actions!))
   \"command center\")
+;; Toggle the corrosion-damaged internal keyboard (i8042 controller unbind).
+;; Must be the exact command from the NOPASSWD sudoers rule in
+;; systems/X1.scm (guile + script path); ~/.local/bin/toggle-internal-kbd
+;; used sudo tee, which the rule does not cover, so it silently failed.
+(bind-prefix-key! \"K\"
+  (lambda ()
+    (wm-spawn
+     (string-append
+      \"sudo -n /run/current-system/profile/bin/guile\"
+      \" -s /home/samuel/Projects/System/scripts/toggle-internal-keyboard.scm\"
+      \" && notify-send 'Internal keyboard' toggled\")))
+  \"toggle internal keyboard\")
+;; Re-pair the ERGO M575 after it was used on another computer (it then
+;; presents a new address and rejects the old bond).  Mouse must be in
+;; pairing mode; the script drops stale bonds, scans, pairs, trusts, connects.
+(bind-prefix-key! \"M\"
+  (lambda () (wm-spawn \"~/Projects/System/scripts/pair-ergo-mouse.scm\"))
+  \"re-pair ERGO mouse\")
+;; Super-low-power toggle: min CPU freq, no turbo, half the cores off,
+;; firmware low-power profile.  Run again to restore.  Needs the
+;; NOPASSWD sudoers rule from systems/X1.scm (exact guile + script path).
+(bind-prefix-key! \"L\"
+  (lambda ()
+    (wm-spawn
+     (string-append
+      \"sudo /run/current-system/profile/bin/guile\"
+      \" -s ~/Projects/System/scripts/low-power-mode.scm\"
+      \" && notify-send 'Low power' toggled\")))
+  \"low power mode\")
 (bind-prefix-key! \"A\"
   (make-keymap
    \"c\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/codex-guix.scm\"))
