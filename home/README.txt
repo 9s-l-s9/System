@@ -27,6 +27,8 @@ home/
 │   ├── lem.scm
 │   ├── redshift.scm
 │   ├── fish.scm
+│   ├── starship.scm / starship.toml # Prompt package, fish integration and theme
+│   ├── konsole.scm             # Declarative Konsole profile, palette and UI
 │   └── bash.scm
 └── files/                      # Dotfiles (shared by all configs)
     └── .config/emacs/          # Emacs config — works on both desktop and WSL2
@@ -72,6 +74,34 @@ the Wayland session is unusable; it is not the daily driver.
 Terminal: foot (Wayland-native) is primary; konsole is the fallback under
 both sessions (X11-only commands in stumpwm.scm use konsole directly, since
 foot does not run under X11).
+
+Konsole appearance is declared in home/services/konsole.scm: the Gruvbox
+profile starts fish directly, uses IBM Plex Mono at 14 pt, 12 px margins,
+no extra row spacing, an opaque background and bottom tabs shown only when
+needed. Semantic divider lines, command bars/backgrounds and scroll markers
+are disabled; shell integration still supports navigation and copying output.
+Its initial floating size is 120 columns by 36 rows; minde controls tiled
+window sizes.
+Guix Home installs konsolerc and the profile/palette as store-backed files.
+KConfig's immutable marker keeps application saves from replacing konsolerc;
+edit the service and reconfigure instead of saving changes in the GUI.
+
+Fish input, suggestion and completion colors live in home/services/fish.scm.
+Colors are set at global scope on each interactive startup, so old universal
+theme settings cannot override the declared values. There is no random
+Konsole theme switch and no `gh` alias (GitHub CLI owns `gh`).
+
+Starship owns the two-line prompt on desktop and WSL2. Its package and fish
+initialization are declared in home/services/starship.scm; edit the adjacent
+starship.toml to change the theme. Guix Home installs that file as
+~/.config/starship.toml. The Gruvbox segments show the directory, Git branch
+and status, and active Guix/language environments. Commands taking at least
+two seconds show their duration on the right; failures turn the prompt red.
+The existing fonts provide the rounded separators and branch glyph.
+
+Apply with `make reconfigure-home`. Open a fresh Konsole process afterward
+to load the new default profile and UI settings. Guix Home backs up existing
+unmanaged configuration files when it first takes ownership.
 
 
 == Emacs Daemon ==
