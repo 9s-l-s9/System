@@ -23,7 +23,7 @@
         "guile-lsp-server"
         "make"
         "python-lsp-server"    ; pylsp LSP backend for eglot
-        "python-debugpy"       ; DAP debug adapter
+        ;"python-debugpy"      ; DAP debug adapter; unused since emacs-dap-mode was dropped
         "ruff"                 ; fast linter + formatter
         "python-pytest"        ; test runner
         "python-mypy"          ; static type checker
@@ -83,7 +83,7 @@
    "emacs-corfu"
    ;;"emacs-dashboard"
    ;;"emacs-dired-preview"
-   "emacs-dap-mode"
+   ;;"emacs-dap-mode"   ; unused; pulls lsp-mode, treemacs and co. and needs 20 min of native compilation
    "emacs-diredfl"
    ;"emacs-doom-themes"
    "emacs-eat"
