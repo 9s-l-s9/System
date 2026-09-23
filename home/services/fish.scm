@@ -68,7 +68,6 @@ end
              '(("ls" . "ls -p --color=auto")
                ("ll" . "ls -l")
                ("grep" . "grep --color=auto")
-               ("gh" . "guix home reconfigure ~/Projects/System/home/samuel-home-configuration.scm")
                ("gs" . "sudo guix system reconfigure ~/Projects/System/systems/$(hostname).scm")
                ("reload-emacs" . "herd restart emacs-daemon")
                ;; Short names for the launcher executables that
