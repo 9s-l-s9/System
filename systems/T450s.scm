@@ -1,4 +1,5 @@
 (use-modules (base-system)
+             (gnu packages video)
              (gnu bootloader)
              (gnu bootloader grub)
              (gnu system)
@@ -21,19 +22,33 @@
   ;; that leaves the machine warm), and i915.enable_psr=0 disables panel
   ;; self-refresh, which is the usual cause of the display wedging on resume.
   ;; T450s-specific: leave X1 on the default kernel arguments.
-  (kernel-arguments (append '("mem_sleep_default=deep" "i915.enable_psr=0")
+  ;;
+  ;; i915.enable_fbc=1 turns on framebuffer compression (supported on
+  ;; Broadwell) to cut memory bandwidth and idle power. Added 2026-09-18;
+  ;; if the panel flickers or tears, drop it the way PSR was dropped.
+  (kernel-arguments (append '("mem_sleep_default=deep" "i915.enable_psr=0"
+                              "i915.enable_fbc=1")
                             %default-kernel-arguments))
 
   ;; Add minde system-wide so SDDM finds its wayland-session entry in
   ;; /run/current-system/profile/share/wayland-sessions.
-  (packages (cons minde (operating-system-packages base-system)))
+  ;;
+  ;; intel-vaapi-driver (i965) is the VA-API backend for the Broadwell
+  ;; HD 5500.  The Zen launcher (home/packages/zen.scm) turns on hardware
+  ;; video decoding only when this driver is present in
+  ;; /run/current-system/profile, so the shared home configuration stays
+  ;; untouched and X1 is unaffected.
+  (packages (cons* minde intel-vaapi-driver
+                   (operating-system-packages base-system)))
 
   (file-systems
    (append
     (list (file-system
            (device (uuid "bbd2fd05-4888-45bc-bc6f-714b4245289c"))
            (mount-point "/")
-           (type "ext4")))
+           (type "ext4")
+           ;; noatime: skip the access-time write on every file read (SSD).
+           (options "noatime")))
     %base-file-systems))
 
   ;; /dev/sda2, re-initialised with mkswap 2026-07-08 (it used to carry a
