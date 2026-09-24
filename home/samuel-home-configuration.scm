@@ -10,7 +10,8 @@
   #:use-module (services lem)
   #:use-module (services agent-skills)
   #:use-module (services agent-launchers)
-  #:use-module (services claude))
+  #:use-module (services claude)
+  #:use-module (services mail))
 
 (home-environment
  (packages
@@ -26,4 +27,5 @@
                 (agent-skills-service)
                 (claude-service))
           (konsole-services)
+          (mail-services)
           (agent-launcher-services))))

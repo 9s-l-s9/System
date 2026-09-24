@@ -72,6 +72,7 @@
 (require 'helpful-conf)
 (use-package eat
   :commands (eat eat-other-window))
+(require 'notmuch-conf)
 
 ;; ── Org ───────────────────────────────────────────────────────────────────────
 ;; (require 'org-conf)
