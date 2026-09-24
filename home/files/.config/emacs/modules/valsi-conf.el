@@ -8,7 +8,7 @@
 ;; becomes a dedicated meow state driven by `valsi-browse-mode-map' (so its
 ;; keys work at emulation priority instead of being shadowed by NORMAL),
 ;; and VALSI's Insert hands the buffer to meow NORMAL -- the modal editing
-;; home -- rather than to meow insert.  Return to Browse with SPC n (leader).
+;; home -- rather than to meow insert.  Return to Browse with SPC o n (leader).
 (with-eval-after-load 'meow
   (meow-define-state valsi
     "Meow state driving VALSI's semantic Browse commands."
