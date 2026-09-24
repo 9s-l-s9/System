@@ -1,6 +1,25 @@
 ;;; keybindings-conf.el --- Meow modal keybindings -*- lexical-binding: t -*-
 ;;; Code:
 
+;; Leader keys meow's keypad reserves and never passes through:
+;;   m -> M-   g -> C-M-   SPC -> literal   c/h/x -> C-c/C-h/C-x prefixes
+;; So SPC m / SPC c never reach a leader command.  SPC c c is C-c C-c
+;; (send mail, org confirm), so the C-c prefix stays as it is.
+
+;; App launcher: SPC o <key>.  Apps live only here, not on the leader.
+(defvar-keymap sls-apps-map
+  :doc "Start an app (SPC o)."
+  "m" #'notmuch                 ; mail
+  "c" #'sls-config-jump         ; any file in ~/Projects/System
+  "v" #'magit-status
+  "t" #'eat
+  "d" #'dired
+  "i" #'ibuffer
+  "a" #'gptel
+  "e" #'eca
+  "n" #'valsi)
+(fset 'sls-apps-map sls-apps-map)
+
 (defun meow-setup ()
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
   (meow-motion-overwrite-define-key
@@ -8,29 +27,22 @@
    '("p" . meow-prev)
    '("<escape>" . ignore))
   (meow-leader-define-key
+   '("o" . sls-apps-map)       ; apps: SPC o m mail, SPC o v magit, SPC o c config ...
    ;; Navigation panels (all open in right side window)
-   '("D" . dired)
    '("d" . sls-dired-sidebar-toggle)
-   '("i" . ibuffer)
    '("s" . imenu-list-smart-toggle)
    '("r" . sls-recentf-open)
    '("b" . bookmark-bmenu-list)
    ;; Actions
    '("p" . sls-new-entry-pkb)
    '("E" . sls-export-org-to-html-and-pdf)
-   '("t" . eat)
    '("T" . sls-capture-todo)       ; quick-capture to the shared wm.org inbox
-   '("c" . sls-config-jump)        ; jump to any file in ~/Projects/System
-   '("v" . magit-status)
    '("y" . sls-copy-file-path)
    '("R" . sls-reload-init-file) ; reload config in place (no daemon restart)
-   '("n" . valsi)             ; project-aware VALSI hub (SPC n)
    '("u" . vundo)              ; visual undo tree
    '("f" . delete-other-windows) ;focus
-   ;; AI
-   '("a" . gptel)              ; chat / rewrite
+   ;; AI (the gptel chat itself is SPC o a)
    '("A" . gptel-menu)
-   '("e" . eca)                ; autonomous agent
    ;; '("c" . minuet-show-suggestion) ; inline completion; needs an API key
    '("w" . whisper-run))       ; voice to text (dictation)
 
@@ -120,7 +132,7 @@
 (global-set-key (kbd "C-c C-d e") #'dap-eval-thing-at-point)
 
 ;; ── gptel: chat / rewrite ───────────────────────────────────────────────────
-;; Open/menu are on the meow leader (SPC a / SPC A); `C-c a' / `C-c A' are
+;; Chat is SPC o a, the menu SPC A (meow leader); `C-c a' / `C-c A' are
 ;; intentionally not bound here to avoid duplicating those.
 (global-set-key (kbd "C-c RET") #'gptel-send)
 (global-set-key (kbd "C-c C-a") #'gptel-add)

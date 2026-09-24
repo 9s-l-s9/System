@@ -14,7 +14,7 @@
 ;;
 ;; `eca' is autoloaded, so this module never needs to load the package
 ;; eagerly; the settings below only apply once `eca' is actually invoked
-;; (via the meow leader, SPC e, set in keybindings-conf.el).
+;; (via the meow app launcher, SPC o e, set in keybindings-conf.el).
 ;;; Code:
 
 (with-eval-after-load 'eca
