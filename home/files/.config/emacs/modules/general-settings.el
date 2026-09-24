@@ -2,7 +2,7 @@
 ;;; Code:
 
 (setq user-full-name "Samuel Levi Schmidt"
-      user-mail-address (concat "schmidt.l.samuel" "@" "gmail.com")
+      user-mail-address (concat "samuel" "@" "schmidt-contact.com")
       copyright-names-regexp (format "%s <%s>"
                                      user-full-name
                                      user-mail-address))
