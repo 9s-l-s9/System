@@ -110,6 +110,7 @@
    "emacs-marginalia"
    ;"emacs-markdown-preview-mode"
    "emacs-meow"
+   "emacs-notmuch"
    "emacs-nerd-icons"
    "emacs-nerd-icons-completion"
    "emacs-nerd-icons-dired"
