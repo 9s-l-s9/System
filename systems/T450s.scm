@@ -47,8 +47,11 @@
            (device (uuid "bbd2fd05-4888-45bc-bc6f-714b4245289c"))
            (mount-point "/")
            (type "ext4")
-           ;; noatime: skip the access-time write on every file read (SSD).
-           (options "noatime")))
+           ;; no-atime: skip the access-time write on every file read (SSD).
+           ;; This is a mount flag, not a driver option: the initrd passes
+           ;; the options string raw to mount(2), ext4 rejects "noatime"
+           ;; there, the root mount fails and the kernel panics (gen 101).
+           (flags '(no-atime))))
     %base-file-systems))
 
   ;; /dev/sda2, re-initialised with mkswap 2026-07-08 (it used to carry a
