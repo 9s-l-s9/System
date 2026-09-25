@@ -187,8 +187,9 @@
   (list
    (service mail-service-type)
    ;; The sync timer runs without a terminal, so pass must find the key
-   ;; already unlocked: unlock once per session (e.g. `pass show mailfence`),
-   ;; the agent then keeps it for the day.
+   ;; already unlocked.  minde's startup hook (minde.scm, handle-startup!)
+   ;; asks for it once at login via pinentry-qt; the agent then keeps it
+   ;; for the day.  Outside minde: `pass show mailfence >/dev/null`.
    (service home-gpg-agent-service-type
             (home-gpg-agent-configuration
              (pinentry-program (file-append pinentry-qt "/bin/pinentry-qt"))
