@@ -1,4 +1,4 @@
-;;; mail.scm --- Mailfence over IMAP: mbsync, notmuch, msmtp, pass
+;;; mail.scm --- Mailfence over IMAP: mbsync, notmuch, msmtp
 ;;;
 ;;; Mail lives in a local Maildir (~/Mail/mailfence) that mbsync mirrors
 ;;; from imap.mailfence.com every five minutes.  notmuch indexes it; its
@@ -16,19 +16,16 @@
 ;;;
 ;;; Sending is msmtp only (Emacs message-mode).  The sync timer never sends.
 ;;;
-;;; The password is read from pass (entry "mailfence"); it is never written
-;;; into a config file.  One-time setup:
-;;;   gpg --full-generate-key
-;;;   pass init <key-id>
-;;;   pass insert mailfence
+;;; The password is read from ~/.local/share/mailfence/password (mode 600,
+;;; outside the repo); it is never written into a config file.  One-time
+;;; setup per device (paste the password, then Ctrl-D):
+;;;   install -Dm600 /dev/stdin ~/.local/share/mailfence/password
 
 (define-module (services mail)
   #:use-module (gnu home services)
-  #:use-module (gnu home services gnupg)
   #:use-module (gnu home services shepherd)
-  #:use-module (gnu packages gnupg)
+  #:use-module (gnu packages base)
   #:use-module (gnu packages mail)
-  #:use-module (gnu packages password-utils)
   #:use-module (gnu packages w3m)
   #:use-module (gnu services)
   #:use-module (gnu services shepherd)
@@ -40,8 +37,10 @@
 (define %mailfence-address (string-append "schmidt.samuel" "@" "mailfence.com"))
 (define %ca-file "/etc/ssl/certs/ca-certificates.crt")
 
+;; mbsync and msmtp both run this through /bin/sh, so ~ expands.
 (define pass-command
-  #~(string-append #$(file-append password-store "/bin/pass") " show mailfence"))
+  #~(string-append #$(file-append coreutils "/bin/cat")
+                   " ~/.local/share/mailfence/password"))
 
 ;; mbsync >= 1.5 reads $XDG_CONFIG_HOME/isyncrc.
 (define isyncrc
@@ -164,7 +163,7 @@
                         #:documentation "Sync Mailfence via mbsync, then notmuch new.")))
 
 (define (mail-packages _config)
-  (list isync notmuch msmtp password-store w3m pinentry-qt))
+  (list isync notmuch msmtp w3m))
 
 (define (mail-xdg-files _config)
   `(("isyncrc" ,isyncrc)
@@ -184,15 +183,4 @@
    (description "Mirror Mailfence to a local Maildir and index it with notmuch.")))
 
 (define (mail-services)
-  (list
-   (service mail-service-type)
-   ;; The sync timer runs without a terminal, so pass must find the key
-   ;; already unlocked.  minde's startup hook (minde.scm, handle-startup!)
-   ;; asks for it once at login via pinentry-qt; the agent then keeps it
-   ;; for the day.  Outside minde: `pass show mailfence >/dev/null`.
-   (service home-gpg-agent-service-type
-            (home-gpg-agent-configuration
-             (pinentry-program (file-append pinentry-qt "/bin/pinentry-qt"))
-             (ssh-support? #f)
-             (default-cache-ttl 28800)
-             (max-cache-ttl 86400)))))
+  (list (service mail-service-type)))

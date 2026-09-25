@@ -300,11 +300,9 @@ name = \"laptop-only\"
   (wm-spawn \"kdeconnectd\")
   (wm-spawn \"kdeconnect-indicator\")
   (wm-spawn %emacs-session-env)
-  ;; The mail-sync timer runs without a display, so pass fails with \"No
-  ;; pinentry\" until gpg-agent holds the key.  Ask once at login
-  ;; (pinentry-qt, see mail.scm) and sync right away instead of silently
-  ;; skipping Mailfence after every reboot.
-  (wm-spawn \"pass show mailfence >/dev/null && herd trigger mail-sync\")
+  ;; Sync Mailfence right away instead of waiting up to five minutes for
+  ;; the mail-sync timer after a reboot.
+  (wm-spawn \"herd trigger mail-sync\")
   (wm-log \"personal autostart complete\"))
 
 ;; Preserve personal additions across the base configuration's atomic reload.
