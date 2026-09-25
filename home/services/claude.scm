@@ -12,7 +12,7 @@
 ;; which stays mutable for the state Claude Code writes itself (theme,
 ;; effort, accepted dialogs).
 ;;
-;; Checked against Claude Code 2.1.280 (2026-09-22).
+;; Checked against Claude Code 2.1.282 (2026-09-25).
 ;;
 ;; - $schema: the published JSON schema, for editor completion and
 ;;   validation.  It may lag behind the newest releases, so a warning on a
@@ -28,6 +28,11 @@
 ;;   bypassPermissions included, so the prompt appears even though the
 ;;   launcher starts the CLI with --dangerously-skip-permissions.  (Allow
 ;;   rules, by contrast, have no effect in that mode; deny rules always do.)
+;; - attribution: empty strings hide the Co-Authored-By commit trailer and
+;;   the "Generated with Claude Code" PR line; sessionUrl false drops the
+;;   Claude-Session trailer cloud and Remote Control sessions add.  With
+;;   this set the CLI never even asks the model to add attribution.  The
+;;   commit-msg hook in services/git.scm is the backstop.
 (define claude-settings
   (plain-file
    "claude-code-settings.json"
@@ -40,6 +45,11 @@
     \"ask\": [
       \"Agent\"
     ]
+  },
+  \"attribution\": {
+    \"commit\": \"\",
+    \"pr\": \"\",
+    \"sessionUrl\": false
   }
 }
 "))
