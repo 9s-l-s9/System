@@ -164,6 +164,28 @@ name = \"laptop-only\"
 (define (next-wallpaper!)
   (wm-spawn %personal-wallpaper))
 
+;; The Emacs daemon is a Shepherd service (emacs.scm) and starts without
+;; the compositor's WAYLAND_DISPLAY/DISPLAY, so eat shells, dired and
+;; browse-url could not open GUI programs (\"no DISPLAY\").  minde exports
+;; both only to its own children, so hand them over from here: record
+;; them for later daemon (re)starts and push them into the running one.
+;; DISPLAY appears once Xwayland is ready, possibly after this spawn;
+;; fall back to the Xwayland process's display argument.
+(define %emacs-session-env
+  (string-append
+   \"f=${XDG_RUNTIME_DIR:-/tmp}/graphical-session.env; d=$DISPLAY; \"
+   \"for _ in $(seq 50); do [ -n \\\"$d\\\" ] && break; \"
+   \"d=$(pgrep -u \\\"$(id -u)\\\" -a Xwayland | grep -o ' :[0-9]*' \"
+   \"| head -n1 | tr -d ' '); [ -n \\\"$d\\\" ] || sleep 0.2; done; \"
+   \"{ echo \\\"WAYLAND_DISPLAY=$WAYLAND_DISPLAY\\\"; \"
+   \"if [ -n \\\"$d\\\" ]; then echo \\\"DISPLAY=$d\\\"; fi; } > \\\"$f.tmp\\\" \"
+   \"&& mv \\\"$f.tmp\\\" \\\"$f\\\"; \"
+   \"el=\\\"(progn (setenv \\\\\\\"WAYLAND_DISPLAY\\\\\\\" \\\\\\\"$WAYLAND_DISPLAY\\\\\\\")\\\"; \"
+   \"[ -n \\\"$d\\\" ] && el=\\\"$el (setenv \\\\\\\"DISPLAY\\\\\\\" \\\\\\\"$d\\\\\\\")\\\"; \"
+   \"el=\\\"$el)\\\"; \"
+   \"for _ in $(seq 100); do \"
+   \"emacsclient -e \\\"$el\\\" >/dev/null 2>&1 && exit 0; sleep 0.2; done\"))
+
 ;; eww's client starts a daemon when none answers, and it detaches
 ;; before that daemon listens.  Two `eww open' processes launched
 ;; together therefore both conclude \"no daemon\", both try to become
@@ -277,6 +299,12 @@ name = \"laptop-only\"
   ;; The indicator gives a tray entry for pairing/sending files.
   (wm-spawn \"kdeconnectd\")
   (wm-spawn \"kdeconnect-indicator\")
+  (wm-spawn %emacs-session-env)
+  ;; The mail-sync timer runs without a display, so pass fails with \"No
+  ;; pinentry\" until gpg-agent holds the key.  Ask once at login
+  ;; (pinentry-qt, see mail.scm) and sync right away instead of silently
+  ;; skipping Mailfence after every reboot.
+  (wm-spawn \"pass show mailfence >/dev/null && herd trigger mail-sync\")
   (wm-log \"personal autostart complete\"))
 
 ;; Preserve personal additions across the base configuration's atomic reload.
