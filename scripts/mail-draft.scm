@@ -107,8 +107,25 @@ with \"> \", as mail clients do on reply; empty if the original is unknown."
   (let ((body (original-text-body msg-id))
         (from (original-header msg-id "From"))
         (date (original-header msg-id "Date")))
-    (if (not body)
-        ""
+    (cond
+     ((not body)
+      ;; Not exported yet (export runs after each sync): notmuch's own quote
+      ;; still works for text/plain mails.
+      (let* ((raw (command-output "notmuch" "reply" (string-append "id:" msg-id)))
+             (end (string-contains raw "\n\n"))
+             (lines (if end (string-split (substring raw (+ end 2)) #\newline) '()))
+             ;; "Non-text part: …" marks skipped HTML/attachment parts.
+             (kept (remove (lambda (l) (string-prefix? "Non-text part:" l)) lines)))
+        (if (any (lambda (l) (and (string-prefix? "> " l)
+                                  (not (string-null? (string-trim-both (substring l 2))))))
+                 kept)
+            (string-append "\n\n" (string-trim-right (string-join kept "\n")))
+            (begin
+              (format (current-error-port)
+                      "mail-draft: WARNUNG: Ursprungsmail ~a weder in ~~/Mail/text noch als Text in notmuch; Entwurf ohne Zitat~%"
+                      msg-id)
+              ""))))
+     (else
         (string-append
          "\n\n"
          (if date
@@ -120,7 +137,7 @@ with \"> \", as mail clients do on reply; empty if the original is unknown."
          (string-join
           (map (lambda (line) (if (string-null? line) ">" (string-append "> " line)))
                (string-split (string-trim-right body) #\newline))
-          "\n")))))
+          "\n"))))))
 
 ;;; RFC 2047 encoding for non-ASCII header text
 
