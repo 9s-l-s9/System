@@ -13,8 +13,12 @@
 ;;;
 ;;; Only In-Reply-To is needed for a reply: To and Subject then default to
 ;;; the original's Reply-To/From and "Re: <subject>", and References is
-;;; rebuilt from the original so the reply threads correctly.  Cc is
-;;; optional.
+;;; rebuilt from the original so the reply threads correctly; the
+;;; original's text (from its export in ~/Mail/text) is quoted with "> "
+;;; below the reply, as a mail client would.  Cc is
+;;; optional.  Attach: takes one or more comma-separated file paths
+;;; (relative to the current directory or absolute); the draft then becomes
+;;; multipart/mixed with each file as a base64 attachment.
 ;;;
 ;;; The draft is written into ~/Mail/mailfence/Drafts and uploaded with
 ;;; `mbsync mailfence-drafts'.  It is never sent: review and send it in
@@ -22,7 +26,8 @@
 ;;;
 ;;; Usage: mail-draft.scm [--no-sync] FILE
 
-(use-modules (ice-9 popen)
+(use-modules (ice-9 binary-ports)
+             (ice-9 popen)
              (ice-9 rdelim)
              (ice-9 regex)
              (ice-9 textual-ports)
@@ -84,6 +89,39 @@
 (define (bare-id id)
   (string-trim-both id (char-set #\< #\> #\space)))
 
+(define (original-text-body msg-id)
+  "Body of MSG-ID from its text export in ~/Mail/text, or #f.  Not `notmuch
+reply': it quotes only text/plain parts, and many recruiting mails are HTML-only."
+  (let* ((hit (command-output "grep" "-rlxF" "--include=*.txt"
+                              (string-append "Message-ID: <" msg-id ">")
+                              (string-append (getenv "HOME") "/Mail/text")))
+         (file (and (not (string-null? hit)) (car (string-split hit #\newline)))))
+    (and file
+         (let* ((text (call-with-input-file file get-string-all))
+                (end (string-contains text "\n\n")))
+           (and end (substring text (+ end 2)))))))
+
+(define (quoted-original msg-id)
+  "\"Am <Datum> um <Zeit>, <Absender> schrieb:\" plus the original body quoted
+with \"> \", as mail clients do on reply; empty if the original is unknown."
+  (let ((body (original-text-body msg-id))
+        (from (original-header msg-id "From"))
+        (date (original-header msg-id "Date")))
+    (if (not body)
+        ""
+        (string-append
+         "\n\n"
+         (if date
+             (string-append "Am " (string-trim-both
+                                   (command-output "date" "-d" date "+%d.%m.%Y um %H:%M"))
+                            ", ")
+             "")
+         (or from "") " schrieb:\n"
+         (string-join
+          (map (lambda (line) (if (string-null? line) ">" (string-append "> " line)))
+               (string-split (string-trim-right body) #\newline))
+          "\n")))))
+
 ;;; RFC 2047 encoding for non-ASCII header text
 
 (define base64-chars
@@ -125,6 +163,45 @@
         (string-split s #\,))
    ", "))
 
+;;; Attachments
+
+(define (wrap-76 s)
+  "Split S into CRLF-free lines of at most 76 characters (RFC 2045)."
+  (let loop ((i 0) (acc '()))
+    (if (>= i (string-length s))
+        (string-join (reverse acc) "\n")
+        (loop (+ i 76)
+              (cons (substring s i (min (string-length s) (+ i 76))) acc)))))
+
+(define (mime-type file)
+  (cond ((string-suffix-ci? ".pdf" file) "application/pdf")
+        ((string-suffix-ci? ".png" file) "image/png")
+        ((or (string-suffix-ci? ".jpg" file) (string-suffix-ci? ".jpeg" file)) "image/jpeg")
+        ((string-suffix-ci? ".txt" file) "text/plain; charset=utf-8")
+        ((string-suffix-ci? ".md" file) "text/markdown; charset=utf-8")
+        (else "application/octet-stream")))
+
+(define (attachment-paths headers)
+  (let ((v (header headers "attach")))
+    (if v
+        (map (lambda (p)
+               (let ((p (string-trim-both p)))
+                 (unless (file-exists? p) (die "attachment not found: ~a" p))
+                 p))
+             (remove string-null? (string-split v #\,)))
+        '())))
+
+(define (attachment-part boundary path)
+  (let* ((name (encode-word (basename path)))
+         (data (call-with-input-file path get-bytevector-all #:binary #t)))
+    (string-append
+     "--" boundary "\n"
+     "Content-Type: " (mime-type path) "; name=\"" name "\"\n"
+     "Content-Disposition: attachment; filename=\"" name "\"\n"
+     "Content-Transfer-Encoding: base64\n"
+     "\n"
+     (wrap-76 (base64 data)) "\n")))
+
 ;;; Building the message
 
 (define (rfc2822-date)
@@ -151,6 +228,11 @@
                            (string-append (or (original-header reply-to "References") "")
                                           " <" reply-to ">"))))
          (cc (header headers "cc"))
+         (body (if reply-to
+                   (string-append (string-trim-right body) (quoted-original reply-to))
+                   body))
+         (attachments (attachment-paths headers))
+         (boundary (string-append "=_" (unique-name)))
          (domain (let ((at (string-index from-address #\@)))
                    (string-trim-right (substring from-address (+ at 1)) #\>))))
     (string-append
@@ -163,10 +245,23 @@
      (if reply-to (string-append "In-Reply-To: <" reply-to ">\n") "")
      (if references (string-append "References: " references "\n") "")
      "MIME-Version: 1.0\n"
-     "Content-Type: text/plain; charset=utf-8\n"
-     "Content-Transfer-Encoding: 8bit\n"
-     "\n"
-     (string-trim-right body) "\n")))
+     (if (null? attachments)
+         (string-append
+          "Content-Type: text/plain; charset=utf-8\n"
+          "Content-Transfer-Encoding: 8bit\n"
+          "\n"
+          (string-trim-right body) "\n")
+         (string-append
+          "Content-Type: multipart/mixed; boundary=\"" boundary "\"\n"
+          "\n"
+          "--" boundary "\n"
+          "Content-Type: text/plain; charset=utf-8\n"
+          "Content-Transfer-Encoding: 8bit\n"
+          "\n"
+          (string-trim-right body) "\n"
+          (string-concatenate
+           (map (lambda (p) (attachment-part boundary p)) attachments))
+          "--" boundary "--\n")))))
 
 (define (write-draft message)
   ;; Maildir flags D (draft) and S (seen); mbsync uploads unnumbered files.
