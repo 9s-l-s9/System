@@ -17,16 +17,26 @@
 ;; (via the meow app launcher, SPC o e, set in keybindings-conf.el).
 ;;; Code:
 
-(with-eval-after-load 'eca
-  ;; ── Server command ────────────────────────────────────────────────────────
-  ;; Uncomment + adapt once you have a server jar.  Leaving this unset lets
-  ;; eca-emacs fall back to its own auto-download behaviour.
-  ;;
-  ;; (setq eca-custom-command
-  ;;       '("java" "-jar" "~/.local/share/eca/eca.jar" "server"))
+;; Optional server override:
+;; (setq eca-custom-command '("java" "-jar" "~/.local/share/eca/eca.jar" "server"))
 
-  (when (boundp 'eca-mode-map)
-    (define-key eca-mode-map (kbd "C-c C-k") #'eca-stop)))
+;; Preserve ECA's native model/agent header; move progress and trust status
+;; into the common top header instead of resurrecting a bottom mode line.
+(setq eca-chat-override-mode-line nil
+      eca-chat-mode-line-format '(:init-progress :elapsed-time " " :usage " " :trust))
+
+(defun sls-eca-ui-setup ()
+  (setq-local sls-ui-title "AI / agent"
+              mode-line-process
+              '(:eval (when-let* ((session (eca-session)))
+                        (eca-chat--mode-line-string session)))
+              sls-ui-actions '(("Send prompt" . eca-chat-send-prompt-at-chat)
+                               ("Stop response" . eca-chat-stop-prompt)
+                               ("New chat" . eca-chat-new)
+                               ("Choose chat…" . eca-chat-select)
+                               ("Choose model…" . eca-chat-select-model)
+                               ("Show context" . eca-chat-show-context))))
+(add-hook 'eca-chat-mode-hook #'sls-eca-ui-setup)
 
 (provide 'eca-conf)
 ;;; eca-conf.el ends here

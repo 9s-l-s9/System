@@ -14,9 +14,13 @@
     (dired-sort-other arg)))
 
 (defun sls-reload-init-file ()
-  "Reload init.el without restarting Emacs."
+  "Re-read init.el and its local configuration modules without restarting.
+Startup-only settings in early-init.el still require a new Emacs session."
   (interactive)
-  (load-file user-init-file))
+  (unless (and user-init-file (file-readable-p user-init-file))
+    (user-error "No readable init file is associated with this session"))
+  (load-file user-init-file)
+  (message "Configuration modules reloaded"))
 
 (defun sls--find-file-make-parent-maybe (filename &optional _wildcards)
   "Offer to create the parent directory of FILENAME when missing."
@@ -55,66 +59,6 @@
   (when (derived-mode-p 'org-mode)
     (org-html-export-to-html)
     (org-latex-export-to-pdf)))
-
-;; Recent files as a navigable buffer
-;; Forward declaration so byte-compiling `sls-recentf-mode' is happy.
-(declare-function sls-recentf--refresh "sls-functions")
-(declare-function sls-recentf--open    "sls-functions")
-
-(defun sls-recentf--refresh (&rest _)
-  "Populate the *Recent Files* buffer."
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (dolist (file recentf-list)
-      (let ((name (file-name-nondirectory file))
-            (dir  (abbreviate-file-name (file-name-directory file))))
-        (insert (propertize name 'face 'link 'sls-path file))
-        (insert (propertize (concat "  " dir) 'face 'shadow))
-        (insert "\n")))
-    (goto-char (point-min))))
-
-(defun sls-recentf--open ()
-  "Open the file on the current line."
-  (interactive)
-  (let ((path (get-text-property (point) 'sls-path)))
-    (if path
-        (find-file path)
-      (message "No file at point"))))
-
-(define-derived-mode sls-recentf-mode special-mode "RecentF"
-  "Browse recent files in a dedicated buffer."
-  (setq-local revert-buffer-function #'sls-recentf--refresh)
-  (define-key sls-recentf-mode-map (kbd "RET") #'sls-recentf--open)
-  (define-key sls-recentf-mode-map (kbd "j") #'next-line)
-  (define-key sls-recentf-mode-map (kbd "k") #'previous-line))
-
-(defun sls-recentf-open ()
-  "Open recent files in a side panel buffer."
-  (interactive)
-  (recentf-mode 1)
-  (let ((buf (get-buffer-create "*Recent Files*")))
-    (with-current-buffer buf
-      (unless (derived-mode-p 'sls-recentf-mode)
-        (sls-recentf-mode))
-      (sls-recentf--refresh))
-    (select-window (display-buffer buf))))
-
-;; Dired as a right-side panel
-(defun sls-dired-sidebar-toggle ()
-  "Toggle a Dired sidebar for the current project/directory."
-  (interactive)
-  (let* ((dir (or (when (buffer-file-name)
-                    (file-name-directory (buffer-file-name)))
-                  default-directory))
-         (buf-name "*Dired Sidebar*")
-         (existing (get-buffer buf-name))
-         (win (and existing (get-buffer-window existing))))
-    (if win
-        (delete-window win)
-      (let ((buf (dired-noselect dir)))
-        (with-current-buffer buf
-          (rename-buffer buf-name t))
-        (select-window (display-buffer buf))))))
 
 ;; Quick-capture to the shared working-memory inbox.
 ;; Lands in the same file and format as the StumpWM `add-todo' command

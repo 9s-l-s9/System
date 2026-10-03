@@ -31,15 +31,6 @@
   (setq minuet-n-completions 2
         minuet-request-timeout 3)
 
-  ;; Keybindings live in keybindings-conf.el.  These are local to Minuet's
-  ;; active suggestion map, so they stay with the feature configuration.
-  (with-eval-after-load 'minuet
-    (when (boundp 'minuet-active-mode-map)
-      (define-key minuet-active-mode-map (kbd "M-RET") #'minuet-accept-suggestion)
-      (define-key minuet-active-mode-map (kbd "C-g")   #'minuet-dismiss-suggestion)
-      (define-key minuet-active-mode-map (kbd "M-n")   #'minuet-next-suggestion)
-      (define-key minuet-active-mode-map (kbd "M-p")   #'minuet-previous-suggestion)))
-
   ;; Opt in to as-you-type ghost text only in code buffers (comment out if you
   ;; prefer purely on-demand completion).
   (add-hook 'prog-mode-hook #'minuet-auto-suggestion-mode))

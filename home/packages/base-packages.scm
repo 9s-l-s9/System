@@ -105,7 +105,6 @@
    "emacs-helpful"
    "emacs-highlight-indent-guides"
    ;"emacs-htmlize"
-   "emacs-imenu-list"
    "emacs-magit"
    "emacs-marginalia"
    ;"emacs-markdown-preview-mode"

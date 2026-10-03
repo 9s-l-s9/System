@@ -1,5 +1,16 @@
 ;;; gptel-conf.el --- AI assistant via gptel -*- lexical-binding: t -*-
 ;;; Code:
+(setq gptel-use-header-line nil) ; status is rendered by the common top header
+
+(defun sls-gptel-ui-setup ()
+  (when (bound-and-true-p gptel-mode)
+    (setq-local sls-ui-title "AI / chat"
+                sls-ui-actions '(("Send prompt" . gptel-send)
+                                 ("Chat options…" . gptel-menu)
+                                 ("Rewrite selection…" . gptel-rewrite)
+                                 ("Add context" . gptel-add)))
+    (sls-ui-view-layout)))
+(add-hook 'gptel-mode-hook #'sls-gptel-ui-setup)
 
 ;; gptel is used through its autoloaded entry points (gptel, gptel-send, …);
 ;; defer the heavy body until the package is actually loaded.

@@ -27,11 +27,9 @@
 (setq hl-line-sticky-flag nil
       global-hl-line-sticky-flag nil)
 
-;; Theme — modus-vivendi retinted to the "design skill" dark-substrate
-;; register: a fully inverted typeset-document look. Near-monochrome by
-;; intent — ink #ededed on #0a0a0a, greyscale for most syntax, with the
-;; accents used sparingly (amber leads, lithographic violet supports), as
-;; the design tokens prescribe. This is NOT a colourful syntax theme.
+;; Theme — Elegant/Nano-inspired hierarchy: primary ink, muted metadata,
+;; quiet surfaces.  Color is reserved for errors, warnings, and changes.
+;; Navigation and syntax use contrast, weight, and underlines.
 ;;
 ;; Palette overrides must be set BEFORE `load-theme'; this is the
 ;; supported way to retint a Modus theme without forking it.
@@ -39,35 +37,26 @@
 (setq modus-themes-italic-constructs t          ; comments/docstrings in italic — paper feel
       modus-themes-bold-constructs   nil
       modus-themes-common-palette-overrides
-      '(;; ── base accent colours, desaturated into the design family ──
-        ;; Remapping the named base colours cascades to every semantic
-        ;; use Modus derives from them (completions, diffs, errors,
-        ;; org headings, rainbow delimiters, prompts…), so the whole
-        ;; theme stays in the amber / violet / muted-ink register
-        ;; instead of clashing with Modus's vivid defaults.
-        (red          "#ee4d42") (red-warmer   "#e85c3a")
-        (red-cooler   "#e0566a") (red-faint    "#a37068")
-        (red-intense  "#ff5a4f")
-        (green        "#7e9b6b") (green-warmer "#8a9b5e")
-        (green-cooler "#6f9b84") (green-faint  "#6f7a66")
-        (green-intense "#8fb069")
-        (yellow       "#c4813e") (yellow-warmer "#cf8a3a")
-        (yellow-cooler "#bd8a5e") (yellow-faint "#8c7c5e")
-        (yellow-intense "#d89a4a")
-        (blue         "#5a8de8") (blue-warmer  "#6f85e0")
-        (blue-cooler  "#5a8de8") (blue-faint   "#6f7e9c")
-        (blue-intense "#6f9bff")
-        (magenta      "#8860b4") (magenta-warmer "#9a6ab0")
-        (magenta-cooler "#7a6ab4") (magenta-faint "#7c6e8c")
-        (magenta-intense "#a070c4")
-        (cyan         "#6f9aa8") (cyan-warmer  "#6f9a9a")
-        (cyan-cooler  "#6f8aa8") (cyan-faint   "#6f7c84")
-        (cyan-intense "#7ab0bf")
+      '(;; Semantic colors for diagnostics and diffs.
+        (red "#d47b75") (red-warmer "#d47b75") (red-cooler "#d47b75")
+        (red-faint "#ad8582") (red-intense "#df8b85")
+        (green "#93a88b") (green-warmer "#93a88b") (green-cooler "#93a88b")
+        (green-faint "#879780") (green-intense "#a3b89b")
+        (yellow "#c3a77a") (yellow-warmer "#c3a77a") (yellow-cooler "#c3a77a")
+        (yellow-faint "#a39885") (yellow-intense "#d3b78a")
+        ;; Modus uses these families for ordinary links, mail fields, and
+        ;; navigation.  Keep those monochrome as well as the syntax tokens.
+        (blue "#c4c4c4") (blue-warmer "#c4c4c4") (blue-cooler "#c4c4c4")
+        (blue-faint "#9a9a9a") (blue-intense "#ededed")
+        (magenta "#c4c4c4") (magenta-warmer "#c4c4c4") (magenta-cooler "#c4c4c4")
+        (magenta-faint "#9a9a9a") (magenta-intense "#ededed")
+        (cyan "#c4c4c4") (cyan-warmer "#c4c4c4") (cyan-cooler "#c4c4c4")
+        (cyan-faint "#9a9a9a") (cyan-intense "#ededed")
         ;; diff / change backgrounds — subtle dark tints, no neon
         (bg-added     "#11211a") (bg-added-refine   "#1a3328")
         (bg-removed   "#241414") (bg-removed-refine "#3a1c1c")
         (bg-changed   "#221d10") (bg-changed-refine "#332b14")
-        (fg-added     "#8fb069") (fg-removed "#ee4d42") (fg-changed "#c4813e")
+        (fg-added "#93a88b") (fg-removed "#d47b75") (fg-changed "#c3a77a")
         ;; ── surfaces & structure (dark-substrate tokens) ──────
         (bg-main      "#0a0a0a")   ; --bg
         (fg-main      "#ededed")   ; --ink
@@ -89,18 +78,22 @@
         (docstring    "#6a6a6a")
         (docmarkup    "#9a9a9a")
         (string       "#9a9a9a")   ; --muted, quiet greyscale
-        (keyword      "#c4813e")   ; --accent-amber (the one lead accent)
+        (keyword      "#d4d4d4")
         (builtin      "#d4d4d4")   ; --ink-2
         (fnname       "#ededed")   ; ink
         (type         "#d4d4d4")   ; --ink-2
         (variable     "#ededed")   ; ink
-        (constant     "#8860b4")   ; --accent-violet (support)
+        (constant     "#d4d4d4")
         (preprocessor "#9a9a9a")
-        (rx-construct "#c4813e")
-        (rx-backslash "#8860b4")
-        ;; links echo the violet support ink
-        (fg-link      "#8860b4")
-        (underline-link "#2a2a2a")))
+        (rx-construct "#d4d4d4")
+        (rx-backslash "#d4d4d4")
+        ;; Links remain identifiable through underlines.
+        (fg-heading-0 fg-main) (fg-heading-1 fg-main)
+        (fg-heading-2 fg-main) (fg-heading-3 fg-main)
+        (fg-heading-4 fg-dim) (fg-heading-5 fg-dim)
+        (fg-heading-6 fg-dim) (fg-heading-7 fg-dim) (fg-heading-8 fg-dim)
+        (fg-link      "#d4d4d4")
+        (underline-link "#6a6a6a")))
 
 (load-theme 'modus-vivendi t)
 (setq custom-safe-themes t)
@@ -135,7 +128,7 @@
       display-line-numbers-type             t
       display-line-numbers-width            4
       display-line-numbers-width-start      t)
-(global-display-line-numbers-mode)
+(global-display-line-numbers-mode 1)
 
 (provide 'general-ui-conf)
 ;;; general-ui-conf.el ends here
