@@ -28,50 +28,43 @@
 ;; ── Format on save ────────────────────────────────────────────────────────────
 ;;
 ;; When eglot is managing the buffer, defer to `eglot-format-buffer' so the LSP
-;; sees the edits and stays in sync. Otherwise, run `ruff format' asynchronously
-;; via stdin/stdout so saving never blocks the UI.
+;; sees the edits and stays in sync. Otherwise, finish `ruff format' before
+;; writing the file: a background result could overwrite edits made after save.
 
-(defun sls-python--ruff-format-async ()
-  "Format the current buffer with `ruff format' asynchronously."
-  (when (and (executable-find "ruff")
-             (not (bound-and-true-p eglot--managed-mode)))
-    (let* ((src-buf (current-buffer))
-           (source  (buffer-substring-no-properties (point-min) (point-max)))
-           (out-buf (generate-new-buffer " *ruff-format*"))
-           (proc
-            (make-process
-             :name    "ruff-format"
-             :noquery t
-             :buffer  out-buf
-             :command `("ruff" "format" "--quiet"
-                        "--stdin-filename"
-                        ,(or (buffer-file-name) "buffer.py")
-                        "-")
-             :sentinel
-             (lambda (proc _event)
-               (when (memq (process-status proc) '(exit signal))
-                 (unwind-protect
-                     (when (and (zerop (process-exit-status proc))
-                                (buffer-live-p src-buf))
-                       (let ((formatted (with-current-buffer out-buf (buffer-string))))
-                         (when (and (> (length formatted) 0)
-                                    (not (string= formatted source)))
-                           (with-current-buffer src-buf
-                             (let ((p (point)))
-                               (save-restriction
-                                 (widen)
-                                 (delete-region (point-min) (point-max))
-                                 (insert formatted))
-                               (goto-char (min p (point-max))))))))
-                   (kill-buffer out-buf)))))))
-      (process-send-string proc source)
-      (process-send-eof    proc))))
+(defun sls-python--ruff-format ()
+  "Format the whole buffer before saving, preserving point and markers.
+On failure, leave the text intact and report Ruff's error.  Keep stderr
+separate from formatted source, including when Ruff exits successfully."
+  (when-let* ((ruff (executable-find "ruff")))
+    (let ((output (generate-new-buffer " *ruff-format*"))
+          (errors (make-temp-file "sls-ruff-format-"))
+          (coding-system-for-read 'utf-8-unix)
+          (coding-system-for-write 'utf-8-unix))
+      (unwind-protect
+          (save-restriction
+            (widen)
+            (let ((status (call-process-region
+                           (point-min) (point-max) ruff nil (list output errors) nil
+                           "format" "--quiet" "--stdin-filename"
+                           (or buffer-file-name "buffer.py") "-")))
+              (if (eq status 0)
+                  (atomic-change-group
+                    (replace-buffer-contents output))
+                (display-warning
+                 'sls-python
+                 (format "Ruff formatting failed (%s); saving without formatting.\n%s"
+                         status
+                         (with-temp-buffer
+                           (insert-file-contents errors)
+                           (buffer-string)))))))
+        (kill-buffer output)
+        (delete-file errors)))))
 
 (defun sls-python--format-on-save ()
   "Pick the right formatter for the current buffer."
   (if (bound-and-true-p eglot--managed-mode)
       (ignore-errors (eglot-format-buffer))
-    (sls-python--ruff-format-async)))
+    (sls-python--ruff-format)))
 
 (defun sls-python--enable-format-on-save ()
   "Install the buffer-local format-on-save hook."
@@ -104,7 +97,8 @@
                             "^[^:]+:\\([0-9]+\\):\\([0-9]+\\): \\([A-Z][0-9]+\\) \\(.+\\)$"
                             nil t)
                       (let* ((line (string-to-number (match-string 1)))
-                             (col  (max 0 (1- (string-to-number (match-string 2)))))
+                             ;; Ruff and `flymake-diag-region' use one-based columns.
+                             (col  (string-to-number (match-string 2)))
                              (code (match-string 3))
                              (msg  (match-string 4))
                              (region (flymake-diag-region source line col)))
@@ -151,22 +145,30 @@
 
 ;; ── Testing: pytest ───────────────────────────────────────────────────────────
 
+(defun sls-python--pytest (args)
+  "Run pytest with ARGS from the project root, or the current directory."
+  (require 'project)
+  (let* ((project (project-current nil))
+         (default-directory (if project (project-root project) default-directory)))
+    (compile (mapconcat #'shell-quote-argument
+                        (append '("python3" "-m" "pytest" "-v") args) " ")
+             t)))
+
 (defun sls-pytest-project ()
   "Run the full pytest suite for the current project."
   (interactive)
-  (compile "python3 -m pytest -v" t))
+  (sls-python--pytest nil))
 
 (defun sls-pytest-file ()
   "Run pytest on the current file."
   (interactive)
-  (compile (format "python3 -m pytest -v %s"
-                   (shell-quote-argument (buffer-file-name)))
-           t))
+  (unless buffer-file-name (user-error "This buffer is not visiting a file"))
+  (sls-python--pytest (list (expand-file-name buffer-file-name))))
 
 (defun sls-pytest-last-failed ()
   "Re-run only tests that failed in the last run."
   (interactive)
-  (compile "python3 -m pytest -v --lf" t))
+  (sls-python--pytest '("--lf")))
 
 (provide 'python-conf)
 ;;; python-conf.el ends here
