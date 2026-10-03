@@ -20,19 +20,51 @@
   "n" #'valsi)
 (fset 'sls-apps-map sls-apps-map)
 
+(defvar-keymap sls-panels-map
+  :doc "Manage the shared sidebar (SPC v)."
+  "b" #'sls-side-panel-select-buffer
+  "p" #'sls-side-panel-pin
+  "o" #'sls-side-panel-pop-out
+  "f" #'sls-side-panel-focus
+  "q" #'sls-side-panel-hide
+  "t" #'window-toggle-side-windows
+  "u" #'winner-undo
+  "r" #'winner-redo)
+(fset 'sls-panels-map sls-panels-map)
+
 (defun meow-setup ()
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+  (setf (alist-get 'valsi meow-replace-state-name-list) "BROWSE")
+  ;; Read-only applications keep their native maps underneath Meow motion.
+  ;; Editable buffers (including message composition and chats) use normal.
+  (dolist (mode '(special-mode help-mode helpful-mode Info-mode
+                  dired-mode ibuffer-mode bookmark-bmenu-mode
+                  notmuch-hello-mode notmuch-search-mode notmuch-show-mode
+                  notmuch-tree-mode magit-mode pdf-view-mode compilation-mode))
+    (setf (alist-get mode meow-mode-state-list) 'motion))
+  (dolist (mode '(message-mode notmuch-message-mode eca-chat-mode eat-mode))
+    (setf (alist-get mode meow-mode-state-list) 'normal))
   (meow-motion-overwrite-define-key
-   '("n" . meow-next)
-   '("p" . meow-prev)
+   '("j" . sls-ui-previous)
+   '("k" . sls-ui-next)
+   '("l" . meow-left)
+   '("r" . meow-right)
+   '("RET" . sls-ui-open)
+   '("q" . sls-ui-quit)
    '("<escape>" . ignore))
   (meow-leader-define-key
    '("o" . sls-apps-map)       ; apps: SPC o m mail, SPC o v magit, SPC o c config ...
+   '("." . sls-ui-actions)
+   '("\\" . sls-ui-native-key)
+   '("RET" . sls-ui-open)
+   '("e" . sls-ui-refresh)
+   '("q" . sls-ui-quit)
+   '("v" . sls-panels-map)
    ;; Navigation panels (all open in right side window)
    '("d" . sls-dired-sidebar-toggle)
-   '("s" . imenu-list-smart-toggle)
+   '("s" . sls-imenu-toggle)
    '("r" . sls-recentf-open)
-   '("b" . bookmark-bmenu-list)
+   '("b" . sls-bookmarks-open)
    ;; Actions
    '("p" . sls-new-entry-pkb)
    '("E" . sls-export-org-to-html-and-pdf)
@@ -40,7 +72,7 @@
    '("y" . sls-copy-file-path)
    '("R" . sls-reload-init-file) ; reload config in place (no daemon restart)
    '("u" . vundo)              ; visual undo tree
-   '("f" . delete-other-windows) ;focus
+   '("f" . sls-window-focus)
    ;; AI (the gptel chat itself is SPC o a)
    '("A" . gptel-menu)
    ;; '("c" . minuet-show-suggestion) ; inline completion; needs an API key
@@ -114,6 +146,37 @@
   (meow-setup)
   (meow-global-mode 1))
 (require 'meow)
+
+;; VALSI's Browse state uses its semantic movement but the same directions
+;; and leader as every other application.  `?' still opens its native menu.
+(with-eval-after-load 'valsi
+  (define-key valsi-browse-mode-map (kbd "SPC") #'meow-keypad)
+  (define-key valsi-browse-mode-map (kbd "j") #'valsi-previous)
+  (define-key valsi-browse-mode-map (kbd "k") #'valsi-next)
+  (define-key valsi-browse-mode-map (kbd "l") #'meow-left)
+  (define-key valsi-browse-mode-map (kbd "r") #'meow-right))
+
+;; Enter activates the same action with or without Meow.  Keep these keys
+;; here, including table rows whose text has no button/keymap property.
+(dolist (entry '((sls-recentf-mode-map . sls-recentf-open-file)
+                 (sls-imenu-mode-map . sls-imenu-open-item)))
+  (when (boundp (car entry))
+    (define-key (symbol-value (car entry)) (kbd "RET") (cdr entry))))
+
+(with-eval-after-load 'helpful
+  (define-key helpful-mode-map [remap revert-buffer] #'helpful-update))
+
+(define-key minibuffer-local-map (kbd "M-A") #'marginalia-cycle)
+(with-eval-after-load 'minuet
+  (when (boundp 'minuet-active-mode-map)
+    (define-key minuet-active-mode-map (kbd "M-RET") #'minuet-accept-suggestion)
+    (define-key minuet-active-mode-map (kbd "C-g") #'minuet-dismiss-suggestion)
+    (define-key minuet-active-mode-map (kbd "M-n") #'minuet-next-suggestion)
+    (define-key minuet-active-mode-map (kbd "M-p") #'minuet-previous-suggestion)))
+
+;; `which-key' is part of Emacs 30+; it documents the existing leader maps.
+(when (require 'which-key nil t)
+  (which-key-mode 1))
 
 ;; ── dap-mode: debugging (C-c C-d prefix) ────────────────────────────────────
 ;; `meow-leader-define-key' installs the leader into `mode-specific-map',

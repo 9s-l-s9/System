@@ -3,7 +3,93 @@
 This is sadly not everything but I now store it in this file to keep an overview of what I have tried.
 
 
-* UI
+* Current interaction model
+
+The active configuration is =init.el= plus =modules/*.el=. The older snippets
+below this section are an archive, not files to tangle over the active config.
+
+The UI follows [[https://github.com/rougier/elegant-emacs][Elegant Emacs]] and
+[[https://github.com/rougier/nano-emacs][Nano Emacs]]: a quiet top header, generous
+spacing, primary/muted text, and typographic hierarchy. Meow state and process
+status share the top header; the bottom modeline stays invisible. Mail uses
+explicit view labels and unread/flagged markers instead of a palette of tag
+colors. Application views have no editor line-number gutter.
+
+** Shared keys
+
+| Key       | Action                                              |
+|-----------+-----------------------------------------------------|
+| =j / k=   | Up / down, in editing and application views          |
+| =l / r=   | Left / right                                        |
+| =RET=     | Activate item in application views                   |
+| =SPC .=   | Search named actions for the current application     |
+| =SPC RET= | Activate item, including from Meow normal state      |
+| =SPC e=   | Refresh view (keeps file-revert confirmation)         |
+| =SPC q=   | Close view, honoring the application's cleanup       |
+| =SPC f=   | Focus the current view, including from the sidebar    |
+| =SPC \=   | Run a native application key or prefix sequence      |
+| =SPC o=   | Existing application launcher                        |
+
+For example, =SPC .= offers reply, archive, tags, and search in mail, and
+stage, unstage, commit, and diff in Magit. Ordinary package bindings remain
+available; when navigation shadows one, =SPC \= followed by that key runs it.
+Meow motion is selected explicitly for read-only applications. Composition
+and chat buffers keep normal/insert editing. In Eat, =i= enters terminal input
+and Escape returns to scrollback navigation. VALSI Browse uses the shared
+leader and =j/k=; its own menu remains on =?=.
+
+** One sidebar
+
+| Key       | Action                                  |
+|-----------+-----------------------------------------|
+| =SPC d=   | Toggle directory panel                  |
+| =SPC s=   | Toggle outline (built-in Imenu)          |
+| =SPC r=   | Recent files                            |
+| =SPC b=   | Bookmarks                               |
+| =SPC o i= | Buffers                                 |
+| =SPC v b= | Choose any buffer for the sidebar       |
+| =SPC v p= | Put the current buffer in the sidebar   |
+| =SPC v o= | Move the panel buffer into the main area |
+| =SPC v f= | Focus sidebar / return to main area     |
+| =SPC v q= | Hide the sidebar                        |
+| =SPC v t= | Hide / restore side windows             |
+| =SPC v u= | Undo window layout change               |
+| =SPC v r= | Redo window layout change               |
+
+Files, bookmarks, buffers, and outline entries open in the main area.
+Directories stay navigable within their panel. Help uses the same side slot.
+Mail's action menu includes “Mail folders in sidebar”; any other application
+buffer can be placed there through =SPC v=. Width is set in =window-conf.el=.
+Imenu is rescanned when opened or refreshed; a changed source is refreshed
+before jumping, so stale integer positions never silently jump elsewhere.
+
+No new external package is needed. The outline uses built-in Imenu and
+=tabulated-list-mode=; action selection uses =completing-read=; placement uses
+Emacs side windows. =which-key= is built into the configured Emacs version.
+Package-specific behavior belongs in its module; every key definition belongs
+in =keybindings-conf.el=.
+
+** Checking and applying
+
+From the repository root:
+
+#+begin_src sh
+emacs --batch -l home/files/.config/emacs/tests/ui-tests.el
+emacs --batch -l home/files/.config/emacs/tests/config-tests.el
+#+end_src
+
+The integration tests use temporary files and a synthetic Notmuch index. They
+never send mail or start an AI service. The installed packages are supplied by
+Guix's site startup. The configuration tests also exercise Ruff against temporary
+Python files and check module reloading and project test commands.
+
+Apply the configuration through the usual Guix Home reconfiguration. =SPC R=
+re-reads =init.el= and the local modules in their configured order. Package
+dependencies remain loaded. Changes to =early-init.el=, package installations,
+and existing buffer-local settings may still need a new session or mode restart.
+
+* Archived UI experiments
+
 ** Shackle
 I prefer configuring window rules directly.
 And this never really worked ;(

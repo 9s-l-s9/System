@@ -3,20 +3,32 @@
 ;; Inspired by elegant-emacs (github.com/rougier/elegant-emacs).
 ;; Modeline moves to the TOP of each window (header-line).
 ;; Shows: buffer name + modified · major mode · git branch.
-;; Bottom mode-line is made invisible; windows are separated by a 3-px divider.
+;; Bottom mode-line stays invisible; all status lives in the top header.
 ;; A 24-px internal border creates clean margins that include the line-number gutter.
 ;;; Code:
+(require 'cl-lib)
+(require 'subr-x)
 
 ;; ── Render helper ─────────────────────────────────────────────────────────────
 
+(defvar sls-header-horizontal-padding 8
+  "Horizontal inset in pixels at each end of a graphical window's header.
+Terminal headers use one character of padding.")
+
+(defun sls-header-padding-width ()
+  "Return the header inset in pixels for the current frame."
+  (if (display-graphic-p) sls-header-horizontal-padding (frame-char-width)))
+
 (defun sls-mode-line-render (left right)
-  "Render LEFT flush-left and RIGHT flush-right to fill the window width.
+  "Render LEFT and RIGHT with equal insets from the window edges.
 Uses pixel width so alignment stays correct with icons or wide chars."
-  (let ((right-px (string-pixel-width right)))
-    (concat left
+  (let* ((padding (sls-header-padding-width))
+         (inset (propertize " " 'display `(space :width (,padding))))
+         (right-px (+ (string-pixel-width right) padding)))
+    (concat inset left
             (propertize " " 'display
                         `(space :align-to (- right (,right-px))))
-            right)))
+            right inset)))
 
 ;; ── Git branch ────────────────────────────────────────────────────────────────
 
@@ -27,40 +39,70 @@ Uses pixel width so alignment stays correct with icons or wide chars."
 
 ;; ── Format spec ───────────────────────────────────────────────────────────────
 
+(defvar-local sls-native-header-line nil
+  "Application header content retained inside the common top header.")
+
+(defun sls-header-left ()
+  "Render the application identity and its native context."
+  (if sls-native-header-line
+      (format-mode-line sls-native-header-line nil nil (current-buffer))
+    (format-mode-line
+     (list "" (when (bound-and-true-p sls-ui-title)
+             (concat sls-ui-title " · "))
+           (propertize "%b" 'face 'mode-line-buffer-id)
+           (when (and buffer-file-name (buffer-modified-p))
+             (propertize " (modified)" 'face 'shadow))) nil nil (current-buffer))))
+
+(defun sls-header-right ()
+  "Render modal state and process status, with more detail in wide windows."
+  (format-mode-line
+   (list "" (when (bound-and-true-p meow-mode)
+           ;; Plain text state: the header keeps its quiet theme styling.
+           (substring-no-properties (meow-indicator)))
+         mode-line-process
+         (when (> (window-body-width) 55)
+           (list "" (unless (bound-and-true-p sls-ui-title)
+                      (propertize " %m" 'face 'shadow))
+                 (when-let* ((branch (sls-mode-line-vc)))
+                   (propertize (concat "  " branch) 'face 'shadow)))))
+   nil nil (current-buffer)))
+
 (defvar sls-header-line-format
   '((:eval
-     (sls-mode-line-render
-      ;; Left: buffer name + optional (modified) marker.
-      ;; No leading/trailing pad chars — the modeline text starts at the same
-      ;; pixel as the buffer text so both align on the window edge.
-      (format-mode-line
-       (list (propertize "%b" 'face 'mode-line-buffer-id)
-             (when (and buffer-file-name (buffer-modified-p))
-               (propertize " (modified)" 'face 'shadow))))
-      ;; Right: major mode  git branch
-      (format-mode-line
-       (list (propertize "%m" 'face 'shadow)
-             (when-let ((branch (sls-mode-line-vc)))
-               (propertize (concat "  " branch) 'face 'shadow)))))))
-  "Header-line format: buffer name, major mode, git branch.")
+     (let* ((right (sls-header-right))
+            (padding-columns (ceiling (* 2 (sls-header-padding-width))
+                                      (frame-char-width)))
+            (available (max 1 (- (window-body-width) (string-width right)
+                                 padding-columns 2)))
+            (left (truncate-string-to-width (sls-header-left) available nil nil "…")))
+       (sls-mode-line-render left right))))
+  "Elegant-style top header: identity, native context, Meow state and status.")
 
-(setq-default header-line-format sls-header-line-format)
-;; The bottom mode-line becomes an invisible short spacer row (" " with a
-;; shrunken bg-colored face, see `sls-set-modeline-faces') so the buffer text
-;; doesn't touch the bottom window divider. `window-divider-mode' draws the
-;; visible separator line below it.
-(setq-default mode-line-format " ")
+(setq-default header-line-format sls-header-line-format
+              mode-line-format " "
+              ;; Table column headers belong with their rows, leaving the top
+              ;; header free for the same identity/state in every application.
+              tabulated-list-use-header-line nil)
 
-;; `setq-default` only affects buffers that haven't set the variable locally.
-;; Many modes (imenu-list, dired, ibuffer, magit, …) bind `mode-line-format`
-;; in their own buffers, so wipe it whenever a buffer's major mode is set.
-(defun sls--kill-local-mode-line ()
-  (kill-local-variable 'mode-line-format)
-  (setq mode-line-format " "))
-(add-hook 'after-change-major-mode-hook #'sls--kill-local-mode-line)
-;; Apply to buffers that already exist at load time.
-(dolist (buf (buffer-list))
-  (with-current-buffer buf (sls--kill-local-mode-line)))
+(defun sls-install-header-line ()
+  "Retain native header content and wrap it in the common top header."
+  (unless (minibufferp)
+    (unless (equal header-line-format sls-header-line-format)
+      ;; Some apps prepend their own status to the inherited header.  Strip
+      ;; our renderer before retaining that content to avoid recursive eval.
+      (setq-local sls-native-header-line
+                  (if (listp header-line-format)
+                      (cl-remove-if (lambda (element)
+                                      (member element sls-header-line-format))
+                                    header-line-format)
+                    header-line-format)))
+    (setq-local header-line-format sls-header-line-format
+                mode-line-format " ")))
+(add-hook 'after-change-major-mode-hook #'sls-install-header-line)
+;; Notmuch rebuilds its subject header after major-mode setup and on refresh.
+(add-hook 'notmuch-show-hook #'sls-install-header-line)
+(dolist (buffer (buffer-list))
+  (with-current-buffer buffer (sls-install-header-line)))
 
 ;; ── Window dividers ───────────────────────────────────────────────────────────
 ;; Bottom dividers replace the mode-line as the per-window bottom separator.

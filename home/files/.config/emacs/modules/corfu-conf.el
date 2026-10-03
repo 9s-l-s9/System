@@ -23,7 +23,7 @@
   ;; be used globally (M-/).  See also the customization variable
   ;; `global-corfu-modes' to exclude certain modes.
   :init
-  (global-corfu-mode))
+  (global-corfu-mode 1))
 
 ;; A few more useful configurations...
 (use-package emacs

@@ -1,57 +1,148 @@
-;;; window-conf.el --- Unified side-panel navigation -*- lexical-binding: t -*-
-;;; Commentary:
-;; All navigation panels (ibuffer, bookmarks, imenu, dired sidebar, recent
-;; files) are placed in the same right-side slot so they replace each other —
-;; one panel visible at a time, all navigated with j/k (meow normal) or n/p
-;; (meow motion).
+;;; window-conf.el --- One reusable side panel -*- lexical-binding: t -*-
 ;;; Code:
-
-;; ── Side-panel slot ───────────────────────────────────────────────────────────
-;;
-;; slot 0, right side, 28 % width.  All navigation buffers share this slot so
-;; opening one automatically hides the previous one.
+(require 'cl-lib)
 
 (defconst sls-side-panel-alist
-  '((display-buffer-in-side-window)
-    (side . right)
-    (slot . 0)
-    (window-width . 0.28)
-    (preserve-selected-window . t)
+  '((side . right) (slot . 0) (window-width . 0.32)
     (window-parameters . ((no-delete-other-windows . t)))))
 
-(dolist (pattern '("^\\*Ibuffer\\*$"
-                   "^\\*Bookmark List\\*$"
-                   "^\\*Ilist\\*$"           ; imenu-list
-                   "^\\*Dired Sidebar\\*$"
-                   "^\\*Recent Files\\*$"))
-  (add-to-list 'display-buffer-alist (cons pattern sls-side-panel-alist)))
+(defvar-local sls-side-panel-p nil
+  "Whether this buffer belongs in the shared sidebar.")
 
-;; ── ibuffer ───────────────────────────────────────────────────────────────────
+(defun sls-side-panel-buffer-p (buffer _action)
+  "Match BUFFER by role, independently of its name."
+  (with-current-buffer buffer
+    (or sls-side-panel-p
+        (derived-mode-p 'ibuffer-mode 'bookmark-bmenu-mode
+                        'sls-recentf-mode 'sls-imenu-mode
+                        'help-mode 'helpful-mode))))
 
-;; Show only the buffer name column (clean sidebar look)
-(setq ibuffer-formats '((mark " " (name 30 30 :left :elide))))
-(setq ibuffer-use-other-window t)
+(defun sls-display-side-panel (buffer alist)
+  "Display BUFFER using ALIST and remember the main window it came from."
+  (unless (window-parameter (selected-window) 'window-side)
+    (set-frame-parameter nil 'sls-side-panel-origin (selected-window)))
+  (display-buffer-in-side-window buffer (append alist sls-side-panel-alist)))
 
-;; ── Bookmark list ─────────────────────────────────────────────────────────────
+(add-to-list 'display-buffer-alist
+             '(sls-side-panel-buffer-p sls-display-side-panel))
 
-;; Ensure the bookmark list respects display-buffer-alist instead of
-;; switching directly.
-(defun sls--bookmark-list-use-display-buffer ()
-  "Re-display *Bookmark List* through `display-buffer' so side-panel rules apply."
-  (when (string= (buffer-name) "*Bookmark List*")
-    (let ((buf (current-buffer)))
-      (quit-window)
-      (select-window (display-buffer buf)))))
+(defun sls-side-panel-window ()
+  "Return the shared sidebar window on this frame."
+  (cl-find-if (lambda (window)
+                (and (eq (window-parameter window 'window-side) 'right)
+                     (eq (window-parameter window 'window-slot) 0)))
+              (window-list)))
 
-(add-hook 'bookmark-bmenu-mode-hook #'sls--bookmark-list-use-display-buffer)
+(defun sls-main-window ()
+  "Return a live non-side window on this frame."
+  (or (and (not (window-parameter (selected-window) 'window-side))
+           (selected-window))
+      (let ((origin (frame-parameter nil 'sls-side-panel-origin)))
+        (and (window-live-p origin)
+             (eq (window-frame origin) (selected-frame))
+             (not (window-parameter origin 'window-side)) origin))
+      (cl-find-if (lambda (window) (not (window-parameter window 'window-side)))
+                  (window-list))
+      (user-error "No main window available")))
 
-;; ── imenu-list ────────────────────────────────────────────────────────────────
+(defun sls-side-panel-show (buffer)
+  "Display BUFFER in the shared sidebar and focus it."
+  (let ((window (sls-display-side-panel buffer nil)))
+    (unless (window-live-p window) (user-error "Cannot create sidebar on this frame"))
+    (select-window window)))
 
-(setq imenu-list-focus-after-activation t
-      imenu-list-auto-resize            nil)
+(defun sls-side-panel-pin ()
+  "Put the current buffer in the shared sidebar."
+  (interactive)
+  (let ((buffer (current-buffer)) (window (selected-window)))
+    (setq-local sls-side-panel-p t)
+    (sls-side-panel-show buffer)
+    (unless (eq window (selected-window))
+      (with-selected-window window (switch-to-prev-buffer window 'bury)))))
 
-;; ── winner-mode (undo/redo window layouts) ────────────────────────────────────
-;; winner-mode is enabled here; its keybindings live in keybindings-conf.el.
+(defun sls-side-panel-select-buffer (buffer)
+  "Select any BUFFER to display in the shared sidebar."
+  (interactive (list (read-buffer "Sidebar buffer: " (other-buffer) t)))
+  (with-current-buffer buffer (setq-local sls-side-panel-p t))
+  (sls-side-panel-show buffer))
+
+(defun sls-side-panel-pop-out ()
+  "Move the sidebar's buffer into the main window."
+  (interactive)
+  (let ((panel (sls-side-panel-window)) (main (sls-main-window)))
+    (unless panel (user-error "No sidebar is visible"))
+    (let ((buffer (window-buffer panel)))
+      (with-current-buffer buffer (setq-local sls-side-panel-p nil))
+      (delete-window panel)
+      (select-window main)
+      (switch-to-buffer buffer))))
+
+(defun sls-side-panel-focus ()
+  "Move between the sidebar and the main window."
+  (interactive)
+  (if (window-parameter (selected-window) 'window-side)
+      (select-window (sls-main-window))
+    (let ((panel (sls-side-panel-window)))
+      (unless panel (user-error "No sidebar is visible"))
+      (set-frame-parameter nil 'sls-side-panel-origin (selected-window))
+      (select-window panel))))
+
+(defun sls-side-panel-hide ()
+  "Hide the sidebar without killing its buffer."
+  (interactive)
+  (when-let* ((panel (sls-side-panel-window))) (delete-window panel)))
+
+(defun sls-window-focus ()
+  "Give the current view the whole frame, including when it is a panel."
+  (interactive)
+  (when (window-parameter (selected-window) 'window-side)
+    (sls-side-panel-pop-out))
+  (let ((ignore-window-parameters t)) (delete-other-windows)))
+
+(defun sls-panel-visit-buffer (buffer &optional position)
+  "Show destination BUFFER at POSITION in the main window."
+  (select-window (sls-main-window))
+  (switch-to-buffer buffer)
+  (when position (goto-char position)))
+
+(defun sls-bookmarks-open ()
+  "Show bookmarks in the shared sidebar."
+  (interactive)
+  (require 'bookmark)
+  (bookmark-bmenu-list)
+  (sls-side-panel-show (get-buffer "*Bookmark List*")))
+
+(defun sls-bookmark-open ()
+  "Visit the bookmark at point in the main window."
+  (interactive)
+  (let ((bookmark (bookmark-bmenu-bookmark)))
+    (select-window (sls-main-window))
+    (bookmark-jump bookmark)))
+
+(defun sls-ibuffer-open ()
+  "Visit the buffer on the current Ibuffer row in the main window."
+  (interactive)
+  (let ((buffer (ibuffer-current-buffer t)))
+    (unless buffer (user-error "No buffer on this row"))
+    (sls-panel-visit-buffer buffer)))
+
+(setq ibuffer-use-other-window t
+      ibuffer-formats '((mark modified read-only " " (name 22 22 :left :elide)
+                            " " (mode 12 12 :left :elide))))
+
+(defun sls-ibuffer-prepare (&optional _other-window name &rest _)
+  "Give Ibuffer's buffer a panel role before Ibuffer displays it.
+Ibuffer sets its major mode only after choosing a window."
+  (with-current-buffer (get-buffer-create (or name "*Ibuffer*"))
+    (setq-local sls-side-panel-p t)))
+(with-eval-after-load 'ibuffer
+  (advice-add 'ibuffer :before #'sls-ibuffer-prepare))
+(defun sls-ibuffer-setup ()
+  (setq-local sls-ui-title "Buffers" sls-ui-open-function #'sls-ibuffer-open))
+(defun sls-bookmark-setup ()
+  (setq-local sls-ui-title "Bookmarks" sls-ui-open-function #'sls-bookmark-open))
+(add-hook 'ibuffer-mode-hook #'sls-ibuffer-setup)
+(add-hook 'bookmark-bmenu-mode-hook #'sls-bookmark-setup)
 
 (provide 'window-conf)
 ;;; window-conf.el ends here

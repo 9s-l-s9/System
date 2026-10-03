@@ -4,6 +4,16 @@
 (require 'valsi)
 (valsi-global-mode 1)     ; auto-activates the right grammar per file
 
+(defun sls-valsi-ui-setup ()
+  (setq-local sls-ui-title "Artifact"
+              sls-ui-open-function #'valsi-follow
+              sls-ui-refresh-function #'valsi-refresh
+              sls-ui-actions '(("Artifact menu…" . valsi-menu)
+                               ("Edit source" . valsi-enter-insert)
+                               ("Validate" . valsi-lint)
+                               ("Outline" . valsi-outline))))
+(add-hook 'valsi-enter-browse-hook #'sls-valsi-ui-setup)
+
 ;; Meow integration: let meow own the modal state machine.  VALSI's Browse
 ;; becomes a dedicated meow state driven by `valsi-browse-mode-map' (so its
 ;; keys work at emulation priority instead of being shadowed by NORMAL),
