@@ -1,0 +1,315 @@
+;;; ui-tests.el --- Interaction regressions -*- lexical-binding: t -*-
+;; Run: emacs --batch -l home/files/.config/emacs/tests/ui-tests.el
+(require 'ert)
+(require 'cl-lib)
+(add-to-list 'load-path (expand-file-name "../modules" (file-name-directory load-file-name)))
+(require 'use-package)
+(setq recentf-save-file (make-temp-file "emacs-ui-history-"))
+(setq use-package-always-defer t
+      meow-use-cursor-position-hack nil)
+(dolist (module '(app-ui-conf window-conf recentf-conf imenu-conf sls-functions
+                 dired-conf notmuch-conf helpful-conf eat-conf pdf-conf
+                 modeline-conf magit-conf gptel-conf eca-conf valsi-conf keybindings-conf))
+  (require module))
+
+(defmacro sls-test-layout (&rest body)
+  `(save-window-excursion
+     (let ((before (buffer-list))
+           (default-directory temporary-file-directory))
+       (unwind-protect
+           (progn
+             (delete-other-windows)
+             (switch-to-buffer (generate-new-buffer "*UI test main*"))
+             ,@body)
+         (dolist (buffer (cl-set-difference (buffer-list) before))
+           (when (buffer-live-p buffer)
+             (with-current-buffer buffer (set-buffer-modified-p nil))
+             (kill-buffer buffer)))))))
+
+(ert-deftest sls-ui-motion-and-native-keys ()
+  (require 'notmuch)
+  (require 'helpful)
+  (require 'ibuffer)
+  (require 'bookmark)
+  (dolist (mode '(help-mode helpful-mode ibuffer-mode bookmark-bmenu-mode
+                 notmuch-hello-mode notmuch-search-mode notmuch-show-mode
+                 notmuch-tree-mode sls-recentf-mode sls-imenu-mode))
+    (with-temp-buffer
+      (funcall mode)
+      (meow-mode 1)
+      (should (meow-motion-mode-p))
+      (should (eq (key-binding (kbd "j")) #'sls-ui-previous))
+      (should (eq (key-binding (kbd "k")) #'sls-ui-next))
+      (should (eq (key-binding (kbd "SPC")) #'meow-keypad))
+      (should (eq (key-binding (kbd "RET")) #'sls-ui-open))
+      (should (eq (key-binding (kbd "C-c .")) #'sls-ui-actions))))
+  (with-temp-buffer
+    (notmuch-show-mode)
+    (meow-mode 1)
+    (should (eq (key-binding "r") #'meow-right))
+    (should (eq (sls-ui-native-command "r") #'notmuch-show-reply-sender))))
+
+(ert-deftest sls-ui-editing-keeps-normal ()
+  (require 'notmuch-mua)
+  (dolist (mode '(text-mode emacs-lisp-mode notmuch-message-mode))
+    (with-temp-buffer
+      (funcall mode)
+      (meow-mode 1)
+      (should (meow-normal-mode-p))
+      (should (eq (key-binding "j") #'meow-prev))
+      (should (eq (key-binding "k") #'meow-next)))))
+
+(ert-deftest sls-ui-sidebar-reuses-slot-and-pops-out ()
+  (sls-test-layout
+   (let ((main (selected-window))
+         (first (get-buffer-create "*First arbitrary app*"))
+         (second (get-buffer-create "*Second arbitrary app*")))
+     (sls-side-panel-show first)
+     (let ((panel (selected-window)))
+       (should (eq (window-parameter panel 'window-side) 'right))
+       (sls-side-panel-show second)
+       (should (eq panel (selected-window)))
+       (should (= (length (window-list)) 2))
+       (sls-side-panel-focus)
+       (should (eq main (selected-window)))
+       (sls-side-panel-pop-out)
+       (should (eq (current-buffer) second))
+       (should-not (sls-side-panel-window))))))
+
+(ert-deftest sls-ui-recent-file-opens-from-any-column ()
+  (sls-test-layout
+   (let* ((file (make-temp-file "emacs-ui-" nil ".txt" "fixture"))
+          (recentf-list (list file))
+          (recentf-save-file (make-temp-file "emacs-ui-recentf-"))
+          (main (selected-window)))
+     (unwind-protect
+         (progn
+           (sls-recentf-open)
+           (goto-char (point-max))
+           (forward-line -1)
+           (end-of-line)
+           (sls-ui-open)
+           (should (eq (selected-window) main))
+           (should (equal buffer-file-name file))
+           (should (sls-side-panel-window)))
+       (delete-file file)
+       (delete-file recentf-save-file)))))
+
+(ert-deftest sls-ui-dired-sidebar-is-independent ()
+  (sls-test-layout
+   (let* ((directory (make-temp-file "emacs-ui-dired-" t))
+          (file (expand-file-name "sample.txt" directory)))
+     (unwind-protect
+         (progn
+           (write-region "sample" nil file nil 'silent)
+           (let* ((ordinary (dired-noselect directory))
+                  (ordinary-name (buffer-name ordinary))
+                  (main (selected-window)))
+             (sls-dired-sidebar-show directory)
+             (should-not (eq ordinary (current-buffer)))
+             (should (equal ordinary-name (buffer-name ordinary)))
+             (dired-goto-file file)
+             (sls-ui-open)
+             (should (eq main (selected-window)))
+             (should (equal buffer-file-name file))))
+       (delete-directory directory t)))))
+
+(ert-deftest sls-ui-outline-visits-symbol-and-refreshes ()
+  (sls-test-layout
+   (emacs-lisp-mode)
+   (insert "(defun first () t)\n(defun second () nil)\n")
+   (let ((source (current-buffer)) (main (selected-window)))
+     (sls-imenu-toggle)
+     (goto-char (point-min))
+     (while (and (not (tabulated-list-get-id)) (not (eobp))) (forward-line 1))
+     (sls-ui-open)
+     (should (eq (selected-window) main))
+     (should (eq (current-buffer) source))
+     (should (looking-at "(defun"))
+     (goto-char (point-max))
+     (insert "(defun third () t)\n")
+     (sls-side-panel-focus)
+     (should-error (sls-ui-open) :type 'user-error)
+     (should (= (length tabulated-list-entries) 3)))))
+
+(ert-deftest sls-ui-header-preserves-native-context ()
+  (with-temp-buffer
+    (setq-local header-line-format "Mail / thread · A subject"
+                mode-line-process '("Running"))
+    (sls-install-header-line)
+    (should (equal sls-native-header-line "Mail / thread · A subject"))
+    (should (equal header-line-format sls-header-line-format))
+    (should (equal mode-line-format " "))
+    (sls-install-header-line)
+    (should (equal sls-native-header-line "Mail / thread · A subject"))))
+
+(ert-deftest sls-ui-notmuch-status-is-explicit ()
+  (should (equal (sls-notmuch-status "%s" '(:tags ("unread" "flagged"))) "U!"))
+  (should (equal (sls-notmuch-status "%s" '(:tags ("inbox"))) "· ")))
+
+(ert-deftest sls-ui-terminal-follows-meow ()
+  (require 'eat)
+  (sls-test-layout
+   (let ((buffer (eat (executable-find "sh") '(4))))
+     (unwind-protect
+         (progn
+           (should (eq (window-buffer) buffer))
+           (set-buffer buffer)
+           (should (meow-normal-mode-p))
+           (should-not eat--semi-char-mode)
+           (meow-insert)
+           (should eat--semi-char-mode)
+           (should (eq (key-binding "a") #'eat-self-input))
+           (should (eq (key-binding (kbd "<escape>")) #'meow-insert-exit))
+           (meow-insert-exit)
+           (should-not eat--semi-char-mode)
+           (should (meow-normal-mode-p))
+           (should (eq (key-binding "j") #'meow-prev)))
+       (when-let* ((process (get-buffer-process buffer)))
+         (set-process-query-on-exit-flag process nil)
+         (delete-process process))))))
+
+(ert-deftest sls-ui-notmuch-real-mail-flow ()
+  (require 'notmuch)
+  (sls-test-layout
+   (let* ((root (make-temp-file "emacs-ui-mail-" t))
+          (maildir (expand-file-name "mail" root))
+          (config (expand-file-name "config" root))
+          (process-environment (copy-sequence process-environment)))
+     (unwind-protect
+         (progn
+           (dolist (sub '("cur" "new" "tmp"))
+             (make-directory (expand-file-name sub maildir) t))
+           (with-temp-file config
+             (insert (format "[database]\npath=%s\n[user]\nname=UI Test\nprimary_email=test@example.invalid\n[new]\ntags=unread;inbox;flagged;\n" maildir)))
+           (with-temp-file (expand-file-name "new/test" maildir)
+             (insert "From: Example <sender@example.invalid>\nTo: test@example.invalid\nSubject: UI fixture 100%% ready\nMessage-ID: <ui-test@example.invalid>\nDate: Fri, 2 Oct 2026 12:00:00 +0000\n\nFixture body.\n"))
+           (setenv "NOTMUCH_CONFIG" config)
+           (should (= 0 (call-process "notmuch" nil nil nil "new")))
+           (sls-notmuch-sidebar)
+           (should (eq major-mode 'notmuch-hello-mode))
+           (should (sls-side-panel-window))
+           ;; Dashboard buttons should open their results outside the sidebar.
+           (goto-char (point-min))
+           (search-forward "inbox")
+           (backward-char 2)
+           (sls-ui-open)
+           (should (eq major-mode 'notmuch-search-mode))
+           (should-not (window-parameter (selected-window) 'window-side))
+           (let ((deadline (+ (float-time) 10)))
+             (while (and (get-buffer-process (current-buffer)) (< (float-time) deadline))
+               (accept-process-output (get-buffer-process (current-buffer)) 0.1)))
+           (goto-char (point-min))
+           (should (looking-at "U!"))
+           (should (equal sls-ui-title "Mail / results"))
+           (sls-ui-open)
+           (should (eq major-mode 'notmuch-show-mode))
+           (should (equal sls-ui-title "Mail / thread"))
+           (should (equal header-line-format sls-header-line-format))
+           (should (string-match-p "Mail / thread" sls-native-header-line))
+           (should (meow-motion-mode-p))
+           (sls-ui-refresh)
+           (should (equal header-line-format sls-header-line-format)))
+       (delete-directory root t)))))
+
+(ert-deftest sls-ui-leader-executes-shared-actions ()
+  (sls-test-layout
+   (text-mode)
+   (meow-mode 1)
+   (let ((source (current-buffer)))
+     (execute-kbd-macro (kbd "SPC v p"))
+     (should (eq (window-buffer (sls-side-panel-window)) source))
+     (should (eq (window-parameter (selected-window) 'window-side) 'right))
+     (let ((called nil))
+       (setq-local sls-ui-refresh-function (lambda () (interactive) (setq called t)))
+       (cl-letf (((symbol-function 'completing-read)
+                  (lambda (&rest _) "Refresh view")))
+         (execute-kbd-macro (kbd "SPC .")))
+       (should called)))))
+
+(ert-deftest sls-ui-bookmarks-and-buffers-open-in-main ()
+  (require 'bookmark)
+  (require 'ibuffer)
+  (sls-test-layout
+   (let* ((file (make-temp-file "emacs-ui-bookmark-" nil ".txt" "fixture"))
+          (bookmark-alist nil)
+          (bookmark-already-loaded t)
+          (bookmark-save-flag nil)
+          (main (selected-window)))
+     (unwind-protect
+         (progn
+           (find-file file)
+           (bookmark-set "UI fixture")
+           (let ((destination (current-buffer)))
+             (sls-bookmarks-open)
+             (goto-char (point-min))
+             (search-forward "UI fixture")
+             (sls-ui-open)
+             (should (eq (selected-window) main))
+             (should (eq (current-buffer) destination))
+             (ibuffer nil "*UI buffer list*")
+             (ibuffer-jump-to-buffer (buffer-name destination))
+             (sls-ui-open)
+             (should (eq (selected-window) main))
+             (should (eq (current-buffer) destination))))
+       (delete-file file)))))
+
+(ert-deftest sls-ui-header-does-not-capture-itself ()
+  (with-temp-buffer
+    (setq-local header-line-format
+                (cons '(t (:eval "Native status")) sls-header-line-format))
+    (sls-install-header-line)
+    (should (equal sls-native-header-line '((t (:eval "Native status")))))))
+
+(ert-deftest sls-ui-line-numbers-stay-out-of-apps ()
+  (require 'notmuch)
+  (with-temp-buffer
+    (notmuch-search-mode)
+    (display-line-numbers-mode 1)
+    (should-not display-line-numbers-mode)
+    (text-mode)
+    (display-line-numbers-mode 1)
+    (should display-line-numbers-mode)))
+
+(ert-deftest sls-ui-valsi-keeps-common-leader-and-directions ()
+  (with-temp-buffer
+    (meow-mode 1)
+    (meow--switch-state 'valsi)
+    (should (eq (key-binding (kbd "SPC")) #'meow-keypad))
+    (should (eq (key-binding "j") #'valsi-previous))
+    (should (eq (key-binding "k") #'valsi-next))
+    (should (eq (key-binding "?") #'valsi-menu))))
+
+(ert-deftest sls-ui-chat-and-git-adapters ()
+  (require 'magit)
+  (require 'gptel)
+  (require 'eca-chat)
+  (with-temp-buffer
+    (magit-status-mode)
+    (meow-mode 1)
+    (should (meow-motion-mode-p))
+    (should (eq sls-ui-refresh-function #'magit-refresh))
+    (dolist (action sls-ui-actions) (should (commandp (cdr action)))))
+  (with-temp-buffer
+    (text-mode)
+    (gptel-mode 1)
+    (meow-mode 1)
+    (should (meow-normal-mode-p))
+    (should (equal header-line-format sls-header-line-format))
+    (should (equal sls-ui-title "AI / chat"))
+    (should mode-line-process)
+    (dolist (action sls-ui-actions) (should (commandp (cdr action)))))
+  (with-temp-buffer
+    (insert "Offline UI fixture")
+    (eca-chat-mode)
+    ;; ECA finishes its UI setup in a short timer.  Verify after it runs,
+    ;; and keep the fixture alive until then.
+    (sit-for 0.1)
+    (meow-mode 1)
+    (should (meow-normal-mode-p))
+    (should (equal header-line-format sls-header-line-format))
+    (should (equal mode-line-format " "))
+    (should-not (member (car sls-header-line-format) sls-native-header-line))
+    (dolist (action sls-ui-actions) (should (commandp (cdr action))))))
+
+(when noninteractive (ert-run-tests-batch-and-exit))
