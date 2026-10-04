@@ -23,11 +23,11 @@
 ;;   spawns the agent and a `model' field in the agent definition both win,
 ;;   so a per-agent choice stays possible.  CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1
 ;;   (2.1.257+) would restore the old behaviour of overriding both.
-;; - permissions.ask Agent: spawning a subagent always prompts.  An explicit
-;;   ask rule is one of the few things no permission mode auto-approves,
-;;   bypassPermissions included, so the prompt appears even though the
-;;   launcher starts the CLI with --dangerously-skip-permissions.  (Allow
-;;   rules, by contrast, have no effect in that mode; deny rules always do.)
+;; - No permissions block: subagents start without a prompt.  An `ask'
+;;   rule for Agent would prompt even under --dangerously-skip-permissions,
+;;   because explicit ask rules win over every permission mode, including
+;;   bypassPermissions.  (Allow rules have no effect in that mode; deny rules
+;;   always apply.)
 ;; - attribution: empty strings hide the Co-Authored-By commit trailer and
 ;;   the "Generated with Claude Code" PR line; sessionUrl false drops the
 ;;   Claude-Session trailer cloud and Remote Control sessions add.  With
@@ -40,11 +40,6 @@
   \"$schema\": \"https://json.schemastore.org/claude-code-settings.json\",
   \"env\": {
     \"CLAUDE_CODE_SUBAGENT_MODEL\": \"sonnet\"
-  },
-  \"permissions\": {
-    \"ask\": [
-      \"Agent\"
-    ]
   },
   \"attribution\": {
     \"commit\": \"\",
