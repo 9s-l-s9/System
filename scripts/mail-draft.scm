@@ -22,7 +22,9 @@
 ;;;
 ;;; The draft is written into ~/Mail/mailfence/Drafts and uploaded with
 ;;; `mbsync mailfence-drafts'.  It is never sent: review and send it in
-;;; Mailfence (web, app) or Emacs.
+;;; the Mailfence web UI or Emacs.  Not in the Mailfence app: it sends a
+;;; draft without In-Reply-To and References (X-Mailer "Mailfence Mail"),
+;;; so the reply leaves its thread at the recipient; the web UI keeps them.
 ;;;
 ;;; Usage: mail-draft.scm [--no-sync] FILE
 
@@ -300,6 +302,9 @@ with \"> \", as mail clients do on reply; empty if the original is unknown."
       (unless no-sync?
         (system* "mbsync" "mailfence-drafts")
         (system* "notmuch" "new" "--quiet")
-        (format #t "In Mailfence unter Drafts.~%")))))
+        (format #t "In Mailfence unter Drafts.~%"))
+      (when (header (car parsed) "in-reply-to")
+        ;; The Mailfence app drops In-Reply-To/References on send.
+        (format #t "Im Mailfence-Web (Browser) senden, nicht in der App: die App entfernt In-Reply-To/References, die Antwort landet beim Empfaenger nicht im Thread.~%")))))
 
 (main (command-line))
