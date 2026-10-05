@@ -110,6 +110,15 @@ An uploaded draft is never overwritten: for changes create a new one, then
 delete the superseded draft yourself (next section). Also show the draft text
 in chat.
 
+**Replies must be sent from the Mailfence web UI, not the Mailfence app** —
+say so when handing over a reply draft (`mail-draft.scm` prints it too). The
+app (sent copy: `X-Mailer: Mailfence Mail`) drops `In-Reply-To` and
+`References`, rewrites the text as HTML (losing `<address>` in the "schrieb:"
+line) and keeps the draft's Message-ID, so the recipient gets a new thread
+(seen 5 Oct 2026). The web UI (`X-Mailer: ContactOffice Mail`) keeps both
+headers. Locally an app-sent reply still sits in its notmuch thread, because
+notmuch indexed the draft under the same Message-ID.
+
 ### Deleting superseded drafts
 
 Allowed by the user (5 Oct 2026): a draft you created yourself with

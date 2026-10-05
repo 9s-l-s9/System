@@ -15,6 +15,11 @@
 ;;; mail from the spam folder is prefixed "spam_".
 ;;; Drafts are not exported.  Re-exporting a message overwrites its file.
 ;;;
+;;; A draft sent from the Mailfence app keeps its Message-ID, so its copy in
+;;; Sent Items is only a new file of a message notmuch already knows as a
+;;; draft and never gets `new'.  Hook mode therefore also exports Sent Items
+;;; messages that lack the `sent' tag (`unexported-sent').
+;;;
 ;;; Afterwards it tags by folder (inbox, sent, draft, spam) and drops `new'.
 ;;;
 ;;; Usage:
@@ -320,11 +325,18 @@
    (as-list (notmuch-json "show" "--entire-thread=false" "--body=true"
                           "--include-html" query))))
 
+;; Sent Items messages not exported as sent yet: drafts sent from the app
+;; (see above).  `inbox' excludes mail first exported from INBOX (mail to
+;; self, mailing lists) that also has a copy in Sent Items.
+(define unexported-sent
+  "folder:\"Sent Items\" and not tag:sent and not tag:inbox and not tag:new")
+
 (define (main args)
   (let ((queries (cdr args)))
     (if (null? queries)
         (begin
-          (export-query "tag:new")
+          (export-query (string-append "tag:new or (" unexported-sent ")"))
+          (notmuch "tag" "+sent" "--" unexported-sent)
           (notmuch "tag" "+inbox" "--" "tag:new" "folder:INBOX")
           (notmuch "tag" "+sent" "--" "tag:new" "folder:\"Sent Items\"")
           (notmuch "tag" "+draft" "--" "tag:new" "folder:Drafts")
