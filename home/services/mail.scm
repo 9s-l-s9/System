@@ -7,14 +7,17 @@
 ;;; mail without a MIME parser.
 ;;;
 ;;; Directions:
-;;;   - INBOX, Sent Items, Wichtig, Spam?: pull only.  Nothing local is ever
+;;;   - INBOX, Wichtig, Spam?: pull only.  Nothing local is ever
 ;;;     uploaded or deleted on the server.  Job mail often lands in spam,
 ;;;     which Mailfence empties after 30 days; the text export keeps it.
 ;;;   - Drafts: both directions.  scripts/mail-draft.scm drops a draft into
 ;;;     the local Drafts folder, mbsync uploads it, and it shows up in the
 ;;;     Mailfence web UI and apps for review and sending.
+;;;   - Sent Items: pull, plus upload of new local mail (PushNew) only.
+;;;     Mailfence keeps no copy of mail sent over SMTP; scripts/mail-send.scm
+;;;     files one here and mbsync uploads it.  Local deletes never propagate.
 ;;;
-;;; Sending is msmtp only (Emacs message-mode).  The sync timer never sends.
+;;; Sending is msmtp only (Emacs message-mode, scripts/mail-send.scm).  The sync timer never sends.
 ;;;
 ;;; The password is read from ~/.local/share/mailfence/password (mode 600,
 ;;; outside the repo); it is never written into a config file.  One-time
@@ -68,11 +71,22 @@
    "Channel mailfence-read\n"
    "Far :mailfence-remote:\n"
    "Near :mailfence-local:\n"
-   "Patterns INBOX \"Sent Items\" Wichtig \"Spam?\"\n"
+   "Patterns INBOX Wichtig \"Spam?\"\n"
    "Create Near\n"
    "Sync Pull\n"
    ;; Mailfence never finishes serving some very large mails (a 28 MB one
    ;; in Wichtig timed out even at 180 s); mbsync keeps a placeholder.
+   "MaxSize 20m\n"
+   "Expunge None\n"
+   "SyncState *\n"
+   "\n"
+   ;; Sent Items: as above, but new local mail (from mail-send) is uploaded.
+   ;; The sync state is kept in the folder, so nothing already there is
+   ;; uploaded again.
+   "Channel mailfence-sent\n"
+   "Far \":mailfence-remote:Sent Items\"\n"
+   "Near \":mailfence-local:Sent Items\"\n"
+   "Sync Pull PushNew\n"
    "MaxSize 20m\n"
    "Expunge None\n"
    "SyncState *\n"
@@ -88,6 +102,7 @@
    "\n"
    "Group mailfence\n"
    "Channel mailfence-read\n"
+   "Channel mailfence-sent\n"
    "Channel mailfence-drafts\n"))
 
 (define msmtp-config
