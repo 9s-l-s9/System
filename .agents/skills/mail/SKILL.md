@@ -20,6 +20,10 @@ msmtp, sync timer), `scripts/mail-export.scm` (text export),
 **Never send mail.** No msmtp, no SMTP, no IMAP writes except the Drafts
 folder: new drafts through `mail-draft.scm`, and removing your own superseded
 drafts (see below). The user reviews and sends every draft.
+Only exception: the user explicitly says to send one specific draft. Then use
+`scripts/mail-send.scm` (dry run first, then `--confirm`), never msmtp
+directly; it files the copy in Sent Items, which Mailfence does not do for
+SMTP. The permission covers that one draft only.
 
 ## Where mail lives
 
@@ -118,6 +122,8 @@ line) and keeps the draft's Message-ID, so the recipient gets a new thread
 (seen 5 Oct 2026). The web UI (`X-Mailer: ContactOffice Mail`) keeps both
 headers. Locally an app-sent reply still sits in its notmuch thread, because
 notmuch indexed the draft under the same Message-ID.
+If the user has no browser, they can let you send it with
+`scripts/mail-send.scm`, which keeps both headers.
 
 ### Deleting superseded drafts
 
