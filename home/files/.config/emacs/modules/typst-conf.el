@@ -49,6 +49,17 @@ Set per project in .dir-locals.el.")
 ;; Also covers chapter buffers the preview opens on a click.
 (advice-add 'typst-preview-start :after #'sls-typst--no-streaming)
 
+(defun sls-typst--sync-no-memory (&rest _)
+  "Answer the preview's request for editor contents with no memory files.
+On every new browser connection tinymist asks for the editor buffers
+(syncEditorChanges); the default reply sends the current buffer, and that
+copy then hides later edits on disk.  An empty sync clears all copies."
+  (when-let* ((master (bound-and-true-p typst-preview--local-master))
+              (socket (typst-preview--master-socket master)))
+    (websocket-send-text socket (json-encode `(("event" . "syncMemoryFiles")
+                                               ("files" . ,(make-hash-table)))))))
+(advice-add 'typst-preview-sync-memory :override #'sls-typst--sync-no-memory)
+
 (defun sls-typst-preview ()
   "Toggle the browser preview of the nearest main.typ."
   (interactive)
