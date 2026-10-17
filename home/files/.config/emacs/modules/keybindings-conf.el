@@ -68,6 +68,7 @@
    ;; Actions
    '("p" . sls-new-entry-pkb)
    '("E" . sls-export-org-to-html-and-pdf)
+   '("t" . sls-typst-preview)     ; toggle the Typst browser preview
    '("T" . sls-capture-todo)       ; quick-capture to the shared wm.org inbox
    '("y" . sls-copy-file-path)
    '("R" . sls-reload-init-file) ; reload config in place (no daemon restart)

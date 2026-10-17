@@ -67,6 +67,7 @@ Package dependencies still use `require'; only our settings are re-evaluated."
 ;; ── Programming ───────────────────────────────────────────────────────────────
 (sls-load-module 'eglot-conf)
 (sls-load-module 'python-conf)
+(sls-load-module 'typst-conf)   ; typst-ts-mode + live preview (tinymist)
 (sls-load-module 'dap-conf)
 (sls-load-module 'gptel-conf)   ; chat / rewrite, user-in-the-loop
 (sls-load-module 'eca-conf)     ; autonomous agent (emacs-eca)
