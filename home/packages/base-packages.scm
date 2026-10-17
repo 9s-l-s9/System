@@ -120,7 +120,7 @@
    ;;"emacs-org-modern"
    ;;"emacs-org-present"
    ;;"emacs-org-transclusion"
-   ;;"emacs-pdf-tools"
+   "emacs-pdf-tools"
    "emacs-rg"
    "emacs-sudo-edit"
    ;;"emacs-telega"

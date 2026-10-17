@@ -77,7 +77,10 @@
     (for-each (lambda (f) (sysfs-write f "1")) online-files))
   (for-each
    (lambda (p)
-     (sysfs-write (string-append p "/scaling_governor") "powersave")
+     ;; intel_pstate is passive here (generic governors): "powersave"
+     ;; pins min frequency, so restore schedutil for normal mode.
+     (sysfs-write (string-append p "/scaling_governor")
+                  (if low? "powersave" "schedutil"))
      (sysfs-write (string-append p "/energy_performance_preference")
                   (if low? "power" "balance_performance"))
      (sysfs-write (string-append p "/scaling_max_freq")
