@@ -5,14 +5,20 @@
 # the home environment (the README's installation steps, in order).
 update: pull reconfigure-system reconfigure-home
 
+# Reconfigure and QA run through time-machine so evaluation always uses the
+# pinned channels, never whatever `guix pull` generation happens to be
+# current (a stale or rolled-back one silently swaps package versions, and
+# a plain pull profile may lack nonguix etc.).
+GUIX_TM = guix time-machine -C channels.scm --
+
 pull:
 	guix pull --channels=channels.scm
 
 reconfigure-system:
-	sudo guix system --load-path=systems reconfigure systems/$$HOSTNAME.scm
+	sudo $(GUIX_TM) system --load-path=systems reconfigure systems/$$HOSTNAME.scm
 
 reconfigure-home:
-	guix home --load-path=home reconfigure home/$$USER-home-configuration.scm
+	$(GUIX_TM) home --load-path=home reconfigure home/$$USER-home-configuration.scm
 
 qa: qa-guile-only
 
@@ -20,10 +26,6 @@ qa-all: qa-guile-only qa-home-samuel qa-home-levi qa-system-x1 qa-system-t450s
 
 qa-guile-only:
 	guile scripts/check-guile-only.scm
-
-# QA runs through time-machine so evaluation uses the channels the system
-# is actually built from (a plain `guix pull` profile may lack nonguix etc.).
-GUIX_TM = guix time-machine -C channels.scm --
 
 qa-home-samuel:
 	$(GUIX_TM) home build --dry-run --load-path=home home/samuel-home-configuration.scm

@@ -2,6 +2,7 @@
   #:use-module (guix build-system trivial)
   #:use-module (guix gexp)
   #:use-module (guix packages)
+  #:use-module ((gnu packages video) #:select (ffmpeg))
   #:use-module ((zen-browser-bin) #:prefix binary-guix:)
   #:export (zen-browser-bin))
 
@@ -88,7 +89,7 @@
        ;; Broadwell; sites then fall back to H.264, which it does decode.
        (define vaapi-prefs
          '(("media.ffmpeg.vaapi.enabled" . "true")
-           ("media.hardware-video-decoding.force-enabled" . "true")
+           ("media.hardware-video-decoding.force-enabled" . "false")
            ("media.mediasource.vp9.enabled" . "false")))
 
        ;; Host-independent prefs.  Autoplay: 5 blocks audio and video,
@@ -133,6 +134,13 @@
        ;; Keep Firefox's profile downgrade protection, even if this variable
        ;; was inherited from a shell or an older browser launcher.
        (unsetenv "MOZ_ALLOW_DOWNGRADE")
+       ;; Gecko dlopens the system libavcodec for H.264/AAC; without it
+       ;; only its bundled VP8/VP9/AV1 decoders exist and, with VP9 off,
+       ;; most videos fail with a source loading error.
+       (setenv "LD_LIBRARY_PATH"
+               (let ((old (getenv "LD_LIBRARY_PATH"))
+                     (lib #$(file-append ffmpeg "/lib")))
+                 (if old (string-append lib ":" old) lib)))
        (when vaapi-driver
          (setenv "LIBVA_DRIVERS_PATH" system-dri)
          (setenv "LIBVA_DRIVER_NAME" vaapi-driver))

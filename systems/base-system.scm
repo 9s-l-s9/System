@@ -229,10 +229,12 @@
        ;; saving, USB autosuspend) remain overridden.
        (service tlp-service-type
                 (tlp-configuration
-                 (cpu-scaling-governor-on-ac (list "powersave"))
-                 ;; intel_pstate "powersave" is the kernel default this
-                 ;; machine already runs: dynamic scaling, instant ramp-up.
-                 (cpu-scaling-governor-on-bat (list "powersave"))
+                 ;; intel_pstate runs in passive mode here (no HWP), so the
+                 ;; governors are the generic cpufreq ones and "powersave"
+                 ;; pins the minimum frequency (~800 MHz: sluggish typing).
+                 ;; schedutil scales with load and ramps up instantly.
+                 (cpu-scaling-governor-on-ac (list "schedutil"))
+                 (cpu-scaling-governor-on-bat (list "schedutil"))
                  (cpu-boost-on-ac? #t)
                  (cpu-boost-on-bat? #t)
                  (sched-powersave-on-bat? #f)   ;; default #t parks cores on battery
