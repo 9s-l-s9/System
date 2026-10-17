@@ -134,6 +134,11 @@
         (unless (string-contains (substring draft (+ 3 (string-rindex draft #\:))) "T")
           (rename-file draft (string-append draft "T")))
         (format #t "Gesendet.~%")
+        ;; notmuch indexed the draft under this Message-ID with tag "draft"; with
+        ;; maildir.synchronize_flags it would re-add the D flag to the Sent copy, and
+        ;; mbsync would upload it as \Draft.  Retag before the upload.
+        (system* "notmuch" "new" "--quiet")
+        (system* "notmuch" "tag" "-draft" "+sent" "--" (string-append "id:" id))
         (if (sync "mailfence-sent" "mailfence-drafts")
             (format #t "In Mailfence unter Sent Items, Entwurf entfernt.~%")
             (format #t "Sync fehlgeschlagen; der naechste Timer-Sync laedt die Kopie hoch.~%"))
