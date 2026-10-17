@@ -8,6 +8,7 @@
   #:use-module (packages font-ia-writer)
   #:use-module (packages font-space-mono)
   #:use-module (packages modus-buffer-theme)
+  #:use-module (packages typst-preview)
   #:use-module (packages whisper)
   #:use-module (packages zen)
   #:export (all-packages)
@@ -32,6 +33,7 @@
         "python-pytest"        ; test runner
         "python-mypy"          ; static type checker
         "tree-sitter-python"   ; grammar for python-ts-mode
+        "tree-sitter-typst"    ; grammar for typst-ts-mode
         "openjdk"              ; ECA server runtime (JVM)
         "parinfer-rust"        ; helix.scm formatter for scheme files
         ;"r"
@@ -123,6 +125,7 @@
    "emacs-pdf-tools"
    "emacs-rg"
    "emacs-sudo-edit"
+   "emacs-typst-ts-mode"
    ;;"emacs-telega"
    "emacs-vertico"
    "emacs-vundo"))
@@ -195,6 +198,7 @@
                 (for-emacs-next emacs-eca)
                 (and emacs-modus-buffer-theme
                      (for-emacs-next emacs-modus-buffer-theme))
+                (for-emacs-next emacs-typst-preview)
                 (for-emacs-next emacs-whisper)
                 font-ia-writer
                 font-space-mono)))
@@ -214,6 +218,7 @@
 
 (define typesetting-packages
   (list "typst-bin"
+        "tinymist-bin"   ; preview server for typst-preview.el (typst-conf.el)
         "haunt"))
 
 ;; X11 applications retained for an easy StumpWM rollback, but deliberately
