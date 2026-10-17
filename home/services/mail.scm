@@ -10,6 +10,8 @@
 ;;;   - INBOX, Wichtig, Spam?: pull only.  Nothing local is ever
 ;;;     uploaded or deleted on the server.  Job mail often lands in spam,
 ;;;     which Mailfence empties after 30 days; the text export keeps it.
+;;;     The one server write here is scripts/mail-unspam.scm, which moves
+;;;     single real mails from "Spam?" to INBOX by IMAP UID MOVE.
 ;;;   - Drafts: both directions.  scripts/mail-draft.scm drops a draft into
 ;;;     the local Drafts folder, mbsync uploads it, and it shows up in the
 ;;;     Mailfence web UI and apps for review and sending.

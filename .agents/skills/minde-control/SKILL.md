@@ -3,11 +3,11 @@ name: minde-control
 description: >
   Drive GUI applications on the user's live minde (Wayland compositor)
   session through `mindectl eval`: list and focus windows, click, type,
-  paste, scroll, drop files, take screenshots, and verify each step. Use when
-  a task needs the real desktop — a logged-in browser window, a GTK file
-  dialog, a terminal in another group — and no structured tool (e.g. a
-  Playwright browser) can do it. Not for changing minde's configuration or
-  keybindings; those live in home/services/minde.scm.
+  paste, scroll, drop files, take screenshots, and verify each step. Use it
+  for web tasks that need the user's logins or an already open tab: the
+  user's browser is signed in, the Playwright browser is not. Also for file
+  dialogs and other desktop windows. Not for changing minde's configuration
+  or keybindings; those live in home/services/minde.scm.
 ---
 
 # minde control
@@ -26,8 +26,9 @@ lands in whatever window is under the pointer.
   configuration, bind keys or change outputs from here — configuration
   changes go to `home/services/minde.scm` (see AGENTS.md: every binding hangs
   off the `Print` prefix).
-- Prefer a structured tool when one fits (Playwright for a web page it can
-  reach). Use minde when the task needs the user's own session.
+- Prefer Playwright for public pages. Playwright has no logins and cannot
+  see the user's tabs, so for anything behind a login, or a tab the user
+  points to, use minde instead of reporting that a sign-in is required.
 - Before an action that commits something (submit, send, delete, pay,
   accept), stop and confirm unless the task already authorized exactly that.
 - Never type into or screenshot password managers, and keep secrets out of
@@ -54,6 +55,10 @@ mindectl eval '(describe-api)'            ; full live API with signatures
 Coordinates are zero-based global logical coordinates including bars and
 gaps — the same system as `wm-window-geometry`, so compute click targets
 relative to the window's (x y), not as guessed absolute pixels.
+
+**Other groups:** `all-window-ids` lists only the current group; probe
+`(window-app-id N)` over a range of ids to find a window elsewhere, and focus
+it with `(perform-action! 'focus-window! '((window . ID)))`.
 
 **Focus:** `(focus-window-by-id! ID)` switches group/frame as needed;
 `wm-focus-window`/`wm-raise-window` only act on what is currently shown.
@@ -104,6 +109,11 @@ full-output captures. To read text from a page: Ctrl+A, Ctrl+C, then
   allow prompts" checkbox appears: confirm with Return instead of clicking
   fixed coordinates.
 - A freshly started browser sometimes renders blank; a new window helps.
+- **Long text from a file:** load it into the clipboard inside minde with
+  `call-with-input-file` and `read-char`, check with `wl-paste`, then paste
+  once.
+- Screenshots of a window are 1:1 with it: a target at image (x, y) is at
+  global (wx + x, wy + y) from `wm-window-geometry`.
 
 When a primitive misbehaves, check `(describe-api)`,
 `~/Projects/minde/doc/api.md` and the "Unreleased" section of
