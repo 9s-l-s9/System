@@ -26,7 +26,7 @@ Set per project in .dir-locals.el.")
                   (expand-file-name (project-root project))
                 default-directory)))
     (setq-local typst-preview-default-dir root)
-    ;; Chromium renders the long SVG preview more smoothly than Zen.
+    ;; The preview opens in Chromium, not the default browser (Zen).
     (setq-local browse-url-browser-function #'browse-url-chromium)
     (when-let* ((dir (locate-dominating-file default-directory "main.typ")))
       (setq-local typst-preview--master-file
