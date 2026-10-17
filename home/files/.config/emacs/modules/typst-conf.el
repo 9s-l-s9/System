@@ -11,7 +11,8 @@
 ;; browser.  tinymist-bin embeds the same Typst version as typst-bin, so the
 ;; preview matches the compiled PDF.
 
-(setq typst-preview-ask-if-pin-main nil)   ; never write local variables into sources
+(setq typst-preview-ask-if-pin-main nil      ; never write local variables into sources
+      typst-preview-partial-rendering t)    ; render only the visible pages (long documents)
 
 (defvar-local sls-typst-font-paths nil
   "Font directories, relative to the project root, passed to the preview.
