@@ -35,6 +35,16 @@ Set per project in .dir-locals.el.")
                 (mapcan (lambda (d) (list "--font-path" (expand-file-name d root)))
                         sls-typst-font-paths))))
 
+;; A file changed on disk (by an agent, git) is reverted by auto-revert, but the
+;; preview keeps the buffer text it was last sent; send the reverted text.
+(defun sls-typst--sync-after-revert ()
+  "Send the reverted buffer to a running preview."
+  (when (and (derived-mode-p 'typst-ts-mode)
+             (fboundp 'typst-preview-connected-p)
+             (typst-preview-connected-p))
+    (typst-preview-sync-memory)))
+(add-hook 'after-revert-hook #'sls-typst--sync-after-revert)
+
 (defun sls-typst-preview ()
   "Toggle the browser preview of the nearest main.typ."
   (interactive)
