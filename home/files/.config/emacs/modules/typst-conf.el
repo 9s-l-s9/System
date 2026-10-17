@@ -12,7 +12,8 @@
 ;; preview matches the compiled PDF.
 
 (setq typst-preview-ask-if-pin-main nil      ; never write local variables into sources
-      typst-preview-partial-rendering t)    ; render only the visible pages (long documents)
+      typst-preview-partial-rendering t     ; render only the visible pages (long documents)
+      typst-preview-open-browser-automatically nil) ; the address is shown; open it in any browser
 
 (defvar-local sls-typst-font-paths nil
   "Font directories, relative to the project root, passed to the preview.
@@ -26,8 +27,6 @@ Set per project in .dir-locals.el.")
                   (expand-file-name (project-root project))
                 default-directory)))
     (setq-local typst-preview-default-dir root)
-    ;; The preview opens in Chromium, not the default browser (Zen).
-    (setq-local browse-url-browser-function #'browse-url-chromium)
     (when-let* ((dir (locate-dominating-file default-directory "main.typ")))
       (setq-local typst-preview--master-file
                   (file-truename (expand-file-name "main.typ" dir))))
@@ -35,15 +34,20 @@ Set per project in .dir-locals.el.")
                 (mapcan (lambda (d) (list "--font-path" (expand-file-name d root)))
                         sls-typst-font-paths))))
 
-;; A file changed on disk (by an agent, git) is reverted by auto-revert, but the
-;; preview keeps the buffer text it was last sent; send the reverted text.
-(defun sls-typst--sync-after-revert ()
-  "Send the reverted buffer to a running preview."
-  (when (and (derived-mode-p 'typst-ts-mode)
-             (fboundp 'typst-preview-connected-p)
-             (typst-preview-connected-p))
-    (typst-preview-sync-memory)))
-(add-hook 'after-revert-hook #'sls-typst--sync-after-revert)
+;; The file on disk is the only source of the preview (agents edit the same
+;; files): Typst buffers save themselves after a second of idle time, the
+;; preview recompiles from disk, and auto-revert brings outside edits into the
+;; buffer.  The buffer is not streamed to the preview; that in-memory copy hid
+;; edits made on disk.
+(setq auto-save-visited-interval 1
+      auto-save-visited-predicate (lambda () (derived-mode-p 'typst-ts-mode)))
+(auto-save-visited-mode 1)
+
+(defun sls-typst--no-streaming (&rest _)
+  "Keep the preview reading the file, not the buffer."
+  (remove-hook 'after-change-functions #'typst-preview--send-buffer-on-type t))
+;; Also covers chapter buffers the preview opens on a click.
+(advice-add 'typst-preview-start :after #'sls-typst--no-streaming)
 
 (defun sls-typst-preview ()
   "Toggle the browser preview of the nearest main.typ."
