@@ -68,5 +68,23 @@ copy then hides later edits on disk.  An empty sync clears all copies."
     (sls-typst--preview-setup)
     (typst-preview-mode 1)))
 
+(defun sls-typst-note ()
+  "Insert a visible note, or wrap the selection, then enter Meow insert state."
+  (interactive)
+  (unless (derived-mode-p 'typst-ts-mode 'typst-mode)
+    (user-error "Notes are available in Typst buffers"))
+  (let ((beg (if (use-region-p) (region-beginning) (point)))
+        (end (if (use-region-p) (region-end) (point)))
+        (prefix "#highlight[NOTE: "))
+    (atomic-change-group
+      (goto-char end)
+      (insert "]")
+      (goto-char beg)
+      (insert prefix)
+      (goto-char (+ end (length prefix))))
+    (deactivate-mark)
+    (when (bound-and-true-p meow-mode)
+      (meow-insert))))
+
 (provide 'typst-conf)
 ;;; typst-conf.el ends here
