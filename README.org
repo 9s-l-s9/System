@@ -26,6 +26,31 @@ My personal system configuration.
 guix pull --channels=$HOME/Projects/System/channels.scm
 #+end_src
 
+** Import the pinned Minde binary
+
+Minde is compiled by GitHub Actions. Before the first reconfiguration on each
+=x86_64-linux= PC, import the version recorded in =minde-binary.lock.scm=:
+
+#+begin_src sh
+cd "$HOME/Projects/System"
+make minde-install
+#+end_src
+
+The importer needs =guix=, =gh= (with =gh attestation verify= support), =curl=, =xz=,
+=mount=, =unshare=, and local =sudo=. It verifies GitHub provenance, the archive
+hash, and Guix signatures. No GitHub login is needed. It does not add a permanent signing key to Guix's
+ACL. The build/download path excludes the affected eMudhra trust roots; this
+does not change the general system trust store.
+
+To select a newer successful [[https://github.com/9s-l-s9/minde/actions/workflows/guix-binary.yml][guix-binary run]], use =make minde-install COMMIT=<full commit>=,
+then commit the updated lock file with the configuration. Other PCs can run
+=make minde-install= to fetch that same build. Reconfiguration creates only
+small symlinks for Minde and Xwayland; it never compiles Minde. Explicit local
+development is available with =MINDE_BUILD_LOCAL=1=.
+
+Keep the Minde checkout at =~/Projects/minde=: the Home configuration still
+loads the separate Shikane package recipe from its =guix-channel/= directory.
+
 ** Update system
 #+begin_src sh
 sudo guix system --load-path=$HOME/Projects/System/systems reconfigure $HOME/Projects/System/systems/$HOSTNAME.scm

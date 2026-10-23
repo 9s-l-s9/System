@@ -1,0 +1,12 @@
+(
+ (schema . 1)
+ (repository . "9s-l-s9/minde")
+ (commit . "cb3b7a07a2ead76a569a3e71ef95f52e905e809b")
+ (version . "1.0.0-rc1")
+ (system . "x86_64-linux")
+ (minde . "/gnu/store/ghcjkyl6pbisyn36r8ss0bb2l7cg72zl-minde-1.0.0-rc1")
+ (xwayland . "/gnu/store/jgmka7yixxfrh130b6h1p19hr9ha3sps-xorg-server-xwayland-24.1.12")
+ (archive-sha256 . "683282a6a3be4b969d1578ae16d598236e44af56d3c608c377c1471af4178787")
+ (key-sha256 . "76273553f884d526a04968082697171185afc77688c085ccac1ee3db687a0b51")
+ (closure-sha256 . "8332e0fed917e79af91a0e695f04e11ef21799e9ed1f2aa4d6efc85b03ffe98b")
+)

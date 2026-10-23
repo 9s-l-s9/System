@@ -1,5 +1,5 @@
 .PHONY: qa qa-all qa-guile-only qa-home-samuel qa-home-levi qa-system-x1 qa-system-t450s \
-	update pull reconfigure-system reconfigure-home
+	update pull reconfigure-system reconfigure-home minde-install
 
 # Full update: pull the pinned channels, then reconfigure the system and
 # the home environment (the README's installation steps, in order).
@@ -13,6 +13,11 @@ GUIX_TM = guix time-machine -C channels.scm --
 
 pull:
 	guix pull --channels=channels.scm
+
+# Import the pinned GitHub build on a new PC, or pin an explicitly selected
+# build with `make minde-install COMMIT=<full commit>`. Never compiles Minde.
+minde-install:
+	guix repl -q -- scripts/minde-binary.scm install $(COMMIT)
 
 reconfigure-system:
 	sudo $(GUIX_TM) system --load-path=systems reconfigure systems/$$HOSTNAME.scm
