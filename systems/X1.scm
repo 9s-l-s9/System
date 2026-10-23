@@ -1,9 +1,9 @@
 (use-modules (gnu)
              (base-system))
 
-;; The shared selector defaults to the working checkout. Set
-;; MINDE_RC_ARCHIVE and MINDE_RC_REVISION to test/install the explicit
-;; vendored RC artifact without removing the checkout rollback path.
+;; The shared selector uses the verified GitHub binary pinned in System.
+;; Run make minde-install before reconfiguring on a new PC.
+;; MINDE_BUILD_LOCAL=1 explicitly opts into compiling the working checkout.
 (define minde
   (primitive-load "/home/samuel/Projects/System/minde-package.scm"))
 
