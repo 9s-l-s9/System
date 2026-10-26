@@ -5,8 +5,8 @@
   #:export (minde-services))
 
 (define minde-package
-  ;; The shared selector retains the checkout fallback and accepts an explicit
-  ;; RC archive through MINDE_RC_ARCHIVE + MINDE_RC_REVISION.
+  ;; Share the verified, pinned binary with the system session package.
+  ;; MINDE_BUILD_LOCAL=1 explicitly opts into compiling the checkout.
   (primitive-load "/home/samuel/Projects/System/minde-package.scm"))
 
 ;; shikane (wlr-output-management profile daemon) lives in minde's own
