@@ -13,7 +13,10 @@
 ;; script takes effect without reconfiguring.
 
 (define launchers
-  '(("pi" . "pi-guix.scm")
+  '(("agy" . "agy-guix.scm")
+    ("agy-guix" . "agy-guix.scm")
+    ("antigravity" . "agy-guix.scm")
+    ("pi" . "pi-guix.scm")
     ("pi-guix" . "pi-guix.scm")
     ("claude" . "claude-guix.scm")
     ("claude-guix" . "claude-guix.scm")

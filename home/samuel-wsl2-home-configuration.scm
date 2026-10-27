@@ -6,6 +6,7 @@
   #:use-module (services fish)
   #:use-module (services starship)
   #:use-module (services helix)
+  #:use-module (services codex)
   #:use-module (services git))
   ;; Omitted vs samuel-home-configuration.scm:
   ;;   stumpwm — window manager; WSL2 has no bare X session to manage
@@ -19,6 +20,7 @@
    (starship-service)
    (helix-service)
    (git-service)
+   (codex-service)
    (service home-dotfiles-service-type
             (home-dotfiles-configuration
              (directories '("./files")))))))

@@ -43,6 +43,10 @@
        (values mode manifest rest)))))
 
 (define (guix-args mode manifest codex-args)
+  (for-each (lambda (path) (ensure-directory (string-append home path)))
+            '("/.codex" "/.cache" "/.cache/agent-npm" "/.local"
+              "/.local/share" "/.local/share/agent-tools"
+              "/.local/share/agent-tools/codex"))
   (append
    (if (eq? mode 'sandbox)
        (append
@@ -52,19 +56,16 @@
         (maybe-mount "--share"
                      (string-append home "/.codex")
                      (string-append home "/.codex"))
-        ;; Persist npm global install location
+        ;; Keep legacy installs available while new installs use a private
+        ;; prefix. npm must never overwrite ~/.local/bin/codex, our launcher.
         (maybe-mount "--share"
                      (string-append home "/.local")
                      (string-append home "/.local"))
+        (maybe-mount "--share"
+                     (string-append home "/.cache/agent-npm")
+                     (string-append home "/.cache/agent-npm"))
         ;; Host Docker/Podman sockets for container-backed tools.
         (container-socket-mounts)
-        ;; Optional: preserve pnpm caches later if you switch back to pnpm
-        ;; (maybe-mount "--share"
-        ;;              (string-append home "/.cache/pnpm")
-        ;;              (string-append home "/.cache/pnpm"))
-        ;; (maybe-mount "--share"
-        ;;              (string-append home "/.local/share/pnpm")
-        ;;              (string-append home "/.local/share/pnpm"))
         (xdg-runtime-expose)
         (guix-profiles-expose)
         (preserve-common-env))
@@ -72,15 +73,21 @@
    (list "-m" manifest)
    (list "--" "bash" "-c"
          (string-append
+          "set -e; "
           "export SHELL=$(command -v bash); "
           ;; Reuse the manifest's python instead of downloading a standalone one.
           "export UV_PYTHON_PREFERENCE=system; "
-          "export NPM_CONFIG_PREFIX=\"$HOME/.local\"; "
-          "export PATH=\"$HOME/.local/bin:$PATH\"; "
-          "if [ ! -f \"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\" ]; then "
-          "  npm install -g @openai/codex; "
+          "export NPM_CONFIG_PREFIX=\"$HOME/.local/share/agent-tools/codex\"; "
+          "export NPM_CONFIG_CACHE=\"$HOME/.cache/agent-npm\"; "
+          "export PATH=\"$NPM_CONFIG_PREFIX/bin:$PATH\"; "
+          "CODEX_ENTRY=\"$NPM_CONFIG_PREFIX/lib/node_modules/@openai/codex/bin/codex.js\"; "
+          "if [ ! -f \"$CODEX_ENTRY\" ]; then "
+          ;; Reuse the installed CLI without downloading or deleting it.
+          "  if [ -f \"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\" ]; then "
+          "    CODEX_ENTRY=\"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\"; "
+          "  else npm install -g @openai/codex; fi; "
           "fi; "
-          "exec node \"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\" \"$@\"")
+          "exec node \"$CODEX_ENTRY\" \"$@\"")
          "codex-guix")
    codex-args))
 

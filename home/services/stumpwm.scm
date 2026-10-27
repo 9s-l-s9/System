@@ -43,6 +43,8 @@
             #~"(defcommand add-todo (todo-text) ((:string \"Enter TODO: \"))"
             #~"(run-shell-command (concatenate 'string \"~/Projects/System/scripts/add-todo.scm \\\"\" todo-text \"\\\" ~/Projects/WorkingMemory/wm.org\"))"
             #~"(format t \"Added TODO: ~A~%\" todo-text))"
+            #~"(defcommand antigravity-agent () ()"
+            #~"(run-shell-command \"konsole -e ~/Projects/System/scripts/agy-guix.scm\"))"
             #~"(defcommand codex-agent () ()"
             #~"(run-shell-command \"konsole -e ~/Projects/System/scripts/codex-guix.scm\"))"
             #~"(defcommand claude-agent () ()"
@@ -239,6 +241,7 @@
              (bindings
               (list
                (stumpwm-keybinding (key "c") (command "codex-agent"))
+               (stumpwm-keybinding (key "g") (command "antigravity-agent"))
                (stumpwm-keybinding (key "d") (command "claude-agent"))
                (stumpwm-keybinding (key "h") (command "deepseek-agent"))
                (stumpwm-keybinding (key "o") (command "opencode-agent"))

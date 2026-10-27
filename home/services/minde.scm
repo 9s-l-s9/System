@@ -116,6 +116,7 @@ name = \"laptop-only\"
 (bind-prefix-key! \"A\"
   (make-keymap
    \"c\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/codex-guix.scm\"))
+   \"g\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/agy-guix.scm\"))
    \"d\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/claude-guix.scm\"))
    \"h\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/dsh-guix.scm\"))
    \"o\" (lambda () (wm-spawn \"foot -e ~/Projects/System/scripts/open-code-guix.scm\"))

@@ -17,6 +17,7 @@
   #:use-module (gnu home services sound)
   #:use-module (services minde)
   #:use-module (services git)
+  #:use-module (services codex)
   #:use-module (services emacs)
   #:export (base-services))
 
@@ -33,6 +34,7 @@
    (service home-dbus-service-type)
    (service home-pipewire-service-type)
    (git-service)
+   (codex-service)
    (emacs-daemon-service)
    (service home-dotfiles-service-type
             (home-dotfiles-configuration

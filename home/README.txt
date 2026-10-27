@@ -21,6 +21,7 @@ home/
 │   ├── stumpwm.scm              # X11 session, kept only as a rollback
 │   ├── emacs.scm
 │   ├── git.scm
+│   ├── codex.scm / codex-config.toml # Writable Codex settings, seeded once
 │   ├── agent-launchers.scm
 │   ├── agent-skills.scm
 │   ├── helix.scm / helix-home-services.scm
@@ -47,16 +48,25 @@ Validate before reconfiguring:
 
 == Agent installations ==
 
-Claude and Pi use separate npm prefixes under ~/.local/share/agent-tools/.
+Codex settings are seeded from home/services/codex-config.toml by
+home/services/codex.scm. The live ~/.codex/config.toml is a writable user
+file so Codex can save settings and project trust. Activation migrates old
+Guix store symlinks while preserving their contents, and leaves existing
+user files intact. Template changes apply only to new installations.
+
+Claude, Codex and Pi use separate npm prefixes under ~/.local/share/agent-tools/.
 Their public ~/.local/bin launchers still enter the configured Guix environment;
 do not replace those links with a vendor installer. Authentication and sessions
-remain in ~/.claude, ~/.claude.json, and ~/.pi. Both launchers persist downloads
-in ~/.cache/agent-npm, including in sandbox mode.
+remain in ~/.claude, ~/.claude.json, ~/.codex, and ~/.pi. All three launchers
+persist downloads in ~/.cache/agent-npm, including in sandbox mode.
 
 Claude installs only when missing. Pi still checks/installs @latest each launch
-and falls back to its installed CLI if an update fails. Pi requires newer Node
-than these Guix pins provide: it reuses dsh's checksummed Node 24 download, but
-keeps a private interpreter-patched executable in its own runtime directory.
+and falls back to its installed CLI if an update fails. Codex reuses a legacy
+~/.local installation until a private one is installed; its npm update prefix
+always points at the private directory so updates preserve the Guix launcher.
+Pi requires newer Node than these Guix pins provide: it reuses dsh's checksummed
+Node 24 download, but keeps a private interpreter-patched executable in its
+own runtime directory.
 The shared dsh runtime is not modified. DeepSeek still uses pnpm; its manifest
 retains that dependency. Old pnpm installations are not deleted by the launchers.
 

@@ -26,6 +26,7 @@
                ("reload-emacs" . "herd restart emacs-daemon")
                ;; Short names for the launcher executables that
                ;; agent-launchers installs into ~/.local/bin.
+               ("agy" . "agy-guix")
                ("codex" . "codex-guix")
                ("claude" . "claude-guix")
                ("claude-host" . "claude-guix --host")   ; no container: sudo, /sys, herd

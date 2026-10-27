@@ -1,0 +1,20 @@
+# Initial defaults only. services/codex.scm seeds a writable
+# ~/.codex/config.toml; Codex owns subsequent settings and trust changes.
+model = "gpt-6.1-sol"
+model_reasoning_effort = "xhigh"
+approvals_reviewer = "auto_review"
+service_tier = "default"
+[projects."/home/samuel/Projects/System"]
+trust_level = "trusted"
+
+[tui]
+screen_reader_detection_done = true
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+"gpt-5.6-sol" = 4
+gpt-6-astra = 4
+"gpt-6.1-sol" = 4
+
+[sandbox_workspace_write]
+network_access = true
