@@ -1,7 +1,7 @@
-;; Shared helpers for the agent launcher scripts (claude-guix, codex-guix,
+;; Shared helpers for the agent launcher scripts (agy-guix, claude-guix, codex-guix,
 ;; pi-guix, dsh-guix, open-code-guix). Kept deliberately small: only the bits
 ;; that were byte-for-byte identical (or safely parameterisable) across all
-;; five scripts live here. Anything that differs per-tool (parse-args shape,
+;; six scripts live here. Anything that differs per-tool (parse-args shape,
 ;; sandbox mounts, the inline bash command) stays in the individual scripts.
 
 (define-module (agent-launch)
