@@ -33,7 +33,7 @@
        (name 'binary-guix)
        (url "https://codeberg.org/s-l-s/BinaryGuix")
        (branch "main")
-       (commit "e0e586ffc09aaa9dbcf5abb045b8408d4542790c"))
+       (commit "ef05ca13d76518a95fce5f60c9485a5741cf097a"))
 
       (channel
        (name 'radix)

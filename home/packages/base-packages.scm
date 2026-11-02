@@ -58,7 +58,8 @@
 ;; System utilities (hardware / desktop daemons)
 
 (define system-utilities-packages
-  (list "adb" "hostapd"     ; wireplumber comes from home-pipewire-service-type
+  (list "android-platform-tools-bin" ; adb/fastboot >= 30 with `adb pair' (binary-guix)
+        "hostapd"         ; wireplumber comes from home-pipewire-service-type
         "alsa-utils"        ; alsamixer/amixer for the hardware (card-level)
                             ; HDA controls PipeWire doesn't manage (Speaker,
                             ; PCM, Headphone); use `alsamixer -c 0`

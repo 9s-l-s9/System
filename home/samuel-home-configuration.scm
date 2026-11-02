@@ -11,7 +11,8 @@
   #:use-module (services agent-skills)
   #:use-module (services agent-launchers)
   #:use-module (services claude)
-  #:use-module (services mail))
+  #:use-module (services mail)
+  #:use-module (services bigme))
 
 (home-environment
  (packages
@@ -28,4 +29,5 @@
                 (claude-service))
           (konsole-services)
           (mail-services)
+          (bigme-services)
           (agent-launcher-services))))
