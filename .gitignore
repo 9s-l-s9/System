@@ -5,3 +5,6 @@ minde-console-continue.log
 minde-console-continue-result.png
 *.elc
 *.go
+
+# Auto-synced claude.ai skills cache (third-party licences)
+.agents/skills/synced/

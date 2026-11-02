@@ -172,7 +172,34 @@
      (list "--" "bash" "-c" cmd "claude-guix")
      claude-args)))
 
+;; Claude Code's shell snapshot wraps find/grep as its embedded bfs/ugrep:
+;; it execs $CLAUDE_CODE_EXECPATH under that argv0, falling back to
+;; ~/.local/bin/claude -- this launcher -- whenever the binary is briefly not
+;; executable (e.g. during a self-update). Recognise those fixed argument
+;; prefixes and hand the call to the real binary, or to plain find/grep.
+(define embedded-tools
+  ;; (argv0 fallback fixed-prefix) -- ugrep also prepends --exclude-dir=s.
+  '(("bfs" "find" ("-S" "dfs" "-regextype" "findutils-default"))
+    ("ugrep" "grep" ("-G" "--ignore-files" "--hidden" "-I"))))
+
+(define (maybe-dispatch-embedded-tool args)
+  (let ((tool (find (lambda (t)
+                      (let ((prefix (caddr t)))
+                        (and (>= (length args) (length prefix))
+                             (equal? (take args (length prefix)) prefix))))
+                    embedded-tools)))
+    (when tool
+      (let ((bin (find (lambda (p) (and p (access? p X_OK)))
+                       (list (getenv "CLAUDE_CODE_EXECPATH")
+                             (string-append home "/.local/share/agent-tools/claude/bin/claude")))))
+        (if bin
+            (apply execl bin (car tool) args)
+            (apply execlp (cadr tool) (cadr tool)
+                   (drop-while (lambda (a) (string-prefix? "--exclude-dir=" a))
+                               (drop args (length (caddr tool))))))))))
+
 (define (main)
+  (maybe-dispatch-embedded-tool (cdr (command-line)))
   (call-with-values
     (lambda () (parse-args (cdr (command-line))))
     (lambda (mode project-dir extra-manifests claude-args)
