@@ -15,8 +15,9 @@
 ;;;     colour pool (placeholders "notyet-pool: TYPE" on 2000-01-01) uses this.
 ;;;   - Only one personal calendar; more exist only as group calendars.
 ;;;
-;;; The password is the Mailfence one from ~/.local/share/mailfence/password
-;;; (see mail.scm); it is never written into a config file.
+;;; The password is the Mailfence one from ~/.local/share/mailfence/password,
+;;; the login and addresses come from identity.scm there (lib mail-identity)
+;;; (see mail.scm); neither is written into this repository.
 
 (define-module (services calendar)
   #:use-module (gnu home services)
@@ -27,11 +28,14 @@
   #:use-module (gnu packages guile)
   #:use-module (gnu services)
   #:use-module (guix gexp)
+  #:use-module (lib mail-identity)
   #:export (calendar-services))
 
-(define %caldav-user "mailfence-user")
-(define %me (string-append "samuel" "@" "example.org"))
-(define %mailfence-address (string-append "user" "@" "mailfence.com"))
+(define %caldav-user (mail-identity 'user))
+(define %me (mail-identity 'address))
+(define %mailfence-address (mail-identity 'mailfence-address))
+;; New event UIDs end in the domain of the From address.
+(define %uid-domain (substring %me (+ 1 (string-index %me #\@))))
 
 ;; $XDG_CONFIG_HOME/vdirsyncer/config.  The local side is a plain vdir; the
 ;; collection is named explicitly so `discover' never has to ask.
@@ -69,7 +73,7 @@
       (default-calendar . "mailfence")
       (timezone . "Europe/Berlin")
       (me ,%me ,%mailfence-address)
-      (uid-domain . "example.org")
+      (uid-domain . ,%uid-domain)
       (sync-command "vdirsyncer" "sync")
       (export-dir . "~/Calendar/text")
       (reminder-action . "EMAIL")

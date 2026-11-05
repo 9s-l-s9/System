@@ -28,7 +28,12 @@
              (srfi srfi-13))
 
 (define imap-url "imaps://imap.mailfence.com/")
-(define imap-user "mailfence-user")
+;; Login from the private identity file (see home/lib/mail-identity.scm).
+(define imap-user
+  (assq-ref (call-with-input-file
+                (string-append (getenv "HOME") "/.local/share/mailfence/identity.scm")
+              read)
+            'user))
 (define spam-folder "Spam%3F")               ; "Spam?" URL-encoded
 (define password-file
   (string-append (getenv "HOME") "/.local/share/mailfence/password"))

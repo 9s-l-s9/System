@@ -35,11 +35,12 @@
   #:use-module (gnu services)
   #:use-module (gnu services shepherd)
   #:use-module (guix gexp)
+  #:use-module (lib mail-identity)
   #:export (mail-services))
 
-(define %imap-user "mailfence-user")
-(define %from-address (string-append "samuel" "@" "example.org"))
-(define %mailfence-address (string-append "user" "@" "mailfence.com"))
+(define %imap-user (mail-identity 'user))
+(define %from-address (mail-identity 'address))
+(define %mailfence-address (mail-identity 'mailfence-address))
 (define %ca-file "/etc/ssl/certs/ca-certificates.crt")
 
 ;; mbsync and msmtp both run this through /bin/sh, so ~ expands.

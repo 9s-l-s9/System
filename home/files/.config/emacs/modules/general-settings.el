@@ -1,8 +1,18 @@
 ;;; general-settings.el --- Core Emacs settings -*- lexical-binding: t -*-
 ;;; Code:
 
+;; The address lives outside this public repo, next to the Mailfence
+;; password (see home/lib/mail-identity.scm).
+(defun my/mail-identity (key)
+  "KEY's value from ~/.local/share/mailfence/identity.scm, or nil."
+  (let ((file (expand-file-name "~/.local/share/mailfence/identity.scm")))
+    (when (file-readable-p file)
+      (with-temp-buffer
+        (insert-file-contents file)
+        (alist-get key (read (current-buffer)))))))
+
 (setq user-full-name "Samuel Levi Schmidt"
-      user-mail-address (concat "samuel" "@" "example.org")
+      user-mail-address (or (my/mail-identity 'address) user-mail-address)
       copyright-names-regexp (format "%s <%s>"
                                      user-full-name
                                      user-mail-address))

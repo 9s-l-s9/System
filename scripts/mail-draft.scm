@@ -41,8 +41,15 @@
 (unless (string-contains-ci (or (false-if-exception (setlocale LC_ALL "")) "") "UTF-8")
   (false-if-exception (setlocale LC_ALL "C.UTF-8")))
 
+;; Address from the private identity file (see home/lib/mail-identity.scm).
 (define from-address
-  (string-append "Samuel Levi Schmidt <samuel" "@" "example.org>"))
+  (string-append "Samuel Levi Schmidt <"
+                 (assq-ref (call-with-input-file
+                               (string-append (getenv "HOME")
+                                              "/.local/share/mailfence/identity.scm")
+                             read)
+                           'address)
+                 ">"))
 (define drafts-dir
   (string-append (getenv "HOME") "/Mail/mailfence/Drafts"))
 

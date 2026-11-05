@@ -1,5 +1,5 @@
 ;;; general-ui-conf.el --- General UI improvements -*- lexical-binding: t -*-
-;; Author: Samuel Schmidt <samuel@example.org>
+;; Author: Samuel Schmidt
 ;;; Code:
 
 ;; No fringe but nice glyphs for truncated and wrapped lines
