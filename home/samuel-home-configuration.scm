@@ -12,6 +12,7 @@
   #:use-module (services agent-launchers)
   #:use-module (services claude)
   #:use-module (services mail)
+  #:use-module (services calendar)
   #:use-module (services bigme))
 
 (home-environment
@@ -29,5 +30,6 @@
                 (claude-service))
           (konsole-services)
           (mail-services)
+          (calendar-services)
           (bigme-services)
           (agent-launcher-services))))
