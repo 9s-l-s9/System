@@ -5,77 +5,81 @@ The order matters because later checks are only useful once the baseline evaluat
 
 ## Issue 1: Baseline Evaluation Cleanup
 
-Status: in progress
+Status: done
 
 Goal:
 
-- make `guix home build --dry-run --load-path=home ...` a reliable baseline check
-- make `guix system build --dry-run --load-path=systems ...` the system-side equivalent
+- make `guix time-machine -C channels.scm -- home build --dry-run --load-path=home ...` a reliable baseline check
+- make `guix time-machine -C channels.scm -- system build --dry-run --load-path=systems ...` the system-side equivalent
 
-Current blockers found while testing:
+Resolution:
 
-- several files under `home/packages/` have module names that do not match their file paths
-- some package modules have load-time issues and warnings during `guix home` evaluation
-- `home/manifests/` still needs naming cleanup beyond the minimal module declarations
-- profile-specific files should not introduce broken package references that poison unrelated evaluations
+- `Makefile` wraps all Guix build/reconfigure targets in `guix time-machine -C channels.scm --`, decoupling evaluation from the active `guix pull` generation
+- package, service, manifest, home, and system modules under `home/` and `systems/` align their `(define-module ...)` headers with their file paths
+- `(base-system)` and `(X1)` declare `#:duplicates (merge-generics replace last)` (matching Guix's `(gnu)` convention for `modify-services`'s `delete` clause) so compilation emits no core-binding override warnings
 
 ## Issue 2: Standardize QA Entry Points
 
-Status: added
+Status: done
 
 Files:
 
 - `Makefile`
 - `scripts/check-guile-only.scm`
+- `scripts/check-scripts-compile.scm`
+- `scripts/test-minde-binary.scm`
+- `home/files/.config/emacs/tests/config-tests.el`
+- `home/files/.config/emacs/tests/ui-tests.el`
+- `.github/workflows/ci.yml`
 
 Current targets:
 
+- `make qa-ci`
+  Runs `qa-guile-only` and `qa-scripts` (enforces the Guile-only `scripts/` policy and compiles scripts with `-Wunbound-variable -Warity-mismatch -Wformat`, failing on warnings; runs in GitHub Actions without Guix).
 - `make qa`
-  Runs the fast repo-policy check.
+  Runs `qa-ci`, `qa-minde-binary` (Minde binary verification & trust tests), and `qa-emacs` (Emacs configuration and UI ERT suites).
 - `make qa-guile-only`
-  Enforces the hard rule that files in `scripts/` are Guile or documentation, not shell.
+  Enforces the hard rule that files in `scripts/` are Guile (`.scm`) or documentation (`.org`), never shell/Python.
+- `make qa-scripts`
+  Compiles `scripts/` with `guild compile` and treats compiler warnings as errors.
+- `make qa-minde-binary`
+  Runs `scripts/test-minde-binary.scm` via `guix repl`.
+- `make qa-emacs`
+  Runs both batch ERT suites (`config-tests.el` and `ui-tests.el`).
 - `make qa-home-samuel`
 - `make qa-home-levi`
 - `make qa-system-x1`
 - `make qa-system-t450s`
+- `make qa-all`
+  Runs `make qa` plus all four `guix time-machine` home and system dry-run builds.
 
-These targets are intentionally thin wrappers around the real Guix commands so the checks stay transparent.
-
-Prerequisite:
-
-- the active Guix installation should already be aligned with `channels.scm`
-- otherwise package resolution can fail for channel-specific packages even when the repo itself is structurally correct
+These targets are intentionally thin wrappers around the real commands so the checks stay transparent.
 
 ## Issue 3: Normalize Module Naming
 
-Status: todo
+Status: done
 
 Goal:
 
 - make file paths and module names agree everywhere under `home/` and `systems/`
 
-Primary targets:
+Resolution:
 
-- `home/packages/*.scm`
-- `home/manifests/*.scm`
-- any profile entrypoint whose `(define-module ...)` does not match the filename
-
-This should reduce noisy warnings and make load-path behavior predictable.
+- every module under `home/` (`packages/`, `services/`, `manifests/`, `lib/`, and `*-home-configuration.scm`) and `systems/` (`base-system.scm`, `X1.scm`, `T450s.scm`) declares a `(define-module ...)` matching its load-path-relative filename
+- intentional exception: `minde-package.scm` at the repository root is evaluated via `primitive-load` for its final package value rather than imported from `home/` or `systems/`, so it does not declare `(define-module ...)`
 
 ## Issue 4: Document The Pre-Commit Flow
 
-Status: todo
+Status: done
 
-Goal:
+Pre-commit QA sequence:
 
-- define the smallest useful QA sequence before committing
-
-Recommended eventual flow:
-
-1. `make qa`
-2. `make qa-home-samuel`
-3. run the relevant profile or system target if the change touches that area
-4. only run full reconfigure when the dry-run/build path is clean
+1. `make qa` — fast local check (~7 s): Guile-only script policy, strict `guild compile` check across `scripts/`, Minde binary security unit tests, and Emacs batch ERT tests (`config-tests.el` + `ui-tests.el`).
+2. Run the dry-run build target(s) matching the area touched (evaluated reproducibly against `channels.scm` via `guix time-machine`):
+   - `make qa-home-samuel` / `make qa-home-levi` when changing `home/` or `minde-package.scm`
+   - `make qa-system-x1` / `make qa-system-t450s` when changing `systems/` or `minde-package.scm`
+   - `make qa-all` when changing shared foundations (`channels.scm`, `minde-package.scm`, `home/packages/base-packages.scm`, `systems/base-system.scm`)
+3. Only run `make reconfigure-home` / `make reconfigure-system` once the dry-run build is clean.
 
 ## Note: Always Check Channel News After `guix pull`
 

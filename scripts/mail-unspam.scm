@@ -28,19 +28,22 @@
              (srfi srfi-13))
 
 (define imap-url "imaps://imap.mailfence.com/")
-;; Login from the private identity file (see home/lib/mail-identity.scm).
-(define imap-user
-  (assq-ref (call-with-input-file
-                (string-append (getenv "HOME") "/.local/share/mailfence/identity.scm")
-              read)
-            'user))
 (define spam-folder "Spam%3F")               ; "Spam?" URL-encoded
+(define identity-file
+  (string-append (getenv "HOME") "/.local/share/mailfence/identity.scm"))
 (define password-file
   (string-append (getenv "HOME") "/.local/share/mailfence/password"))
 
 (define (die fmt . args)
   (apply format (current-error-port) (string-append "mail-unspam: " fmt "~%") args)
   (exit 1))
+
+;; Login from the private identity file (see home/lib/mail-identity.scm).
+(define (imap-user)
+  (unless (file-exists? identity-file)
+    (die "~a missing (see home/lib/mail-identity.scm)" identity-file))
+  (or (assq-ref (call-with-input-file identity-file read) 'user)
+      (die "no 'user in ~a" identity-file)))
 
 (define (message-id-of arg)
   (cond
@@ -58,7 +61,7 @@
          (pw (string-trim-right (call-with-input-file password-file get-string-all))))
     (umask #o077)
     (call-with-output-file cfg
-      (lambda (p) (format p "user = \"~a:~a\"~%" imap-user pw)))
+      (lambda (p) (format p "user = \"~a:~a\"~%" (imap-user) pw)))
     (let* ((port (open-pipe* OPEN_READ "curl" "-s" "-S" "--max-time" "60" "-K" cfg
                              "--url" (string-append imap-url folder) "-X" command))
            (out (get-string-all port))

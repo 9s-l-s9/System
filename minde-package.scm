@@ -1,7 +1,7 @@
 ;;; Shared by both systems and Guix Home. Installed Minde is a verified CI
 ;;; binary; local compilation requires an explicit MINDE_BUILD_LOCAL=1.
 (add-to-load-path (string-append (dirname (current-filename)) "/scripts"))
-(use-modules (lib minde-binary))
+(use-modules (lib minde-binary) (srfi srfi-1))
 
 (define checkout "/home/samuel/Projects/minde")
 (define archive (getenv "MINDE_RC_ARCHIVE"))
@@ -25,4 +25,23 @@
  (else
   (unless (file-exists? lock-file)
     (error "No pinned Minde binary. Run make minde-install COMMIT=<full GitHub build commit> in System."))
-  (prebuilt-minde-package (read-metadata lock-file))))
+  (let ((metadata (read-metadata lock-file)))
+    ;; Each machine imports the pinned build once. Do it here so a plain
+    ;; reconfigure works after a lock bump; root evaluation (system
+    ;; reconfigure) cannot run the user-side download, so make does it first.
+    (unless (every (lambda (name) (file-exists? (assoc-ref metadata name)))
+                   '(minde xwayland))
+      (let ((importer (string-append (dirname lock-file) "/scripts/minde-binary.scm")))
+        ;; Guix may load this file several times; attempt the import once.
+        (unless (and (not (zero? (getuid)))
+                     (not (getenv "MINDE_IMPORT_FAILED"))
+                     (or (zero? (status:exit-val
+                                 (system* "guix" "repl" "-q" "--" importer "ensure")))
+                         (begin (setenv "MINDE_IMPORT_FAILED" "1") #f)))
+          ;; Guix reports a failed module load only as an unbound variable,
+          ;; so say what is actually missing before failing.
+          (format (current-error-port)
+                  "~%minde: pinned binary ~a is not imported and the automatic import failed.~%minde: run  make -C ~a minde-install  as your user.~%~%"
+                  (assoc-ref metadata 'commit) (dirname lock-file))
+          (error "Minde binary is not imported" (assoc-ref metadata 'minde)))))
+    (prebuilt-minde-package metadata))))

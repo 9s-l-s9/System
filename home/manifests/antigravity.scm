@@ -1,12 +1,11 @@
-(define-module (manifests antigravity)
-  #:use-module (gnu packages))
+(eval-when (expand load eval)
+  (add-to-load-path "/home/samuel/Projects/System/home"))
 
-;; Shared base (bash/git/guix/d2/uv/python/nss-certs/... — see agent-base.scm).
-(define base-specs
-  (primitive-load
-   "/home/samuel/Projects/System/home/manifests/agent-base.scm"))
+(define-module (manifests antigravity)
+  #:use-module (gnu packages)
+  #:use-module (manifests agent-base))
 
 ;; Antigravity CLI (agy) is a single native binary; the launcher fetches it
 ;; from Google's release manifest, so it only needs tar/gzip on top.
 (specifications->manifest
- (append base-specs '("tar" "gzip")))
+ (append agent-base-specs '("tar" "gzip")))

@@ -1,13 +1,12 @@
-(define-module (manifests codex)
-  #:use-module (gnu packages))
+(eval-when (expand load eval)
+  (add-to-load-path "/home/samuel/Projects/System/home"))
 
-;; Shared base (bash/git/guix/d2/uv/python/nss-certs/... — see agent-base.scm).
-(define base-specs
-  (primitive-load
-   "/home/samuel/Projects/System/home/manifests/agent-base.scm"))
+(define-module (manifests codex)
+  #:use-module (gnu packages)
+  #:use-module (manifests agent-base))
 
 ;; node comes from agent-base.scm now; codex uses npm, not pnpm.
 (specifications->manifest
- (append base-specs
+ (append agent-base-specs
          '("bind:utils"   ; dig/nslookup for network debugging
            "poppler")))   ; pdftotext etc. for document handling

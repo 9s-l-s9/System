@@ -1,11 +1,10 @@
 ;;; Shared base package set for every coding-agent container
-;;; (claude/codex/pi). The per-agent manifests pull this in via
-;;; `primitive-load' on an absolute path -- the same pattern
-;;; home/services/minde.scm uses for minde-package.scm -- so we avoid putting
-;;; home/ on the Guile %load-path just to cross-reference a module.
+;;; (claude/codex/pi/agy/dsh) and skill manifests.  Exported from a proper
+;;; `(manifests agent-base)' module so `guix home --load-path=home' scans
+;;; `home/' cleanly without load warnings; standalone manifests add `home/' to
+;;; `%load-path' before importing it.
 ;;;
-;;; This file's value is its last expression: a plain list of Guix package
-;;; specifications. Add a tool here to hand it to ALL agents at once.
+;;; Add a tool to `agent-base-specs' to hand it to ALL agents at once.
 ;;;
 ;;; Notes on the Python tooling:
 ;;;   uv         -- Astral's package/venv manager. Works inside the
@@ -19,7 +18,12 @@
 ;;;                 rather uv reuse the `python' below than download its own.)
 ;;;   python     -- a stable interpreter on PATH so uv/pipx have a system one.
 ;;;   ruff       -- single-binary linter/formatter, natural uv companion.
-'("bash"
+
+(define-module (manifests agent-base)
+  #:export (agent-base-specs))
+
+(define agent-base-specs
+  '("bash"
   "coreutils"
   "grep"
   "sed"
@@ -49,4 +53,4 @@
   "node@22"
   ;; File search, used generally and specifically by pi/deepseek-harness.
   "ripgrep"
-  "fd")
+  "fd"))

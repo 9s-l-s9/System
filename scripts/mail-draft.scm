@@ -41,21 +41,23 @@
 (unless (string-contains-ci (or (false-if-exception (setlocale LC_ALL "")) "") "UTF-8")
   (false-if-exception (setlocale LC_ALL "C.UTF-8")))
 
-;; Address from the private identity file (see home/lib/mail-identity.scm).
-(define from-address
-  (string-append "Samuel Levi Schmidt <"
-                 (assq-ref (call-with-input-file
-                               (string-append (getenv "HOME")
-                                              "/.local/share/mailfence/identity.scm")
-                             read)
-                           'address)
-                 ">"))
 (define drafts-dir
   (string-append (getenv "HOME") "/Mail/mailfence/Drafts"))
+(define identity-file
+  (string-append (getenv "HOME") "/.local/share/mailfence/identity.scm"))
 
 (define (die fmt . args)
   (apply format (current-error-port) (string-append "mail-draft: " fmt "~%") args)
   (exit 1))
+
+;; Address from the private identity file (see home/lib/mail-identity.scm).
+(define (from-address)
+  (unless (file-exists? identity-file)
+    (die "~a missing (see home/lib/mail-identity.scm)" identity-file))
+  (let ((addr (assq-ref (call-with-input-file identity-file read) 'address)))
+    (unless (and (string? addr) (string-index addr #\@))
+      (die "no valid 'address in ~a" identity-file))
+    (string-append "Samuel Levi Schmidt <" addr ">")))
 
 (define (command-output program . args)
   (let* ((port (apply open-pipe* OPEN_READ program args))
@@ -259,11 +261,12 @@ with \"> \", as mail clients do on reply; empty if the original is unknown."
                    body))
          (attachments (attachment-paths headers))
          (boundary (string-append "=_" (unique-name)))
-         (domain (let ((at (string-index from-address #\@)))
-                   (string-trim-right (substring from-address (+ at 1)) #\>))))
+         (from (from-address))
+         (domain (let ((at (string-index from #\@)))
+                   (string-trim-right (substring from (+ at 1)) #\>))))
     (string-append
      "Date: " (rfc2822-date) "\n"
-     "From: " from-address "\n"
+     "From: " from "\n"
      "To: " (encode-addresses to) "\n"
      (if cc (string-append "Cc: " (encode-addresses cc) "\n") "")
      "Subject: " (encode-word subject) "\n"

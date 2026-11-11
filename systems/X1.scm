@@ -1,5 +1,7 @@
-(use-modules (gnu)
-             (base-system))
+(define-module (X1)
+  #:use-module (gnu)
+  #:use-module (base-system)
+  #:duplicates (merge-generics replace last))
 
 ;; The shared selector uses the verified GitHub binary pinned in System.
 ;; Run make minde-install before reconfiguring on a new PC.

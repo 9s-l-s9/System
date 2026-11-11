@@ -2,6 +2,7 @@
 !#
 (add-to-load-path (dirname (current-filename)))
 (use-modules (lib minde-binary)
+             (srfi srfi-1)
              (srfi srfi-64)
              (ice-9 textual-ports)
              (guix build utils)
@@ -23,8 +24,14 @@
   (call-with-output-file metadata-file (lambda (port) (write value port)))
   (read-metadata metadata-file))
 
+(define (replace-field key value)
+  (acons key value (alist-delete key valid eq?)))
+
+;; Catch only `error' (`misc-error'), never `unbound-variable' or arity/type
+;; bugs in the test expression itself.
 (define-syntax-rule (rejects name body ...)
-  (test-assert name (catch #t (lambda () body ... #f) (lambda _ #t))))
+  (test-assert name
+    (catch 'misc-error (lambda () body ... #f) (lambda _ #t))))
 
 (test-begin "minde-binary")
 (test-equal "valid metadata" valid (metadata valid))
@@ -33,13 +40,13 @@
 (rejects "reject unknown fields"
   (metadata (cons '(run . "malicious-command") valid)))
 (rejects "reject repository substitution"
-  (metadata (acons 'repository "attacker/minde" (assq-delete-all 'repository valid))))
+  (metadata (replace-field 'repository "attacker/minde")))
 (rejects "reject architecture substitution"
-  (metadata (acons 'system "aarch64-linux" (assq-delete-all 'system valid))))
+  (metadata (replace-field 'system "aarch64-linux")))
 (rejects "reject store path traversal"
-  (metadata (acons 'minde "/gnu/store/../etc" (assq-delete-all 'minde valid))))
+  (metadata (replace-field 'minde "/gnu/store/../etc")))
 (rejects "reject abbreviated commit"
-  (metadata (acons 'commit "abc123" (assq-delete-all 'commit valid))))
+  (metadata (replace-field 'commit "abc123")))
 (rejects "reject executable Scheme instead of data"
   (metadata '(begin (system "false") '())))
 (rejects "reject trailing expression"
@@ -47,7 +54,7 @@
     (lambda (port) (write valid port) (display "\n(system \"false\")" port)))
   (read-metadata metadata-file))
 (rejects "reject malformed digest"
-  (metadata (acons 'key-sha256 "checksum" (assq-delete-all 'key-sha256 valid))))
+  (metadata (replace-field 'key-sha256 "checksum")))
 (test-assert "reject non-store paths" (not (store-item? "/tmp/minde")))
 (test-assert "reject paths inside a store item"
   (not (store-item? (string-append (assoc-ref valid 'minde) "/bin/minde"))))

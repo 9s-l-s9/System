@@ -11,10 +11,10 @@
 ;; Usage:
 ;;   claude-guix -m .agents/skills/guix-packaging/manifest.scm
 
-(use-modules (guix profiles))
+(eval-when (expand load eval)
+  (add-to-load-path "/home/samuel/Projects/System/home"))
 
-(define base-specs
-  (primitive-load
-   "/home/samuel/Projects/System/home/manifests/agent-base.scm"))
+(use-modules (guix profiles)
+             (manifests agent-base))
 
-(specifications->manifest base-specs)
+(specifications->manifest agent-base-specs)

@@ -1,6 +1,5 @@
 (define-module (base-system)
   #:use-module (gnu)
-  #:use-module (srfi srfi-1)
   #:use-module (gnu system nss)
   #:use-module (gnu system accounts)
   #:use-module (gnu services pm)
@@ -39,6 +38,7 @@
   #:use-module (gnu packages version-control)
   #:use-module (nongnu packages linux)
   #:use-module (nongnu system linux-initrd)
+  #:duplicates (merge-generics replace last)
 
   #:export (base-system))
 

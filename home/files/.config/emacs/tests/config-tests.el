@@ -104,25 +104,37 @@
 
 (ert-deftest sls-ruff-diagnostics-point-at-the-symbol ()
   (skip-unless (executable-find "ruff"))
-  (sls-test-python-file "print(missing)\nother\n"
-    (let (done diagnostics)
-      (sls-ruff-flymake
-       (lambda (reported &rest _)
-         (setq done t diagnostics reported)))
-      (let ((deadline (+ (float-time) 5)))
-        (while (and (not done) (< (float-time) deadline))
-          (accept-process-output nil 0.05)))
-      (should done)
-      (should (= (length diagnostics) 2))
-      (dolist (entry '(("missing" . 7) ("other" . 16)))
-        (let ((diag (cl-find-if
-                     (lambda (d) (string-match-p (car entry) (flymake-diagnostic-text d)))
-                     diagnostics)))
-          (should diag)
-          (should (= (flymake-diagnostic-beg diag) (cdr entry)))
-          (should (equal (buffer-substring (flymake-diagnostic-beg diag)
-                                           (flymake-diagnostic-end diag))
-                         (car entry))))))))
+  (let ((process-environment (append '("COLORTERM=truecolor" "FORCE_COLOR=1")
+                                     process-environment)))
+    (sls-test-python-file "print(missing)\nother\n"
+      (let (done diagnostics)
+        (sls-ruff-flymake
+         (lambda (reported &rest _)
+           (setq done t diagnostics reported)))
+        (let ((deadline (+ (float-time) 5)))
+          (while (and (not done) (< (float-time) deadline))
+            (accept-process-output nil 0.05)))
+        (should done)
+        (should (= (length diagnostics) 2))
+        (dolist (entry '(("missing" . 7) ("other" . 16)))
+          (let ((diag (cl-find-if
+                       (lambda (d) (string-match-p (car entry) (flymake-diagnostic-text d)))
+                       diagnostics)))
+            (should diag)
+            (should (= (flymake-diagnostic-beg diag) (cdr entry)))
+            (should (equal (buffer-substring (flymake-diagnostic-beg diag)
+                                             (flymake-diagnostic-end diag))
+                           (car entry)))))))))
+
+(ert-deftest sls-python-keybindings-live-in-mode-maps ()
+  (require 'python)
+  (dolist (map (list python-mode-map
+                     (and (boundp 'python-ts-mode-map) python-ts-mode-map)))
+    (when (keymapp map)
+      (should (eq (lookup-key map (kbd "C-c C-p")) #'sls-python-repl))
+      (should (eq (lookup-key map (kbd "C-c t t")) #'sls-pytest-project))
+      (should (eq (lookup-key map (kbd "C-c t f")) #'sls-pytest-file))
+      (should (eq (lookup-key map (kbd "C-c t l")) #'sls-pytest-last-failed)))))
 
 (ert-deftest sls-pytest-commands-use-project-root ()
   (skip-unless (executable-find "git"))

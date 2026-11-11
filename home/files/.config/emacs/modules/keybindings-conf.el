@@ -158,6 +158,40 @@
   (define-key valsi-browse-mode-map (kbd "l") #'meow-left)
   (define-key valsi-browse-mode-map (kbd "r") #'meow-right))
 
+;; notmuch views run in MOTION, whose l/r (left/right) mean nothing in a mail
+;; list but hide notmuch's r (reply to sender) and l (filter results).  Hand
+;; those back, and put notmuch's j (jump to saved search) and k (tag menu)
+;; on J and K because j/k stay the shared up/down.  SPC remains the leader,
+;; q/RET the shared ones.
+(define-minor-mode sls-notmuch-keys-mode
+  "Give notmuch's own r, l and J precedence over Meow MOTION.")
+
+(defun sls-native-key-pass-through ()
+  "Run the application's own command for this key, bypassing Meow MOTION."
+  (interactive)
+  (let* ((keys (this-command-keys-vector))
+         (native (let ((sls-notmuch-keys-mode nil))
+                   (sls-ui-native-command keys))))
+    (call-interactively
+     (if (and (commandp native) (not (eq native #'sls-native-key-pass-through)))
+         native
+       (let ((sls-notmuch-keys-mode nil)) (key-binding keys t))))))
+
+(defvar-keymap sls-notmuch-keys-map
+  :doc "Keys that take precedence over Meow MOTION in notmuch views."
+  "r" #'sls-native-key-pass-through   ; reply to sender (R: reply to all)
+  "l" #'sls-native-key-pass-through   ; filter / limit the current results
+  "J" #'notmuch-jump-search           ; J i inbox, J u unread, ...
+  "K" #'notmuch-tag-jump)             ; K t todo, K a archive, ...; C-u K reverses
+
+;; Meow's state maps sit in `emulation-mode-map-alists'; an ordered entry
+;; sorts ahead of them.  Keypad (SPC) uses `overriding-local-map' and wins.
+(defvar sls-notmuch-keys-alist `((sls-notmuch-keys-mode . ,sls-notmuch-keys-map)))
+(add-to-ordered-list 'emulation-mode-map-alists 'sls-notmuch-keys-alist 0)
+(dolist (hook '(notmuch-hello-mode-hook notmuch-search-mode-hook
+                notmuch-show-mode-hook notmuch-tree-mode-hook))
+  (add-hook hook #'sls-notmuch-keys-mode))
+
 ;; Enter activates the same action with or without Meow.  Keep these keys
 ;; here, including table rows whose text has no button/keymap property.
 (dolist (entry '((sls-recentf-mode-map . sls-recentf-open-file)
@@ -179,6 +213,16 @@
 ;; `which-key' is part of Emacs 30+; it documents the existing leader maps.
 (when (require 'which-key nil t)
   (which-key-mode 1))
+
+;; ── python: REPL & pytest ───────────────────────────────────────────────────
+(with-eval-after-load 'python
+  (dolist (map (list python-mode-map
+                     (and (boundp 'python-ts-mode-map) python-ts-mode-map)))
+    (when (keymapp map)
+      (define-key map (kbd "C-c C-p") #'sls-python-repl)
+      (define-key map (kbd "C-c t t") #'sls-pytest-project)
+      (define-key map (kbd "C-c t f") #'sls-pytest-file)
+      (define-key map (kbd "C-c t l") #'sls-pytest-last-failed))))
 
 ;; ── dap-mode: debugging (C-c C-d prefix) ────────────────────────────────────
 ;; `meow-leader-define-key' installs the leader into `mode-specific-map',

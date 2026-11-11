@@ -43,11 +43,23 @@
       (should (eq (key-binding (kbd "SPC")) #'meow-keypad))
       (should (eq (key-binding (kbd "RET")) #'sls-ui-open))
       (should (eq (key-binding (kbd "C-c .")) #'sls-ui-actions))))
+  ;; notmuch keeps its own r (reply) and l (filter) and gets J (jump);
+  ;; other MOTION views keep Meow's directions.
   (with-temp-buffer
     (notmuch-show-mode)
     (meow-mode 1)
-    (should (eq (key-binding "r") #'meow-right))
-    (should (eq (sls-ui-native-command "r") #'notmuch-show-reply-sender))))
+    (should (eq (key-binding "r") #'sls-native-key-pass-through))
+    (should (eq (key-binding "J") #'notmuch-jump-search))
+    (should (eq (key-binding "K") #'notmuch-tag-jump))
+    (should (eq (key-binding (kbd "SPC")) #'meow-keypad))
+    (should (eq (let ((sls-notmuch-keys-mode nil)) (sls-ui-native-command "r"))
+                #'notmuch-show-reply-sender))
+    (should (eq (let ((sls-notmuch-keys-mode nil)) (sls-ui-native-command "l"))
+                #'notmuch-show-filter-thread)))
+  (with-temp-buffer
+    (help-mode)
+    (meow-mode 1)
+    (should (eq (key-binding "r") #'meow-right))))
 
 (ert-deftest sls-ui-editing-keeps-normal ()
   (require 'notmuch-mua)
@@ -144,8 +156,50 @@
     (should (equal sls-native-header-line "Mail / thread · A subject"))))
 
 (ert-deftest sls-ui-notmuch-status-is-explicit ()
-  (should (equal (sls-notmuch-status "%s" '(:tags ("unread" "flagged"))) "U!"))
-  (should (equal (sls-notmuch-status "%s" '(:tags ("inbox"))) "· ")))
+  ;; Batch has no graphical frame, so the one-letter fallbacks render.
+  (cl-flet ((status (tags) (string-trim-right (sls-notmuch-status "%s" (list :tags tags)))))
+    (should (equal (status '("unread" "flagged")) "U !"))
+    (should (equal (status '("inbox")) "·"))
+    (should (equal (status '("unread" "attachment" "replied")) "U   @"))
+    (should (equal (status '("replied")) "·   r"))))
+
+(ert-deftest sls-ui-notmuch-tags-column-hides-what-markers-show ()
+  (require 'notmuch)
+  (with-temp-buffer
+    (setq-local notmuch-search-query-string "tag:inbox")
+    (should (equal (sls-notmuch-tags-column "%s" '(:tags ("attachment" "inbox" "todo" "unread")))
+                   "todo")))
+  (with-temp-buffer
+    (setq-local notmuch-search-query-string "tag:todo")
+    (should (equal (sls-notmuch-tags-column "%s" '(:tags ("inbox" "todo"))) "i todo")))
+  ;; Thread view has no marker column: every state stays visible there.
+  (should (equal (notmuch-tag-format-tags '("inbox" "unread") '("inbox" "unread")) "i U")))
+
+(ert-deftest sls-ui-notmuch-part-buttons-only-for-attachments ()
+  (require 'notmuch)
+  (should-not (sls-notmuch-insert-header-p '(:id 1 :content-type "multipart/alternative") nil))
+  (should-not (sls-notmuch-insert-header-p '(:id 2 :content-type "text/plain") nil))
+  (should (sls-notmuch-insert-header-p '(:id 2 :content-type "text/html") t))
+  (should (sls-notmuch-insert-header-p
+           '(:id 3 :content-type "application/pdf" :filename "Vertrag.pdf") nil))
+  (should (sls-notmuch-insert-header-p '(:id 3 :content-type "image/png") nil)))
+
+(ert-deftest sls-ui-notmuch-mark-read-warning-survives-list-header ()
+  (require 'notmuch)
+  (with-temp-buffer
+    (notmuch-show-mode)
+    (sls-install-header-line)
+    (setq-local sls-native-header-line "Mail / thread   A subject")
+    (let ((notmuch-show-mark-read-function (lambda (&rest _) (error "index locked"))))
+      (notmuch-show-command-hook))
+    (should (equal header-line-format sls-header-line-format))
+    (should (string-match-p "mark read" sls-native-header-line))))
+
+(ert-deftest sls-ui-notmuch-newest-first ()
+  ;; Buffer-local variable: a plain `setq' in :config never reached the default.
+  (with-temp-buffer
+    (require 'notmuch)
+    (should (null (default-value 'notmuch-search-oldest-first)))))
 
 (ert-deftest sls-ui-terminal-follows-meow ()
   (require 'eat)
@@ -200,7 +254,7 @@
              (while (and (get-buffer-process (current-buffer)) (< (float-time) deadline))
                (accept-process-output (get-buffer-process (current-buffer)) 0.1)))
            (goto-char (point-min))
-           (should (looking-at "U!"))
+           (should (looking-at "U ! "))
            (should (equal sls-ui-title "Mail / results"))
            (sls-ui-open)
            (should (eq major-mode 'notmuch-show-mode))

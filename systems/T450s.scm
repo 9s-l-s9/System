@@ -1,10 +1,12 @@
-(use-modules (base-system)
-             (gnu packages video)
-             (gnu bootloader)
-             (gnu bootloader grub)
-             (gnu system)
-             (gnu system file-systems)
-             (gnu system keyboard))
+(define-module (T450s)
+  #:use-module (base-system)
+  #:use-module (gnu packages video)
+  #:use-module (gnu bootloader)
+  #:use-module (gnu bootloader grub)
+  #:use-module (gnu system)
+  #:use-module (gnu system file-systems)
+  #:use-module (gnu system keyboard)
+  #:use-module (guix gexp))
 
 ;; The shared selector uses the verified GitHub binary pinned in System.
 ;; Run make minde-install before reconfiguring on a new PC.
@@ -40,6 +42,16 @@
   ;; untouched and X1 is unaffected.
   (packages (cons* minde intel-vaapi-driver
                    (operating-system-packages base-system)))
+
+  ;; Low-power toggle from minde (Print L): script caps CPU freq/cores via
+  ;; sysfs, so allow running it as root without a terminal password prompt.
+  (sudoers-file
+   (plain-file "sudoers"
+    (string-append
+     "root ALL=(ALL) ALL\n"
+     "%wheel ALL=(ALL) ALL\n"
+     "samuel ALL=(root) NOPASSWD: "
+     "/run/current-system/profile/bin/guile -s /home/samuel/Projects/System/scripts/low-power-mode.scm\n")))
 
   (file-systems
    (append
