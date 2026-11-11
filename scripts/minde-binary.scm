@@ -155,6 +155,15 @@
   (("fetch" commit)
    (format #t "Verified download: ~a~%" (fetch-release commit)))
   (("install" commit) (install-release commit))
+  ;; Import the pinned build only when it is missing from this store, e.g.
+  ;; on another machine after the lock was bumped. Called by reconfigure.
+  (("ensure")
+   (let ((pinned (read-metadata (string-append system-directory "/minde-binary.lock.scm"))))
+     (unless (every (lambda (name) (file-exists? (assoc-ref pinned name)))
+                    '(minde xwayland))
+       (format #t "Pinned Minde binary ~a is not in this store; importing it.~%"
+               (assoc-ref pinned 'commit))
+       (install-release (assoc-ref pinned 'commit)))))
   (("install")
    (install-release
     (assoc-ref (read-metadata (string-append system-directory "/minde-binary.lock.scm"))

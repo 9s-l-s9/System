@@ -104,13 +104,13 @@ name = \"laptop-only\"
   \"re-pair ERGO mouse\")
 ;; Super-low-power toggle: min CPU freq, no turbo, half the cores off,
 ;; firmware low-power profile.  Run again to restore.  Needs the
-;; NOPASSWD sudoers rule from systems/X1.scm (exact guile + script path).
+;; NOPASSWD sudoers rule from systems/{X1,T450s}.scm (exact guile + script path).
 (bind-prefix-key! \"L\"
   (lambda ()
     (wm-spawn
      (string-append
-      \"sudo /run/current-system/profile/bin/guile\"
-      \" -s ~/Projects/System/scripts/low-power-mode.scm\"
+      \"sudo -n /run/current-system/profile/bin/guile\"
+      \" -s /home/samuel/Projects/System/scripts/low-power-mode.scm\"
       \" && notify-send 'Low power' toggled\")))
   \"low power mode\")
 (bind-prefix-key! \"A\"
