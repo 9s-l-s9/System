@@ -56,7 +56,7 @@ prints.
 ```
 notyet new "Globex: Videointerview (Alex M.)" --type Gespräch --start "2026-11-12 14:00" --for 45m --location Teams --desc "Link: Mail vom 29.10., Message-ID <...>"
 notyet new "Frist Initech Online-Test" --type Frist --start 2026-11-12
-notyet new "Nachhaken: Antwort Acme?" --type Nachhaken --start "+5d 9:00" --desc "Message-ID <...>"
+notyet new "Nachhaken: bei Acme nachfragen, falls keine Antwort" --type Nachhaken --start "+10d 9:00" --desc "Message-ID <...>"
 notyet edit acme date:fr --start 10:00 --for 90m     # also --shift +1d, --title, --tag/--untag
 notyet tag +Bewerbung -- globex date:2026-11
 notyet rm ref:2026-11-06/bewerbung-acme               # dry run; add --confirm
@@ -79,6 +79,12 @@ Rules:
    mail, so the source can be found again (see the mail skill).
 7. Follow-up instead of "remind me in N days": a **Nachhaken** event; Mailfence
    sends the reminder e-mail at that time.
+8. A **Nachhaken** event names something the user still has to do (send a
+   reply, ask again after a set silence). Waiting for someone else ("Antwort
+   da?", "Zugang angekommen?") is no event: an answer shows up in the mail
+   check anyway. When the user has done the task (the mail is in Sent),
+   delete the event; before a day starts, check that day's Nachhaken events
+   against `Sent Items` and drop the ones already done.
 
 ## Colours
 
