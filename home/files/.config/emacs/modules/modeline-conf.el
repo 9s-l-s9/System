@@ -101,6 +101,22 @@ Uses pixel width so alignment stays correct with icons or wide chars."
 (add-hook 'after-change-major-mode-hook #'sls-install-header-line)
 ;; Notmuch rebuilds its subject header after major-mode setup and on refresh.
 (add-hook 'notmuch-show-hook #'sls-install-header-line)
+;; When marking a message read fails (index locked by the sync timer, wrong
+;; database path), notmuch appends a warning to `header-line-format' with
+;; `concat', which signals on our list form.  Retain the warning in the
+;; native header ourselves instead of an "Error in post-command-hook".
+(defun sls-notmuch-show-command-hook-guard (orig)
+  "Call ORIG, keeping its mark-read warning inside the common header."
+  (condition-case nil
+      (funcall orig)
+    (wrong-type-argument
+     (when (and (stringp sls-native-header-line)
+                (not (string-match-p "mark read" sls-native-header-line)))
+       (setq-local sls-native-header-line
+                   (concat sls-native-header-line
+                           (propertize "  [some mark read tag changes may have failed]"
+                                       'face 'font-lock-warning-face)))))))
+(advice-add 'notmuch-show-command-hook :around #'sls-notmuch-show-command-hook-guard)
 (dolist (buffer (buffer-list))
   (with-current-buffer buffer (sls-install-header-line)))
 

@@ -72,44 +72,61 @@ separate from formatted source, including when Ruff exits successfully."
 
 ;; ── Ruff: lint via flymake (independent of eglot diagnostics) ────────────────
 
+(defvar-local sls-python--ruff-proc nil
+  "In-flight Ruff Flymake process for the current buffer.")
+
 (defun sls-ruff-flymake (report-fn &rest _)
   "Flymake backend: run `ruff check' on the buffer."
   (unless (executable-find "ruff")
     (error "ruff not on PATH"))
-  (let ((source (current-buffer)))
-    (let ((proc
-           (make-process
-            :name    "ruff-flymake"
-            :noquery t
-            :buffer  (generate-new-buffer " *ruff*")
-            :command `("ruff" "check"
-                       "--output-format=concise" "--quiet"
-                       "--stdin-filename"
-                       ,(or (buffer-file-name) "buffer.py")
-                       "-")
-            :sentinel
-            (lambda (proc _event)
-              (when (memq (process-status proc) '(exit signal))
-                (let ((diags nil))
-                  (with-current-buffer (process-buffer proc)
-                    (goto-char (point-min))
-                    (while (re-search-forward
-                            "^[^:]+:\\([0-9]+\\):\\([0-9]+\\): \\([A-Z][0-9]+\\) \\(.+\\)$"
-                            nil t)
-                      (let* ((line (string-to-number (match-string 1)))
-                             ;; Ruff and `flymake-diag-region' use one-based columns.
-                             (col  (string-to-number (match-string 2)))
-                             (code (match-string 3))
-                             (msg  (match-string 4))
-                             (region (flymake-diag-region source line col)))
-                        (push (flymake-make-diagnostic
-                               source (car region) (cdr region)
-                               :warning (format "%s: %s" code msg))
-                              diags))))
-                  (funcall report-fn diags))
-                (kill-buffer (process-buffer proc)))))))
-      (process-send-region proc (point-min) (point-max))
-      (process-send-eof proc))))
+  (when (process-live-p sls-python--ruff-proc)
+    (kill-process sls-python--ruff-proc))
+  (let* ((source (current-buffer))
+         ;; Use pipes and disable color env vars (an entry without `=' unsets
+         ;; it in `process-environment') so Ruff never emits ANSI escapes.
+         (process-environment (append '("NO_COLOR=1" "FORCE_COLOR" "CLICOLOR_FORCE")
+                                      process-environment))
+         (proc
+          (make-process
+           :name            "ruff-flymake"
+           :noquery         t
+           :connection-type 'pipe
+           :buffer          (generate-new-buffer " *ruff*")
+           :command         `("ruff" "check"
+                              "--output-format=concise" "--quiet"
+                              "--stdin-filename"
+                              ,(or (buffer-file-name) "buffer.py")
+                              "-")
+           :sentinel
+           (lambda (proc _event)
+             (when (memq (process-status proc) '(exit signal))
+               (unwind-protect
+                   (when (and (buffer-live-p source)
+                              (eq proc (buffer-local-value 'sls-python--ruff-proc source)))
+                     (let ((diags nil))
+                       (with-current-buffer (process-buffer proc)
+                         (goto-char (point-min))
+                         (while (re-search-forward
+                                 "^[^:]+:\\([0-9]+\\):\\([0-9]+\\): \\([A-Z]+[0-9]+\\) \\(.+\\)$"
+                                 nil t)
+                           (let* ((line (string-to-number (match-string 1)))
+                                  ;; Ruff and `flymake-diag-region' use one-based columns.
+                                  (col  (string-to-number (match-string 2)))
+                                  (code (match-string 3))
+                                  (msg  (match-string 4))
+                                  (region (flymake-diag-region source line col)))
+                             (push (flymake-make-diagnostic
+                                    source (car region) (cdr region)
+                                    :warning (format "%s: %s" code msg))
+                                   diags))))
+                       (funcall report-fn (nreverse diags))))
+                 (when (buffer-live-p (process-buffer proc))
+                   (kill-buffer (process-buffer proc)))))))))
+    (setq sls-python--ruff-proc proc)
+    (save-restriction
+      (widen)
+      (process-send-region proc (point-min) (point-max)))
+    (process-send-eof proc)))
 
 ;; Activate ruff flymake only when NOT managed by eglot (eglot adds its own)
 (defun sls-maybe-enable-ruff-flymake ()
@@ -118,18 +135,10 @@ separate from formatted source, including when Ruff exits successfully."
     (add-hook 'flymake-diagnostic-functions #'sls-ruff-flymake nil t)
     (flymake-mode 1)))
 
-(defun sls-python--bind-test-keys ()
-  "Buffer-local test keybindings for Python."
-  (local-set-key (kbd "C-c C-p") #'sls-python-repl)
-  (local-set-key (kbd "C-c t t") #'sls-pytest-project)
-  (local-set-key (kbd "C-c t f") #'sls-pytest-file)
-  (local-set-key (kbd "C-c t l") #'sls-pytest-last-failed))
-
 (dolist (hook '(python-mode-hook python-ts-mode-hook))
   (add-hook hook #'sls-python--indent-setup)
   (add-hook hook #'sls-python--enable-format-on-save)
-  (add-hook hook #'sls-maybe-enable-ruff-flymake)
-  (add-hook hook #'sls-python--bind-test-keys))
+  (add-hook hook #'sls-maybe-enable-ruff-flymake))
 
 ;; ── REPL ─────────────────────────────────────────────────────────────────────
 

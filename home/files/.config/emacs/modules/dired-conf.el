@@ -10,7 +10,10 @@
 (setq dired-listing-switches "-alhU")
 
 ;; Core Dired faces provide the same quiet hierarchy as the other views.
-;; File types remain visible through names and listing details.
+;; File-type icons (nerd-icons, glyphs from font-nerd-symbols) in every Dired
+;; buffer, the sidebar included.  Only needed inside Dired, so the package is
+;; loaded on first use rather than at startup.
+(add-hook 'dired-mode-hook #'nerd-icons-dired-mode)
 
 (defun sls-dired-sidebar-show (directory)
   "Show DIRECTORY in an independent Dired buffer in the sidebar."
