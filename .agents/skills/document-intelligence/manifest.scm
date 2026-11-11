@@ -1,14 +1,14 @@
 ;; Layered manifest for the document-intelligence skill: agent-base.scm
 ;; (bash/coreutils/python/nss-certs/...) plus the extras Docling needs.
 
-(use-modules (guix profiles))
+(eval-when (expand load eval)
+  (add-to-load-path "/home/samuel/Projects/System/home"))
 
-(define base-specs
-  (primitive-load
-   "/home/samuel/Projects/System/home/manifests/agent-base.scm"))
+(use-modules (guix profiles)
+             (manifests agent-base))
 
 (specifications->manifest
- (append base-specs
+ (append agent-base-specs
          '("glib"
            "libxcb"
            "mesa"
