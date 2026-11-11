@@ -1,6 +1,7 @@
 .codex
 scripts/.codex
 pw-stealth/
+.playwright-mcp/
 minde-console-continue.log
 minde-console-continue-result.png
 *.elc

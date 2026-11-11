@@ -23,5 +23,5 @@ jobs:
       - name: Install Guile
         run: sudo apt-get install -y --no-install-recommends guile-3.0
 
-      - name: Guile-only script policy
-        run: make qa-guile-only
+      - name: Guile policy and script compilation
+        run: make qa-ci

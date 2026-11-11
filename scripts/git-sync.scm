@@ -22,7 +22,7 @@
 
 ;; Default commit message 
 (define DEFAULT-AUTOCOMMIT-MSG 
-  (string-append "changes from " (uname 'nodename) " on " (strftime "%c" (localtime (current-time)))))
+  (string-append "changes from " (utsname:nodename (uname)) " on " (strftime "%c" (localtime (current-time)))))
 
 ;; Command templates for auto-committing
 (define DEFAULT-AUTOCOMMIT-CMD "git add -u ; git commit -m \"%message\";")
@@ -116,7 +116,7 @@
      ((string=? "" count) "noUpstream")
      ((string=? "0\t0" count) "equal")
      ((string-match "^0\t" count) "ahead")
-     ((string-match "^\t0$" count) "behind")
+     ((string-match "^[0-9]+\t0$" count) "behind")
      (else "diverged"))))
 
 ;; Exit, issue warning if not in sync

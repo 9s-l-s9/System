@@ -7,12 +7,14 @@ My personal system configuration.
 
 * QA
 
-- Run =make qa= for the fast repository policy check.
-- Run =make qa-home-samuel= before changing Samuel's home configuration.
-- Run =make qa-home-levi= before changing Levi's home configuration.
-- Run =make qa-system-x1= or =make qa-system-t450s= when changing system definitions.
-- The Guix QA targets assume your current Guix installation is already aligned with =channels.scm=.
-- See =QA.md= for the broader cleanup roadmap.
+Pre-commit sequence (see =QA.md= for details):
+
+1. Run =make qa= for fast local checks (Guile-only =scripts/= policy, strict =guild compile= warning check, =minde-binary= unit tests, and Emacs ERT test suites).
+2. Run the dry-run Guix evaluation target(s) for what changed (all evaluated reproducibly against =channels.scm= via =guix time-machine=):
+   - =make qa-home-samuel= / =make qa-home-levi= when changing =home/=
+   - =make qa-system-x1= / =make qa-system-t450s= when changing =systems/=
+   - =make qa-all= when changing shared files (=channels.scm=, =minde-package.scm=, =base-packages.scm=, =base-system.scm=)
+3. Only reconfigure (=make reconfigure-home= / =make reconfigure-system=) once the dry-run path is clean.
 
 * Installation
 
