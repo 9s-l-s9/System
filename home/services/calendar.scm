@@ -105,6 +105,9 @@
          ;; because the collection is named and the directory exists.
          (system* "vdirsyncer" "discover")
          (system* "vdirsyncer" "sync")
+         ;; Unfinished to-dos and missed Fokus blocks of earlier days move to
+         ;; today (a no-op once they are there); syncs again only on a change.
+         (system* (string-append home "/Projects/notyet/bin/notyet") "carry")
          ;; The text mirror, also when the sync failed (local state is valid).
          (execl (string-append home "/Projects/notyet/bin/notyet")
                 "notyet" "export"))))))
@@ -114,7 +117,7 @@
                         "*/5 * * * *"
                         #~(#$calendar-sync-program)
                         #:documentation
-                        "Sync the Mailfence calendar via vdirsyncer, then notyet export.")))
+                        "Sync the Mailfence calendar via vdirsyncer, carry open to-dos, then notyet export.")))
 
 ;; Like the agent launchers: link the live checkout so edits to notyet take
 ;; effect without a reconfigure.

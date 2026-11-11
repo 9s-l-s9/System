@@ -86,6 +86,17 @@ Rules:
    delete the event; before a day starts, check that day's Nachhaken events
    against `Sent Items` and drop the ones already done.
 
+## To-dos
+
+A to-do is an all-day event titled `To-do: …` (type Fokus) or a Fokus work
+block. Finished: `notyet done <query>` (tag Erledigt, title `Erledigt: …`);
+do this when the user says a task is done or you finished it together.
+Unfinished ones do not drop out: the sync timer runs `notyet carry`, which
+moves every open to-do and missed Fokus block of the last 7 days to today as
+an all-day `To-do: …` with `Offen seit DATE` in the description. At the
+start of a day, name today's carried to-dos and ask in one question which
+are already done; mark those with `notyet done`.
+
 ## Colours
 
 CalDAV cannot set Mailfence colours, so notyet keeps a pool of coloured
