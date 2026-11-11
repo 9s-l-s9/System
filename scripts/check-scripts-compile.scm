@@ -47,13 +47,23 @@
                       (file-exists? path)))
                (string-split (string-trim-right output) #\newline))))))
 
+(define (guild-program)
+  ;; Debian/Ubuntu install guild as guild-3.0 (guild only via alternatives).
+  (or (find (lambda (name)
+              (zero? (status:exit-val
+                      (system (string-append "command -v " name " >/dev/null 2>&1")))))
+            '("guild" "guild-3.0"))
+      (begin
+        (format (current-error-port) "check-scripts-compile: guild not found~%")
+        (exit 1))))
+
 (define (compile-diagnostics path temp-go)
   ;; Capture both stdout and stderr from guild compile; fail on non-zero exit
   ;; or any compiler warning (`;;; file:line:col: warning: ...`), since guild
   ;; exits 0 on unbound-variable and arity warnings.
   (let* ((quoted-path (string-append "'" (string-join (string-split path #\') "'\\''") "'"))
          (quoted-go (string-append "'" (string-join (string-split temp-go #\') "'\\''") "'"))
-         (cmd (string-append "guild compile -L scripts/lib"
+         (cmd (string-append (guild-program) " compile -L scripts/lib"
                              " -Wunbound-variable -Warity-mismatch -Wformat"
                              " -o " quoted-go " " quoted-path " 2>&1"))
          (port (open-input-pipe cmd))
