@@ -9,8 +9,8 @@
 ;; everything just gets slow instead of hot.
 ;;
 ;; Needs root for the sysfs writes — run it as
-;;   sudo guile -s ~/Projects/System/scripts/low-power-mode.scm
-;; or via pkexec like toggle-internal-keyboard.scm.  Session-only:
+;;   sudo -n /etc/system-scripts/low-power-mode
+;; Reconfigure the system to install changes to this script. Session-only:
 ;; a reboot restores normal defaults, and running it again while low
 ;; restores them immediately.  cpu0 can never be offlined (no
 ;; `online` file), which also guarantees at least one core survives.

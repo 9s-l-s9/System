@@ -19,10 +19,6 @@ matching the existing style and checking for conflicts.
   modal editing: the leader map (prefix shown there) is canonical, e.g.
   `'("a" . gptel)`. A feature module (`gptel-conf.el`, etc.) should configure
   the feature; its keys go in `keybindings-conf.el`.
-- **StumpWM** — keybindings live in `home/services/stumpwm.scm` under the
-  `keymaps` section. Prefix key is `Print`; commands are `defcommand`s that
-  `run-shell-command` into `scripts/*.scm`, bound in the root keymap (or a
-  prefix sub-map).
 - **minde** — keybindings live in `home/services/minde.scm` (`personal-init`,
   via `bind-prefix-key!`). **Hard rule: every binding hangs off the `Print`
   prefix key — never bind Super, Ctrl, Alt, or any other modifier chord.**

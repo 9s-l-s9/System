@@ -4,6 +4,7 @@
   #:use-module (ice-9 regex)
   #:use-module (ice-9 rdelim)
   #:use-module (ice-9 textual-ports)
+  #:use-module (ice-9 ftw)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-13)
   #:use-module (rnrs bytevectors)
@@ -18,7 +19,7 @@
   #:export (minde-repository minde-workflow release-files
             run! full-commit? store-item? read-metadata read-closure
             file-digest set-download-trust! verify-release!
-            prebuilt-minde-package))
+            prebuilt-minde-package prune-binary-roots!))
 
 (define minde-repository "9s-l-s9/minde")
 (define minde-workflow
@@ -33,6 +34,18 @@
 
 (define (full-commit? value)
   (and (string? value) (string-match "^[0-9a-f]{40}$" value) #t))
+
+(define (prune-binary-roots! directory keep-commits)
+  "Remove only our obsolete GC-root symlinks; profile generations keep their builds."
+  (for-each
+   (lambda (name)
+     (let ((match (string-match "^([0-9a-f]{40})-(minde|xwayland)$" name))
+           (path (string-append directory "/" name)))
+       (when (and match
+                  (not (member (match:substring match 1) keep-commits))
+                  (eq? 'symlink (stat:type (lstat path))))
+         (delete-file path))))
+   (scandir directory)))
 
 (define (store-item? value)
   (and (string? value)

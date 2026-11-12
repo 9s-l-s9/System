@@ -233,7 +233,7 @@ finally resolves to a real color instead of \"unspecified-bg\"."
 ;; ── Margins (internal border) ─────────────────────────────────────────────────
 ;;
 ;; internal-border-width offsets ALL window content — including the line-number
-;; margin — from the frame edge, so relative line numbers stay inside the margin.
+;; margin — from the frame edge, so line numbers stay inside the margin.
 
 (defun sls-set-frame-margins (&optional frame)
   "Set 24-px internal border on FRAME (or current frame)."

@@ -1,14 +1,14 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Single resident emitter for the eww sysinfo widget (driven via deflisten).
 # Replaces seven 1-second defpolls that each forked a pipeline -- four of
 # them `mpstat -P N 1 1`, which *blocks a full second sampling*, so four
 # mpstat processes were permanently alive and ~15 processes were spawned
 # every second while the widget existed. This loop reads /proc and /sys
 # with shell builtins instead: steady-state it forks only `sleep` per tick
-# and `iwgetid` on network refreshes.
+# and `nmcli` on network refreshes.
 #
 # Output: one JSON object per line, every TICK seconds. eww exposes it as
-# `stats` and widgets read {stats.cpu0}, {stats.mem}, ...
+# `stats` and widgets read {stats.cpus}, {stats.mem}, ...
 
 TICK=2        # seconds between updates
 NET_EVERY=5   # refresh network fields every NET_EVERY ticks
@@ -67,23 +67,28 @@ read_temp() {
 
 # Per-core usage from /proc/stat deltas between ticks (what mpstat did,
 # without occupying a process for a second to do it).
+declare -A prev_total prev_idle
 cpu_bars() {
+    cpus="[" separator=""
     while read -r name u n s idle io irq sirq steal _; do
         case "$name" in
-            cpu[0-3])
+            cpu[0-9]*)
                 c=${name#cpu}
                 total=$((u + n + s + idle + io + irq + sirq + steal))
                 idl=$((idle + io))
-                eval "pt=\$prev_total_$c pi=\$prev_idle_$c"
+                pt=${prev_total[$c]} pi=${prev_idle[$c]}
                 usage=0
                 if [ -n "$pt" ] && [ $((total - pt)) -gt 0 ]; then
                     usage=$(( ((total - pt) - (idl - pi)) * 100 / (total - pt) ))
                 fi
                 bar "$usage"
-                eval "cpu$c=\$BAR prev_total_$c=$total prev_idle_$c=$idl"
+                cpus+="$separator{\"index\":$c,\"bar\":\"$BAR\"}"
+                separator=,
+                prev_total[$c]=$total prev_idle[$c]=$idl
                 ;;
         esac
     done < /proc/stat
+    cpus+="]"
 }
 
 mem_swap_bars() {
@@ -123,8 +128,11 @@ refresh_net() {
     done < /proc/net/route
     if [ "$net_iface" != "OFFLINE" ]; then
         net_stat="ONLINE"
-        ssid=$(iwgetid -r 2>/dev/null | tr -d '"\\')
-        [ -n "$ssid" ] && net_ssid=$ssid
+        while IFS= read -r network; do
+            case "$network" in
+                yes:*) net_ssid=${network#yes:}; break ;;
+            esac
+        done < <(nmcli -t --escape no -f ACTIVE,SSID dev wifi list ifname "$net_iface" --rescan no 2>/dev/null)
     fi
 }
 
@@ -158,6 +166,17 @@ refresh_bat() {
     [ -n "$bat" ] || bat="--"
 }
 
+# Network names are data, including quotes, backslashes and control characters.
+json_string() {
+    JSON_STRING=${1//\\/\\\\}
+    JSON_STRING=${JSON_STRING//\"/\\\"}
+    JSON_STRING=${JSON_STRING//$'\n'/\\n}
+    JSON_STRING=${JSON_STRING//$'\r'/\\r}
+    JSON_STRING=${JSON_STRING//$'\t'/\\t}
+    JSON_STRING=${JSON_STRING//$'\b'/\\b}
+    JSON_STRING=${JSON_STRING//$'\f'/\\f}
+}
+
 tick=0
 while :; do
     printf -v now '%(%H.%M %a %b %d)T' -1
@@ -171,9 +190,11 @@ while :; do
     read_temp "$temp1_file"; temp1=$TEMP
     [ $((tick % NET_EVERY)) -eq 0 ] && refresh_net
     [ $((tick % BAT_EVERY)) -eq 0 ] && refresh_bat
-    printf '{"time":"%s","clock":"%s","up":"%s","cpu0":"%s","cpu1":"%s","cpu2":"%s","cpu3":"%s","mem":"%s","swap":"%s","temp0":"%s","temp1":"%s","net_stat":"%s","net_iface":"%s","net_ssid":"%s","bat":"%s"}\n' \
-        "$now" "$clock" "$upstr" "$cpu0" "$cpu1" "$cpu2" "$cpu3" "$mem" "$swap" \
-        "$temp0" "$temp1" "$net_stat" "$net_iface" "$net_ssid" "$bat"
+    json_string "$net_ssid"; ssid_json=$JSON_STRING
+    json_string "$net_iface"; iface_json=$JSON_STRING
+    printf '{"time":"%s","clock":"%s","up":"%s","cpus":%s,"mem":"%s","swap":"%s","temp0":"%s","temp1":"%s","net_stat":"%s","net_iface":"%s","net_ssid":"%s","bat":"%s"}\n' \
+        "$now" "$clock" "$upstr" "$cpus" "$mem" "$swap" \
+        "$temp0" "$temp1" "$net_stat" "$iface_json" "$ssid_json" "$bat"
     tick=$((tick + 1))
     sleep "$TICK"
 done

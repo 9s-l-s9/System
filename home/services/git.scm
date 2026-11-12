@@ -1,42 +1,26 @@
 (define-module (services git)
   #:use-module (gnu home services)
-  #:use-module (gnu packages base)
+  #:use-module (gnu packages bash)
   #:use-module (gnu packages version-control)
   #:use-module (gnu services)
   #:use-module (guix gexp)
+  #:use-module (lib git-hooks)
   #:use-module (lib identity)
   #:export (git-service))
 
-;; Global commit-msg hook: refuse any commit message that credits an AI
-;; (Co-Authored-By trailers from Claude Code, its "Generated with" line,
-;; Claude-Session trailers).  The Claude Code side is switched off in
-;; services/claude.scm; this hook is the backstop for anything else.
-;;
-;; core.hooksPath replaces a repository's own .git/hooks, so the hook
-;; chains to that directory's commit-msg when one exists.
-(define commit-msg-hook
-  (computed-file
-   "commit-msg"
-   #~(begin
-       (call-with-output-file #$output
-         (lambda (port)
-           (display
-            (string-append
-             "#!/bin/sh\n"
-             "# Installed by services/git.scm (guix home).\n"
-             "if " #$(file-append grep "/bin/grep")
-             " -qiE '^Co-Authored-By:.*(claude|anthropic)"
-             "|^Claude-Session:|Generated with \\[?Claude' \"$1\"; then\n"
-             "    echo 'commit-msg: AI attribution is not allowed in commit"
-             " messages' >&2\n"
-             "    exit 1\n"
-             "fi\n"
-             "repo_hook=\"$(" #$(file-append git "/bin/git")
-             " rev-parse --git-dir)/hooks/commit-msg\"\n"
-             "[ -x \"$repo_hook\" ] && exec \"$repo_hook\" \"$@\"\n"
-             "exit 0\n")
-            port)))
-       (chmod #$output #o555))))
+;; core.hooksPath replaces *every* repository hook. Install dispatchers for
+;; all events, including LFS hooks, and locate them through --git-common-dir
+;; so linked worktrees use their repository's hooks as well.
+(define (git-hook name)
+  (program-file
+   name
+   (with-imported-modules '((lib git-hooks))
+     #~(begin
+         (use-modules (lib git-hooks))
+         (dispatch-git-hook
+          #$name #$(file-append git "/bin/git")
+          #$(file-append bash-minimal "/bin/sh")
+          #$(file-append git "/share/git-core/templates/hooks/push-to-checkout.sample"))))))
 
 (define git-config-file
   (plain-file
@@ -114,7 +98,8 @@
   git-config-activation)
 
 (define (git-xdg-files _config)
-  `(("git/hooks/commit-msg" ,commit-msg-hook)))
+  (map (lambda (name) (list (string-append "git/hooks/" name) (git-hook name)))
+       git-hook-names))
 
 (define git-service-type
   (service-type

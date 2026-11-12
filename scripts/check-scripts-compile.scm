@@ -2,28 +2,36 @@
 !#
 ;;; Compile-check scripts/ for unbound variables, arity mismatches, and syntax
 ;;; errors.  Pure-Guile scripts are compiled everywhere (including CI); scripts
-;;; importing (guix ...) are compiled whenever Guix is on Guile's load path.
+;;; importing (guix ...) use Guix's own compiler when its modules are available.
 
 (use-modules (ice-9 format)
              (ice-9 popen)
              (ice-9 rdelim)
              (ice-9 regex)
+             (system base compile)
              (srfi srfi-1)
              (srfi srfi-13))
 
 (define optional-module-scripts
   '((("scripts/lib/minde-binary.scm"
       "scripts/minde-binary.scm"
-      "scripts/test-minde-binary.scm")
+      "scripts/test-minde-binary.scm"
+      "scripts/test-git-hooks.scm"
+      "scripts/test-privileged-scripts.scm")
      . "guix/packages.scm")
-    (("scripts/ask-ai.scm"
-      "scripts/mail-export.scm")
+    (("scripts/mail-export.scm" "scripts/pw-mcp-gen-config.scm")
      . "json.scm")))
 
 (define (missing-dependency? path)
   (any (lambda (entry)
          (and (member path (car entry))
               (not (search-path %load-path (cdr entry)))))
+       optional-module-scripts))
+
+(define (guix-script? path)
+  (any (lambda (entry)
+         (and (member path (car entry))
+              (string-prefix? "guix/" (cdr entry))))
        optional-module-scripts))
 
 (define (run-lines program . args)
@@ -63,9 +71,15 @@
   ;; exits 0 on unbound-variable and arity warnings.
   (let* ((quoted-path (string-append "'" (string-join (string-split path #\') "'\\''") "'"))
          (quoted-go (string-append "'" (string-join (string-split temp-go #\') "'\\''") "'"))
-         (cmd (string-append (guild-program) " compile -L scripts/lib"
-                             " -Wunbound-variable -Warity-mismatch -Wformat"
-                             " -o " quoted-go " " quoted-path " 2>&1"))
+         ;; A profile's guild can use a different Guile than Guix itself.
+         ;; Compile Guix consumers in Guix's own environment; otherwise a
+         ;; bytecode/language mismatch fails before checking our source.
+         (cmd (if (guix-script? path)
+                  (string-append "guix repl -q -- scripts/check-scripts-compile.scm"
+                                 " --compile " quoted-path " " quoted-go " 2>&1")
+                  (string-append (guild-program) " compile -L scripts/lib -L home -L systems"
+                                 " -Wunbound-variable -Warity-mismatch -Wformat"
+                                 " -o " quoted-go " " quoted-path " 2>&1")))
          (port (open-input-pipe cmd))
          (output (read-string port))
          (code (status:exit-val (close-pipe port))))
@@ -109,4 +123,13 @@
            (reverse failures))
           (exit 1)))))
 
-(main)
+(if (and (= (length (command-line)) 4)
+         (string=? (cadr (command-line)) "--compile"))
+    (begin
+      (add-to-load-path "scripts/lib")
+      (add-to-load-path "home")
+      (add-to-load-path "systems")
+      (compile-file (caddr (command-line))
+                    #:output-file (cadddr (command-line))
+                    #:opts '(#:warnings (unbound-variable arity-mismatch format))))
+    (main))

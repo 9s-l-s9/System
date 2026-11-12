@@ -8,9 +8,7 @@
   #:use-module (services helix)
   #:use-module (services codex)
   #:use-module (services git))
-  ;; Omitted vs samuel-home-configuration.scm:
-  ;;   stumpwm — window manager; WSL2 has no bare X session to manage
-  ;;   redshift — X11 blue-light filter; not applicable on WSL2
+  ;; WSLg supplies graphical windows; this home starts no compositor.
 
 (home-environment
  (packages (wsl2-packages))

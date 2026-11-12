@@ -105,12 +105,13 @@
          ;; because the collection is named and the directory exists.
          (system* "vdirsyncer" "discover")
          (system* "vdirsyncer" "sync")
-         ;; Unfinished to-dos and missed Fokus blocks of earlier days move to
-         ;; today (a no-op once they are there); syncs again only on a change.
-         (system* (string-append home "/Projects/notyet/bin/notyet") "carry")
-         ;; The text mirror, also when the sync failed (local state is valid).
-         (execl (string-append home "/Projects/notyet/bin/notyet")
-                "notyet" "export"))))))
+         (let ((notyet (string-append home "/Projects/notyet/bin/notyet")))
+           (when (file-exists? notyet)
+             ;; Unfinished to-dos and missed Fokus blocks move to today;
+             ;; carry syncs again only on a change.
+             (system* notyet "carry")
+             ;; Export even after a sync failure; local state is valid.
+             (execl notyet "notyet" "export"))))))))
 
 (define (calendar-sync-timer _config)
   (list (shepherd-timer '(calendar-sync)

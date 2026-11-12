@@ -1,13 +1,16 @@
 (define-module (X1)
+  #:use-module (guix utils)
   #:use-module (gnu)
   #:use-module (base-system)
+  #:use-module (privileged-scripts)
   #:duplicates (merge-generics replace last))
 
 ;; The shared selector uses the verified GitHub binary pinned in System.
 ;; Run make minde-install before reconfiguring on a new PC.
 ;; MINDE_BUILD_LOCAL=1 explicitly opts into compiling the working checkout.
 (define minde
-  (primitive-load "/home/samuel/Projects/System/minde-package.scm"))
+  (primitive-load (string-append (dirname (current-source-directory))
+                                 "/minde-package.scm")))
 
 (operating-system
   (inherit base-system)
@@ -18,23 +21,11 @@
   ;; /run/current-system/profile/share/wayland-sessions.
   (packages (cons minde (operating-system-packages base-system)))
 
-  ;; The internal keyboard is corrosion-damaged; scripts/toggle-internal-keyboard.scm
-  ;; kills the whole i8042 controller via sysfs.  Declare the NOPASSWD rule
-  ;; here — a hand-written /etc/sudoers.d/internal-kbd does not survive
-  ;; reconfigure/reboot on Guix System.
-  (sudoers-file
-   (plain-file "sudoers"
-    (string-append
-     "root ALL=(ALL) ALL\n"
-     "%wheel ALL=(ALL) ALL\n"
-     "samuel ALL=(root) NOPASSWD: "
-     "/run/current-system/profile/bin/guile -s /home/samuel/Projects/System/scripts/toggle-internal-keyboard.scm, "
-     "/run/current-system/profile/bin/guile -s /home/samuel/Projects/System/scripts/toggle-internal-keyboard.scm on, "
-     "/run/current-system/profile/bin/guile -s /home/samuel/Projects/System/scripts/toggle-internal-keyboard.scm off, "
-     ;; Low-power toggle from a minde key: script caps CPU freq/cores via
-     ;; sysfs, so it must run as root without a password prompt (wm-spawn
-     ;; has no terminal to ask on).
-     "/run/current-system/profile/bin/guile -s /home/samuel/Projects/System/scripts/low-power-mode.scm\n")))
+  ;; The damaged keyboard and CPU power controls need root. Install immutable
+  ;; programs so passwordless sudo cannot execute edits to the checkout.
+  (services (append (privileged-script-services #:keyboard? #t)
+                    (operating-system-user-services base-system)))
+  (sudoers-file (privileged-sudoers "samuel" #:keyboard? #t))
 
       (swap-devices (list (swap-space
                         (target (uuid

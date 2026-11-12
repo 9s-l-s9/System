@@ -1,6 +1,7 @@
 (define-module (services fish)
   #:use-module (gnu services)
   #:use-module (gnu home services shells)
+  #:use-module (services shell-aliases)
   #:use-module (guix gexp)
   #:export (fish-service))
 
@@ -64,23 +65,5 @@ end
                ("GUILE_LOAD_COMPILED_PATH"
                 . "$HOME/.guix-home/profile/lib/guile/3.0/site-ccache:$XDG_CONFIG_HOME/guix/current/lib/guile/3.0/site-ccache")
                ("GUIX_LOCPATH" . "$HOME_ENVIRONMENT/profile/lib/locales")))
-            (aliases
-             '(("ls" . "ls -p --color=auto")
-               ("ll" . "ls -l")
-               ("grep" . "grep --color=auto")
-               ("gs" . "sudo guix system reconfigure ~/Projects/System/systems/$(hostname).scm")
-               ("reload-emacs" . "herd restart emacs-daemon")
-               ;; Short names for the launcher executables that
-               ;; agent-launchers installs into ~/.local/bin.
-               ("agy" . "agy-guix")
-               ("codex" . "codex-guix")
-               ("claude" . "claude-guix")
-               ("claude-full" . "claude-guix --full")   ; FHS container (host is the default)
-               ("deepseek" . "dsh-guix")
-               ("dsh" . "dsh-guix")
-               ("drawio-render" . "~/.local/bin/drawio-render")
-               ("drawio-export" . "~/.local/bin/drawio-render")
-               ("opencode" . "opencode-guix")
-               ("pi" . "pi-guix")
-               ("alire-shell" . "guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME")))
+            (aliases shell-aliases)
             (config (list %fish-appearance)))))

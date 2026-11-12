@@ -1,5 +1,7 @@
+(use-modules (guix utils))
+
 (eval-when (expand load eval)
-  (add-to-load-path "/home/samuel/Projects/System/home"))
+  (add-to-load-path (dirname (current-source-directory))))
 
 (define-module (manifests pi)
   #:use-module (gnu packages)

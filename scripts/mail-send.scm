@@ -23,7 +23,9 @@
 ;;;
 ;;; Usage: mail-send.scm [--confirm] DRAFT
 
-(use-modules (ice-9 ftw)
+(add-to-load-path (dirname (or (current-filename) "scripts/mail-send.scm")))
+(use-modules (lib maildir)
+             (ice-9 ftw)
              (ice-9 popen)
              (ice-9 rdelim)
              (ice-9 regex)
@@ -97,7 +99,21 @@
           (gethostname)))
 
 (define (sync . channels)
-  (zero? (status:exit-val (apply system* "mbsync" channels))))
+  (zero? (apply system* "mbsync" channels)))
+
+(define (after-send description thunk)
+  "Run one follow-up without obscuring a successful SMTP delivery."
+  (catch #t
+    (lambda () (thunk) #t)
+    (lambda (key . args)
+      (format (current-error-port)
+              "Gesendet, aber ~a fehlgeschlagen: ~s ~s. Nicht erneut senden.~%"
+              description key args)
+      #f)))
+
+(define (checked-command . args)
+  (let ((status (apply system* args)))
+    (unless (zero? status) (error "command failed" args status))))
 
 (define (main args)
   (let* ((confirm? (member "--confirm" args))
@@ -126,22 +142,42 @@
                           (open-pipe* OPEN_WRITE "msmtp" "-a" "mailfence" "-t")))
              (_ (begin (set-port-encoding! port "ISO-8859-1") (put-string port out)))
              (status (status:exit-val (close-pipe port))))
-        (unless (zero? status)
+        (unless (eqv? status 0)
           (delete-file tmp)
           (die "msmtp exit ~a; draft kept, NOT retried.  See ~~/.cache/msmtp.log: an error after DATA can still mean it was sent" status))
-        (rename-file tmp (string-append sent-dir "/cur/" (unique-name) ":2,S"))
-        ;; Trashed: the drafts channel (Expunge Both) removes it on the server.
-        (unless (string-contains (substring draft (+ 3 (string-rindex draft #\:))) "T")
-          (rename-file draft (string-append draft "T")))
         (format #t "Gesendet.~%")
+        (force-output)
+        (let* ((saved?
+                (after-send (string-append "Sent-Kopie ablegen (gesichert in " tmp ")")
+                  (lambda ()
+                    (rename-file tmp (string-append sent-dir "/cur/"
+                                                    (unique-name) ":2,S")))))
+               ;; Trashed: Expunge Both removes the draft on the server.
+               (trashed?
+                (and saved?
+                     (after-send "Entwurf entfernen"
+                       (lambda ()
+                         (let ((target (trashed-maildir-path draft)))
+                           (unless (string=? draft target)
+                             (when (file-exists? target)
+                               (error "trash target already exists" target))
+                             (rename-file draft target))))))))
         ;; notmuch indexed the draft under this Message-ID with tag "draft"; with
         ;; maildir.synchronize_flags it would re-add the D flag to the Sent copy, and
         ;; mbsync would upload it as \Draft.  Retag before the upload.
-        (system* "notmuch" "new" "--quiet")
-        (system* "notmuch" "tag" "-draft" "+sent" "--" (string-append "id:" id))
-        (if (sync "mailfence-sent" "mailfence-drafts")
-            (format #t "In Mailfence unter Sent Items, Entwurf entfernt.~%")
-            (format #t "Sync fehlgeschlagen; der naechste Timer-Sync laedt die Kopie hoch.~%"))
-        (system* "notmuch" "new" "--quiet")))))
+          (when (and saved?
+                     (after-send "Sent-Kopie indizieren"
+                       (lambda () (checked-command "notmuch" "new" "--quiet")))
+                     (after-send "Entwurfsmarkierung der Sent-Kopie entfernen"
+                       (lambda ()
+                         (checked-command "notmuch" "tag" "-draft" "+sent"
+                                          "--" (string-append "id:" id)))))
+            (when (after-send "Sent-Kopie hochladen"
+                    (lambda ()
+                      (checked-command "mbsync" "mailfence-sent" "mailfence-drafts")))
+              (format #t "In Mailfence unter Sent Items~a.~%"
+                      (if trashed? ", Entwurf entfernt" "; Entwurf bitte manuell entfernen")))
+            (after-send "Mailindex aktualisieren"
+              (lambda () (checked-command "notmuch" "new" "--quiet")))))))))
 
 (main (command-line))

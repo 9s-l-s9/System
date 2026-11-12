@@ -8,8 +8,10 @@
 ;;; ~/.local/share/bigme/pulled/.  Reviewed flashcards of the learning
 ;;; papers become page-turn decks; cards bookmarked there are collected in
 ;;; ~/.local/share/bigme/anki/ for Anki.  When the tablet is not reachable the
-;;; script exits at once.  The Python tools live outside this repo because
-;;; scripts/ is Guile-only and PyMuPDF has no Guile bindings.
+;;; script exits at once. The legacy Python tools are local, unversioned
+;;; files; restore them from the working device before enabling this workflow
+;;; on another machine. Without them the timer does nothing. Future versions
+;;; belong under home/files/ (outside the scripts/ Guile-only rule).
 
 (define-module (services bigme)
   #:use-module (gnu home services)
@@ -34,6 +36,9 @@
   (program-file
    "bigme-sync"
    #~(begin
+       (unless (file-exists?
+                (string-append (getenv "HOME") "/.local/share/bigme/bigme-sync.py"))
+         (exit 0))
        (setenv "GUIX_PYTHONPATH"
                (string-append #$bigme-python "/lib/python"
                               #$(version-major+minor (package-version python))

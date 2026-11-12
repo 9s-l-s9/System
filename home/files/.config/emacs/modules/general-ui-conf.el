@@ -127,9 +127,14 @@
 (load-theme 'modus-vivendi t)
 (setq custom-safe-themes t)
 
-;; Emoji: prefer a real color emoji font when present; fall back silently.
-(when (member "Noto Color Emoji" (font-family-list))
-  (set-fontset-font t 'emoji "Noto Color Emoji" nil 'prepend))
+;; The daemon has no font list until a graphical frame exists.
+(defun sls-emoji-font-setup (frame)
+  "Configure emoji fallback when a graphical FRAME is available."
+  (when (and (display-graphic-p frame)
+             (member "Noto Color Emoji" (font-family-list frame)))
+    (set-fontset-font t 'emoji "Noto Color Emoji" frame 'prepend)))
+(add-hook 'after-make-frame-functions #'sls-emoji-font-setup)
+(dolist (frame (frame-list)) (sls-emoji-font-setup frame))
 
 ;; Visual pulse on focus change (built-in beacon alternative)
 ;; https://karthinks.com/software/batteries-included-with-emacs/

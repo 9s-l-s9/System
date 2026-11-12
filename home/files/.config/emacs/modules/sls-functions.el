@@ -61,9 +61,6 @@ Startup-only settings in early-init.el still require a new Emacs session."
     (org-latex-export-to-pdf)))
 
 ;; Quick-capture to the shared working-memory inbox.
-;; Lands in the same file and format as the StumpWM `add-todo' command
-;; (scripts/add-todo.scm): "* TODO YYYY-MM-DD text", so captures from the
-;; window manager and from Emacs converge on one inbox.
 (defcustom sls-working-memory-file "~/Projects/WorkingMemory/wm.org"
   "Org file used as the shared TODO inbox."
   :type 'file

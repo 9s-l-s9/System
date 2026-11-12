@@ -1,6 +1,6 @@
 (define-module (base-system)
+  #:use-module (guix utils)
   #:use-module (gnu)
-  #:use-module (gnu system nss)
   #:use-module (gnu system accounts)
   #:use-module (gnu services pm)
   #:use-module (gnu services xorg)
@@ -8,8 +8,6 @@
   #:use-module (gnu services desktop)
   #:use-module (gnu services containers)
   #:use-module (gnu services sysctl)
-  #:use-module (gnu services networking)
-  #:use-module (gnu services virtualization)
   #:use-module (gnu services sound)
   #:use-module (gnu services linux)
   #:use-module (gnu services mcron)
@@ -19,22 +17,10 @@
   #:use-module (gnu packages display-managers)
   #:use-module (gnu packages imagemagick)
   #:use-module (guix gexp)
-  #:use-module (gnu packages gtk)
-  #:use-module (gnu packages xorg)
-  #:use-module (gnu packages xdisorg)
-  #:use-module (gnu packages suckless)
-  #:use-module (gnu packages emacs)
+  #:use-module ((gnu packages xdisorg) #:select (xf86-input-wacom))
   #:use-module (gnu packages file-systems)
   #:use-module (gnu packages gnome)
-  #:use-module (gnu packages mtools)
   #:use-module (gnu packages linux)
-  #:use-module (gnu packages base)
-  #:use-module (gnu packages terminals)
-  #:use-module (gnu packages audio)
-  #:use-module (gnu packages lisp)
-  #:use-module (gnu packages gnuzilla)
-  #:use-module (gnu packages pulseaudio)
-  #:use-module (gnu packages web-browsers)
   #:use-module (gnu packages version-control)
   #:use-module (nongnu packages linux)
   #:use-module (nongnu system linux-initrd)
@@ -58,12 +44,14 @@
                            Driver \"wacom\"
                          EndSection"))))
 
-;; SDDM login background: a wallpaper from ~/Projects/images, copied into
-;; the store at build time so the (unprivileged) sddm user can read it.
-;; Swap the image by changing this path and reconfiguring.
+;; Optional sibling wallpaper collection; a fresh clone uses SDDM's stock
+;; background. Copy the selected image into the store for the greeter.
 (define %sddm-background
-  (local-file "/home/samuel/Projects/images/Bentheim_Forest.png"
-              "sddm-background.png"))
+  (let ((image (string-append (dirname (dirname (current-source-directory)))
+                              "/images/Bentheim_Forest.png")))
+    (if (file-exists? image)
+        (local-file image "sddm-background.png")
+        (file-append sddm "/share/sddm/themes/maldives/background.jpg"))))
 
 ;; SDDM has no standalone background setting; the background belongs to the
 ;; theme. This takes the bundled "maldives" theme and swaps its background
@@ -166,17 +154,12 @@
                                        ;; routing is PipeWire's job (Guix Home
                                        ;; home-pipewire-service-type), so no
                                        ;; bluez-alsa here.
-                        xf86-input-libinput
-			xf86-input-wacom
                         gvfs)         ;; for user mounts
                       %base-packages))
 
     (services
      (append
       (list
-       ;; swaylock is Minde's ext-session-lock-v1 locker:
-       ;; /etc/pam.d/swaylock so password verification works. No setuid --
-       ;; swaylock is designed to run unprivileged through PAM.
        ;; FHS loader path for foreign prebuilt binaries (Claude Code's native
        ;; Bun executable, uv-downloaded CPython, ...). Lets claude-guix --host
        ;; run them in a plain `guix shell` with no FHS container, i.e. with
@@ -184,30 +167,31 @@
        ;; glibc lib dir, so libc/libm/libpthread resolve without LD_LIBRARY_PATH.
        (extra-special-file "/lib64/ld-linux-x86-64.so.2"
                            (file-append glibc "/lib/ld-linux-x86-64.so.2"))
+       ;; swaylock is Minde's ext-session-lock-v1 locker. Install its PAM
+       ;; entry for password verification; no setuid program is needed.
        (service screen-locker-service-type
                 (screen-locker-configuration
                  (name "swaylock")
                  (program (file-append swaylock "/bin/swaylock"))
                  (using-pam? #t)
                  (using-setuid? #f)))
-       ;; Compressed swap in RAM. The T450s has 8 GB and no disk swap
-       ;; (T450s.scm sets swap-devices to '()), so without this, memory
-       ;; pressure goes straight to cache-thrashing and the OOM killer.
-       ;; Note: zram cannot back hibernation; that would need real disk swap.
+       ;; Compressed swap in RAM, preferred over disk swap. The T450s uses
+       ;; its priority-10 disk partition as spill-over behind this device.
+       ;; zram cannot back hibernation; that needs real disk swap.
        (service zram-device-service-type
                 (zram-device-configuration
                  (size "4G")
                  (compression-algorithm 'zstd)
                  (priority 100)))
 
-       ;; Weekly TRIM (Sunday 04:00) so the SSD learns which blocks are
-       ;; free; neither Guix nor the ext4 mount does this by default.
+       ;; Daily afternoon TRIM: laptops usually sleep through Sunday 04:00.
+       ;; Re-trimming is cheap; include all mounted supported file systems.
        (service mcron-service-type
                 (mcron-configuration
-                 (jobs (list #~(job "0 4 * * 0"
+                 (jobs (list #~(job "0 14 * * *"
                                     (string-append
                                      #$(file-append util-linux "/sbin/fstrim")
-                                     " /"))))))
+                                     " --all --quiet-unsupported"))))))
 
        ;; Rootless Podman instead of Docker (2026-07): dockerd + containerd
        ;; sat resident on an 8 GB machine and slowed boot for a tool used
@@ -220,13 +204,9 @@
                  (subgids (list (subid-range (name "samuel"))))
                  (subuids (list (subid-range (name "samuel"))))))
 
-       ;; TLP had been a package (inert) since the beginning; the service is
-       ;; what applies a policy. intel_pstate's "powersave" governor is a
-       ;; dynamic policy, not a low-frequency cap: turbo remains available,
-       ;; while balance_performance avoids the needless heat and fan noise of
-       ;; pinning the energy preference to performance. Defaults that add
-       ;; perceptible latency (core parking, SATA min_power, wifi/sound power
-       ;; saving, USB autosuspend) remain overridden.
+       ;; TLP applies the CPU and device policy. schedutil scales frequency
+       ;; with demand; turbo stays enabled and battery mode favors performance.
+       ;; Avoid defaults that add latency to storage, audio or input devices.
        (service tlp-service-type
                 (tlp-configuration
                  ;; intel_pstate runs in passive mode here (no HWP), so the
@@ -238,7 +218,6 @@
                  (cpu-boost-on-ac? #t)
                  (cpu-boost-on-bat? #t)
                  (sched-powersave-on-bat? #f)   ;; default #t parks cores on battery
-                 (energy-perf-policy-on-bat "performance") ;; default "powersave"
                  (cpu-energy-perf-policy-on-ac "balance_performance")
                  (cpu-energy-perf-policy-on-bat "performance")
                  (sata-linkpwr-on-bat "med_power_with_dipm") ;; default min_power adds I/O latency
@@ -268,11 +247,9 @@
                 (sddm-configuration
                  (theme "custom")
                  (themes-directory %sddm-custom-theme)
-                 ;; Guix defaults Numlock=on (upstream default is none). The
-                 ;; locked Mod2 carries into X11 sessions and stumpwm's key
-                 ;; grabs stop matching -- the "keyboard dead in stumpwm,
-                 ;; mouse fine" bug (diagnosed 2026-07-07 via xinput test-xi2:
-                 ;; every key event arrived with "modifiers: locked 0x10").
+                 ;; Guix defaults Numlock=on (upstream default is none).
+                 ;; Leave the lock state unchanged at login; forcing NumLock
+                 ;; previously broke key matching in X11 sessions.
                  (numlock "none")
                  (xorg-configuration %xorg-wacom-configuration)))
 

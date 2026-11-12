@@ -27,9 +27,9 @@
 
 ;; ── Format on save ────────────────────────────────────────────────────────────
 ;;
-;; When eglot is managing the buffer, defer to `eglot-format-buffer' so the LSP
-;; sees the edits and stays in sync. Otherwise, finish `ruff format' before
-;; writing the file: a background result could overwrite edits made after save.
+;; Ruff owns formatting, including buffers managed by Eglot (pylsp need not
+;; provide a formatter). Ordinary buffer edits notify Eglot of the changes.
+;; Finish before writing: a background result could overwrite later edits.
 
 (defun sls-python--ruff-format ()
   "Format the whole buffer before saving, preserving point and markers.
@@ -61,10 +61,8 @@ separate from formatted source, including when Ruff exits successfully."
         (delete-file errors)))))
 
 (defun sls-python--format-on-save ()
-  "Pick the right formatter for the current buffer."
-  (if (bound-and-true-p eglot--managed-mode)
-      (ignore-errors (eglot-format-buffer))
-    (sls-python--ruff-format)))
+  "Run Ruff before saving, whether or not Eglot manages the buffer."
+  (sls-python--ruff-format))
 
 (defun sls-python--enable-format-on-save ()
   "Install the buffer-local format-on-save hook."
@@ -128,17 +126,30 @@ separate from formatted source, including when Ruff exits successfully."
       (process-send-region proc (point-min) (point-max)))
     (process-send-eof proc)))
 
-;; Activate ruff flymake only when NOT managed by eglot (eglot adds its own)
-(defun sls-maybe-enable-ruff-flymake ()
-  "Add ruff flymake backend if eglot is not active."
-  (unless (bound-and-true-p eglot--managed-mode)
+(defvar eglot-stay-out-of)
+
+(defun sls-python--flymake-setup ()
+  "Keep Ruff diagnostics when Eglot connects or disconnects."
+  (when (derived-mode-p 'python-mode 'python-ts-mode)
+    (require 'flymake)
+    ;; Only Python opts out; Scheme and other modes keep Eglot's defaults.
+    (setq-local eglot-stay-out-of
+                (cons 'flymake (remove 'flymake
+                                       (and (boundp 'eglot-stay-out-of)
+                                            eglot-stay-out-of))))
     (add-hook 'flymake-diagnostic-functions #'sls-ruff-flymake nil t)
+    (if (and (fboundp 'eglot-managed-p) (eglot-managed-p))
+        (add-hook 'flymake-diagnostic-functions #'eglot-flymake-backend nil t)
+      (remove-hook 'flymake-diagnostic-functions #'eglot-flymake-backend t))
     (flymake-mode 1)))
 
+(add-hook 'eglot-managed-mode-hook #'sls-python--flymake-setup)
+
 (dolist (hook '(python-mode-hook python-ts-mode-hook))
+  (remove-hook hook #'sls-maybe-enable-ruff-flymake) ; migrate a running daemon
   (add-hook hook #'sls-python--indent-setup)
   (add-hook hook #'sls-python--enable-format-on-save)
-  (add-hook hook #'sls-maybe-enable-ruff-flymake))
+  (add-hook hook #'sls-python--flymake-setup))
 
 ;; ── REPL ─────────────────────────────────────────────────────────────────────
 

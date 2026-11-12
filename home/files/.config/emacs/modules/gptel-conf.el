@@ -2,6 +2,9 @@
 ;;; Code:
 (setq gptel-use-header-line nil) ; status is rendered by the common top header
 
+(defvar sls-gptel-default-model 'claude-sonnet-4-6
+  "Default Claude model selected when gptel loads.")
+
 (defun sls-gptel-ui-setup ()
   (when (bound-and-true-p gptel-mode)
     (setq-local sls-ui-title "AI / chat"
@@ -32,7 +35,7 @@
     :models '(llama3.2:latest deepseek-r1:latest))
 
   ;; Default: Claude Sonnet
-  (setq gptel-model   'claude-sonnet-4-6
+  (setq gptel-model   sls-gptel-default-model
         gptel-backend sls-gptel-claude-backend)
 
   ;; ── Behaviour ───────────────────────────────────────────────────────────────
@@ -71,6 +74,7 @@
      :description "Read the contents of a file."
      :args        '((:name "path" :type string
                      :description "Absolute or home-relative file path"))
+     :confirm     t
      :category    "filesystem")
 
     ;; Write file tool — lets gptel apply edits, not just read.
@@ -104,6 +108,7 @@
      :description "List files in a directory."
      :args        '((:name "path" :type string
                      :description "Directory path to list"))
+     :confirm     t
      :category    "filesystem")))
 
 (provide 'gptel-conf)

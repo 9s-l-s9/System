@@ -17,8 +17,7 @@
   #:export (utilities-packages)
   #:export (emacs-packages)
   #:export (for-emacs-next)
-  #:export (fonts-packages)
-  #:export (xorg-packages))
+  #:export (fonts-packages))
 
 ;; Development
 
@@ -28,7 +27,6 @@
         "guile-lsp-server"
         "make"
         "python-lsp-server"    ; pylsp LSP backend for eglot
-        ;"python-debugpy"      ; DAP debug adapter; unused since emacs-dap-mode was dropped
         "ruff"                 ; fast linter + formatter
         "python-pytest"        ; test runner
         "python-mypy"          ; static type checker
@@ -51,7 +49,7 @@
   (list "tree" "curl"
         "rsync" "zip" "unzip"
         "glibc-locales" "mpv" "ripgrep" "git-lfs" "yt-dlp" "d2"
-        "guile-json"                 ; scripts/ask-ai.scm
+        "guile-json"                 ; scripts/mail-export.scm
         "whisper-cpp" "ffmpeg"       ; local speech-to-text (whisper.el)
         "github-cli"))               ; `gh`, used as services/git.scm's credential helper
 
@@ -80,6 +78,7 @@
         "font-google-roboto" "font-lato" "font-inconsolata" "font-victor-mono"
         "font-fantasque-sans"
         "font-nerd-symbols"           ; icon glyphs for emacs-nerd-icons
+        "font-google-noto-emoji"      ; graphical frames, including the daemon
         ;; design-skill manual aesthetic: Plex Mono body; Space Mono is custom.
         "font-ibm-plex"))
 
@@ -93,7 +92,6 @@
    "emacs-corfu"
    ;;"emacs-dashboard"
    ;;"emacs-dired-preview"
-   ;;"emacs-dap-mode"   ; unused; pulls lsp-mode, treemacs and co. and needs 20 min of native compilation
    "emacs-diredfl"
    ;"emacs-doom-themes"
    "emacs-eat"
@@ -116,7 +114,6 @@
    "emacs-nerd-icons"
    "emacs-nerd-icons-completion"
    "emacs-nerd-icons-dired"
-   ;; "emacs-minuet"       ; AI inline completion; disabled until an API key exists
 
    ;; "emacs-nano-modeline"
    "emacs-orderless"
@@ -191,7 +188,7 @@
 
 ;; Custom packages missing from upstream Guix (package objects, not specs).
 ;; emacs-modus-buffer-theme is #f on machines without the owner's personal
-;; /home/samuel/Projects/emacs-buffer-theme checkout (see packages/modus-buffer-theme.scm);
+;; sibling emacs-buffer-theme checkout (see packages/modus-buffer-theme.scm);
 ;; filter it out rather than including a #f in the package list.
 (define custom-home-packages
   (filter identity
@@ -222,19 +219,7 @@
         "tinymist-bin"   ; preview server for typst-preview.el (typst-conf.el)
         "haunt"))
 
-;; X11 applications retained for an easy StumpWM rollback, but deliberately
-;; not included by `all-packages'.
-
-(define xorg-packages
-  (list
-   ;; "rofi"
-   "dunst" "xrandr" "arandr"
-   "feh" "picom" "redshift" "xset"
-   "xdotool"                          ; type transcription into focused window
-   "numlockx"                         ; clear SDDM's forced NumLock at session start
-   "xsel"))
-
-;; Wayland (defined but not assembled by default)
+;; Wayland desktop
 
 (define wayland-packages
   (list "gammastep" "mako" "fuzzel" "swaybg"

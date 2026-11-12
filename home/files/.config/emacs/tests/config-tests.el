@@ -92,13 +92,12 @@
     (should (equal (sls-test-file-text buffer-file-name) "value=1\n"))
     (should-not (buffer-modified-p))))
 
-(ert-deftest sls-python-save-keeps-eglot-formatting ()
+(ert-deftest sls-python-save-uses-ruff-when-eglot-managed ()
+  (skip-unless (executable-find "ruff"))
   (sls-test-python-file "value=1\n"
     (setq-local eglot--managed-mode t)
     (cl-letf (((symbol-function 'eglot-format-buffer)
-               (lambda () (erase-buffer) (insert "value = 1\n")))
-              ((symbol-function 'sls-python--ruff-format)
-               (lambda () (ert-fail "Ruff must not compete with Eglot"))))
+               (lambda () (ert-fail "pylsp need not provide formatting"))))
       (save-buffer))
     (should (equal (sls-test-file-text buffer-file-name) "value = 1\n"))))
 
@@ -197,5 +196,109 @@
 (ert-deftest sls-reload-rejects-a-missing-init-file ()
   (let ((user-init-file nil))
     (should-error (sls-reload-init-file) :type 'user-error)))
+
+(ert-deftest sls-python-ruff-survives-real-eglot-connection ()
+  (skip-unless (and (executable-find "ruff") (executable-find "pylsp")))
+  (require 'python)
+  (require 'eglot)
+  (sls-test-python-file "value=1\nprint(missing)\n"
+    (let ((python-mode-hook (remove #'eglot-ensure python-mode-hook))
+          (eglot-sync-connect t)
+          (eglot-connect-timeout 15)
+          server)
+      (unwind-protect
+          (progn
+            (python-mode)
+            (setq server (eglot '(python-mode) (cons 'transient default-directory)
+                                'eglot-lsp-server (list (executable-find "pylsp"))
+                                '("python")))
+            (should (eglot-managed-p))
+            (should (memq #'sls-ruff-flymake flymake-diagnostic-functions))
+            (should (memq #'eglot-flymake-backend flymake-diagnostic-functions))
+            (save-buffer)
+            (should (equal (sls-test-file-text buffer-file-name)
+                           "value = 1\nprint(missing)\n"))
+            (flymake-start nil t)
+            (let ((deadline (+ (float-time) 8)))
+              (while (and (< (float-time) deadline)
+                          (not (cl-some
+                                (lambda (diag)
+                                  (string-match-p "F821" (flymake-diagnostic-text diag)))
+                                (flymake-diagnostics))))
+                (accept-process-output nil 0.05)))
+            (should (cl-some
+                     (lambda (diag) (string-match-p "F821" (flymake-diagnostic-text diag)))
+                     (flymake-diagnostics)))
+            (eglot-shutdown server)
+            (setq server nil)
+            (should-not (eglot-managed-p))
+            (should (memq #'sls-ruff-flymake flymake-diagnostic-functions))
+            (should-not (memq #'eglot-flymake-backend flymake-diagnostic-functions)))
+        (when server (ignore-errors (eglot-shutdown server)))))))
+
+(ert-deftest sls-cape-completions-stay-buffer-local ()
+  (let ((defaults (copy-tree (default-value 'completion-at-point-functions))))
+    (with-temp-buffer
+      (text-mode)
+      (should (local-variable-p 'completion-at-point-functions))
+      (should (memq #'cape-tex completion-at-point-functions))
+      (should-not (memq #'cape-elisp-symbol completion-at-point-functions)))
+    (with-temp-buffer
+      (emacs-lisp-mode)
+      (should (memq #'cape-elisp-symbol completion-at-point-functions))
+      (should-not (memq #'cape-tex completion-at-point-functions)))
+    (should (equal defaults (default-value 'completion-at-point-functions)))
+    (with-temp-buffer
+      (fundamental-mode)
+      (should (equal completion-at-point-functions defaults)))))
+
+(ert-deftest sls-emoji-font-is-configured-for-new-graphical-frames ()
+  (let (configured)
+    (cl-letf (((symbol-function 'display-graphic-p) (lambda (frame) (eq frame 'gui)))
+              ((symbol-function 'font-family-list) (lambda (&rest _) '("Noto Color Emoji")))
+              ((symbol-function 'set-fontset-font)
+               (lambda (&rest args) (push args configured))))
+      (sls-emoji-font-setup 'terminal)
+      (should-not configured)
+      (should (memq #'sls-emoji-font-setup after-make-frame-functions))
+      (sls-emoji-font-setup 'gui)
+      (should (member '(t emoji "Noto Color Emoji" gui prepend) configured)))))
+
+(ert-deftest sls-notmuch-fcc-files-sent-mail-without-draft-flag ()
+  (skip-unless (executable-find "notmuch"))
+  (require 'notmuch)
+  (require 'notmuch-maildir-fcc)
+  (let* ((directory (make-temp-file "sls-fcc-test-" t))
+         (config (expand-file-name "notmuch-config" directory))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (setenv "NOTMUCH_CONFIG" config)
+          (setenv "XDG_CONFIG_HOME" directory)
+          (with-temp-file config
+            (insert (format "[database]\npath=%s\nhook_dir=%s\n[user]\nname=Test\nprimary_email=test@example.invalid\n[new]\ntags=new;\n[maildir]\nsynchronize_flags=true\n"
+                            (expand-file-name "mail" directory)
+                            (expand-file-name "hooks" directory))))
+          (make-directory (expand-file-name "mail" directory))
+          (make-directory (expand-file-name "hooks" directory))
+          (should (zerop (call-process "notmuch" nil nil nil "new" "--no-hooks")))
+          (with-temp-buffer
+            (insert "From: test@example.invalid\nTo: recipient@example.invalid\nMessage-ID: <fcc-test@example.invalid>\nSubject: Synthetic Fcc test\n\nbody\n")
+            (notmuch-maildir-notmuch-insert-current-buffer "Drafts" t '("+draft"))
+            ;; notmuch-draft-resume removes the draft's Message-ID; sending
+            ;; generates a new one. Insert never retags duplicate IDs.
+            (goto-char (point-min))
+            (search-forward "<fcc-test@example.invalid>")
+            (replace-match "<sent-fcc-test@example.invalid>" t t)
+            (notmuch-maildir-fcc-with-notmuch-insert notmuch-fcc-dirs t))
+          (let ((sent (directory-files (expand-file-name "mail/Sent Items/cur" directory)
+                                       nil ":2,")))
+            (should (= (length sent) 1))
+            (should (string-match-p ":2,S$" (car sent))))
+          (with-temp-buffer
+            (should (zerop (call-process "notmuch" nil t nil "count"
+                                         "id:sent-fcc-test@example.invalid and tag:sent and tag:new and not tag:draft and not tag:unread and not tag:inbox")))
+            (should (equal (buffer-string) "1\n"))))
+      (delete-directory directory t))))
 
 (ert-run-tests-batch-and-exit)

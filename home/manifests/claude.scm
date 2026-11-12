@@ -1,5 +1,7 @@
+(use-modules (guix utils))
+
 (eval-when (expand load eval)
-  (add-to-load-path "/home/samuel/Projects/System/home"))
+  (add-to-load-path (dirname (current-source-directory))))
 
 (define-module (manifests claude)
   #:use-module (gnu packages)
@@ -13,4 +15,5 @@
            ;; download its own Chromium, which can't launch in the FHS container
            ;; (missing libglib/nss/... closure); claude-guix.scm points the MCP
            ;; server at this one via --executable-path instead.
+           "guile-json"
            "ungoogled-chromium")))

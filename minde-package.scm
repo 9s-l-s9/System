@@ -1,12 +1,14 @@
 ;;; Shared by both systems and Guix Home. Installed Minde is a verified CI
 ;;; binary; local compilation requires an explicit MINDE_BUILD_LOCAL=1.
-(add-to-load-path (string-append (dirname (current-filename)) "/scripts"))
+(use-modules (guix utils))
+(add-to-load-path (string-append (current-source-directory) "/scripts"))
 (use-modules (lib minde-binary) (srfi srfi-1))
 
-(define checkout "/home/samuel/Projects/minde")
+(define checkout
+  (string-append (dirname (current-source-directory)) "/minde"))
 (define archive (getenv "MINDE_RC_ARCHIVE"))
 (define lock-file
-  (string-append (dirname (current-filename)) "/minde-binary.lock.scm"))
+  (string-append (current-source-directory) "/minde-binary.lock.scm"))
 
 (cond
  ;; Explicit development/release verification remains available.

@@ -21,6 +21,8 @@
 ;;; messages that lack the `sent' tag (`unexported-sent').
 ;;;
 ;;; Afterwards it tags by folder (inbox, sent, draft, spam) and drops `new'.
+;;; Individual failures get `export-failed' and do not block the next message.
+;;; Retry them explicitly with: mail-export.scm tag:export-failed
 ;;;
 ;;; Usage:
 ;;;   mail-export.scm              export tag:new (hook mode)
@@ -49,7 +51,8 @@
 (define (command-output program . args)
   (let* ((port (apply open-pipe* OPEN_READ program args))
          (out (get-string-all port)))
-    (close-pipe port)
+    (let ((status (close-pipe port)))
+      (unless (zero? status) (error "command failed" program args status)))
     out))
 
 (define (notmuch . args)
@@ -138,12 +141,30 @@
 ;;; Body
 
 (define (html->text html)
-  (let ((tmp (string-append "/tmp/mail-export-" (number->string (getpid)) ".html")))
-    (call-with-output-file tmp (lambda (p) (put-string p html)))
-    (let ((out (command-output "w3m" "-dump" "-T" "text/html" "-O" "UTF-8"
-                               "-cols" "100" tmp)))
-      (delete-file tmp)
-      out)))
+  (let* ((port (mkstemp (string-append (or (getenv "XDG_RUNTIME_DIR") "/tmp")
+                                     "/mail-export-XXXXXX")))
+         (tmp (port-filename port)))
+    (dynamic-wind
+      (lambda () #t)
+      (lambda ()
+        (put-string port html)
+        (close-port port)
+        (command-output "w3m" "-dump" "-T" "text/html" "-O" "UTF-8"
+                        "-cols" "100" tmp))
+      (lambda ()
+        (unless (port-closed? port) (close-port port))
+        (when (file-exists? tmp) (delete-file tmp))))))
+
+(define (atomic-output-file file writer)
+  "Replace FILE only after WRITER succeeds; keep partial mail private."
+  (let* ((port (mkstemp (string-append file ".XXXXXX")))
+         (tmp (port-filename port)))
+    (dynamic-wind
+      (lambda () #t)
+      (lambda () (writer port) (close-port port) (rename-file tmp file))
+      (lambda ()
+        (unless (port-closed? port) (close-port port))
+        (when (file-exists? tmp) (delete-file tmp))))))
 
 (define (part-type part)
   (string-downcase (or (ref part "content-type") "")))
@@ -249,22 +270,31 @@
           (loop (+ n 1))))))
 
 (define (save-attachments msg-id parts dir)
-  (filter-map
+  (let ((used '()))
+   (filter-map
    (lambda (p)
      (and (attachment? p)
-          (let ((name (ref p "filename")))
+          (let* ((original (ref p "filename"))
+                 (id (number->string (ref p "id")))
+                 (base (and (string? original) (basename original)))
+                 (name (if (or (not base) (member base '("" "." ".." "/"))
+                               (string-any char-set:iso-control base))
+                           (string-append "attachment-" id)
+                           base))
+                 (name (if (member name used) (string-append id "-" name) name)))
+            (set! used (cons name used))
             (mkdir-p dir)
             (let* ((port (open-pipe* OPEN_READ "notmuch" "show" "--format=raw"
                                      (string-append "--part=" (number->string (ref p "id")))
                                      (string-append "id:" msg-id)))
                    (data (get-bytevector-all port)))
-              (close-pipe port)
-              (call-with-output-file (string-append dir "/" (basename name))
+              (unless (zero? (close-pipe port))
+                (error "attachment extraction failed" msg-id id))
+              (atomic-output-file (string-append dir "/" name)
                 (lambda (out)
-                  (unless (eof-object? data) (put-bytevector out data)))
-                #:binary #t))
+                  (unless (eof-object? data) (put-bytevector out data)))))
             name)))
-   parts))
+   parts)))
 
 (define (mkdir-p dir)
   (unless (file-exists? dir)
@@ -285,7 +315,7 @@
                           (string-append label ": " value "\n")
                           ""))))
         (mkdir-p (dirname base))
-        (call-with-output-file (string-append base ".txt")
+        (atomic-output-file (string-append base ".txt")
           (lambda (out)
             (put-string
              out
@@ -319,11 +349,30 @@
               (as-list nodes)))
 
 (define (export-query query)
+  ;; A whole-query JSON document cannot be parsed past one malformed body.
+  ;; Enumerate IDs first, then fetch/parse/export each message independently.
   (for-each
-   (lambda (thread)
-     (for-each export-message (messages-of thread)))
-   (as-list (notmuch-json "show" "--entire-thread=false" "--body=true"
-                          "--include-html" query))))
+   (lambda (message-id)
+    (let ((id (string-append "id:\""
+                            (string-join (string-split message-id #\") "\"\"") "\"")))
+     (catch #t
+       (lambda ()
+         (let* ((threads (as-list
+                          (notmuch-json "show" "--entire-thread=false" "--body=true"
+                                        "--include-html" "--exclude=false" "--" id)))
+                (messages (append-map messages-of threads)))
+           (when (null? messages) (error "message disappeared from index" id))
+           (for-each export-message messages)
+           (notmuch "tag" "-export-failed" "--" id)))
+       (lambda (key . args)
+         (format (current-error-port) "mail-export: ~a failed: ~s ~s~%" id key args)
+         ;; Tagging errors must not stop later exports either (e.g. a lock).
+         (catch #t
+           (lambda () (notmuch "tag" "+export-failed" "--" id))
+           (lambda (tag-key . tag-args)
+             (format (current-error-port) "mail-export: cannot tag ~a: ~s ~s~%"
+                     id tag-key tag-args)))))))
+   (as-list (notmuch-json "search" "--output=messages" "--exclude=false" "--" query))))
 
 ;; Sent Items messages not exported as sent yet: drafts sent from the app
 ;; (see above).  `inbox' excludes mail first exported from INBOX (mail to
@@ -337,7 +386,7 @@
         (begin
           (export-query (string-append "tag:new or (" unexported-sent ")"))
           (notmuch "tag" "+sent" "--" unexported-sent)
-          (notmuch "tag" "+inbox" "--" "tag:new" "folder:INBOX")
+          (notmuch "tag" "+inbox" "--" "tag:new and (folder:INBOX or folder:Wichtig)")
           (notmuch "tag" "+sent" "--" "tag:new" "folder:\"Sent Items\"")
           (notmuch "tag" "+draft" "--" "tag:new" "folder:Drafts")
           (notmuch "tag" "+spam" "--" "tag:new" "folder:\"Spam?\"")

@@ -75,6 +75,31 @@
   (call-with-output-file bad-ca (lambda (port) (display "not a certificate" port)))
   (rejects "empty CA store fails closed"
     (set-download-trust! (string-append directory "/bad-trust") bad-ca)))
+(let* ((roots (string-append directory "/roots"))
+       (old (make-string 40 #\a))
+       (previous (make-string 40 #\b))
+       (current (make-string 40 #\c)))
+  (mkdir roots)
+  (for-each
+   (lambda (commit)
+     (for-each (lambda (name)
+                 ;; Broken symlinks must be collected too.
+                 (symlink "/missing-store-item"
+                          (string-append roots "/" commit "-" name)))
+               '("minde" "xwayland")))
+   (list old previous current))
+  (symlink "/unrelated" (string-append roots "/manual-root"))
+  (call-with-output-file (string-append roots "/" (make-string 40 #\d) "-minde")
+    (lambda (port) (display "not our symlink" port)))
+  (prune-binary-roots! roots (list current previous))
+  (test-equal "only obsolete binary roots removed" 6
+    (length (find-files roots ".*" #:stat lstat)))
+  (test-assert "current and previous roots retained"
+    (every (lambda (commit)
+             (false-if-exception (readlink (string-append roots "/" commit "-minde"))))
+           (list current previous)))
+  (test-assert "stale root removed"
+    (not (false-if-exception (lstat (string-append roots "/" old "-minde"))))))
 (define failures (test-runner-fail-count (test-runner-current)))
 (test-end "minde-binary")
 (delete-file-recursively directory)

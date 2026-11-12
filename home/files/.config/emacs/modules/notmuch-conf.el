@@ -224,9 +224,9 @@ HTML newsletter opened with [ multipart/alternative ] [ text/plain ]."
         ;; Postponed drafts go to the synced Drafts folder, so they also
         ;; appear in the Mailfence web UI.
         notmuch-draft-folder "Drafts"
-        ;; Mailfence's SMTP relay may already file a copy in Sent Items;
-        ;; enable a local Fcc only if sent mail turns out to be missing there.
-        notmuch-fcc-dirs nil)
+        ;; Mailfence keeps no SMTP copy. notmuch insert files and indexes our
+        ;; copy; mailfence-sent uploads it on the next Sync Pull PushNew run.
+        notmuch-fcc-dirs "\"Sent Items\" +sent -draft -unread -inbox")
   ;; Buffer-local variable: `setq' here only set it in whichever buffer was
   ;; current while notmuch loaded, so searches stayed oldest-first.
   (setq-default notmuch-search-oldest-first nil)

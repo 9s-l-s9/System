@@ -1,5 +1,5 @@
-.PHONY: qa qa-ci qa-all qa-guile-only qa-scripts qa-minde-binary qa-emacs \
-	qa-home-samuel qa-home-levi qa-system-x1 qa-system-t450s \
+.PHONY: qa qa-ci qa-all qa-guile-only qa-scripts qa-minde-binary qa-git-hooks qa-privileged-scripts qa-mail qa-emacs \
+	qa-home-samuel qa-home-samuel-wsl2 qa-system-x1 qa-system-t450s \
 	update pull reconfigure-system reconfigure-home minde-install minde-ensure
 
 # Full update: pull the pinned channels, then reconfigure the system and
@@ -33,9 +33,9 @@ reconfigure-home: minde-ensure
 
 qa-ci: qa-guile-only qa-scripts
 
-qa: qa-ci qa-minde-binary qa-emacs
+qa: qa-ci qa-minde-binary qa-git-hooks qa-privileged-scripts qa-mail qa-emacs
 
-qa-all: qa qa-home-samuel qa-home-levi qa-system-x1 qa-system-t450s
+qa-all: qa qa-home-samuel qa-home-samuel-wsl2 qa-system-x1 qa-system-t450s
 
 qa-guile-only:
 	guile scripts/check-guile-only.scm
@@ -46,6 +46,15 @@ qa-scripts:
 qa-minde-binary:
 	guix repl -q -- scripts/test-minde-binary.scm
 
+qa-git-hooks:
+	$(GUIX_TM) repl -q -- scripts/test-git-hooks.scm
+
+qa-privileged-scripts:
+	$(GUIX_TM) repl -q -- scripts/test-privileged-scripts.scm
+
+qa-mail:
+	guile --no-auto-compile scripts/test-mail-workflows.scm
+
 qa-emacs:
 	emacs --batch -l home/files/.config/emacs/tests/config-tests.el
 	emacs --batch -l home/files/.config/emacs/tests/ui-tests.el -f ert-run-tests-batch-and-exit
@@ -53,8 +62,8 @@ qa-emacs:
 qa-home-samuel:
 	$(GUIX_TM) home build --dry-run --load-path=home home/samuel-home-configuration.scm
 
-qa-home-levi:
-	$(GUIX_TM) home build --dry-run --load-path=home home/levi-home-configuration.scm
+qa-home-samuel-wsl2:
+	$(GUIX_TM) home build --dry-run --load-path=home home/samuel-wsl2-home-configuration.scm
 
 qa-system-x1:
 	$(GUIX_TM) system build --dry-run --load-path=systems systems/X1.scm

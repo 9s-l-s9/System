@@ -10,52 +10,57 @@
 ;; services fingerprint (see chromium-extensions/webgl-spoof/). Headed by default (headless:false) so the container's Wayland/X
 ;; display is used; for a pure SSH/headless run set PW_MCP_HEADLESS=1.
 
-(use-modules (ice-9 format)
-             (srfi srfi-1))
+(use-modules (ice-9 format) (ice-9 textual-ports) (json) (srfi srfi-1))
 
-(define (find-chromium)
-  (let ((path (or (getenv "PATH") "")))
-    (any (lambda (dir)
-           (let ((candidate (string-append dir "/chromium")))
-             (and (not (string-null? dir))
-                  (access? candidate X_OK)
-                  candidate)))
-         (string-split path #\:))))
-
-(define chromium (find-chromium))
-(unless chromium
-  (format (current-error-port) "pw-mcp-gen-config: chromium not found in PATH~%")
-  (exit 1))
-
+(define mcp-version "0.0.85")
 (define home (getenv "HOME"))
+(define chromium
+  (or (search-path (string-split (or (getenv "PATH") "") #\:) "chromium")
+      (error "pw-mcp-gen-config: chromium not found in PATH")))
 (define ext-dir (string-append home "/Projects/System/chromium-extensions/webgl-spoof"))
-(define profile-dir (string-append home "/.cache/pw-mcp-profile"))
 (define out (string-append home "/.cache/pw-mcp-config.json"))
-(define headless (if (string=? (or (getenv "PW_MCP_HEADLESS") "0") "1") "true" "false"))
+(define config
+  `(("browser" . (("browserName" . "chromium")
+                  ("userDataDir" . ,(string-append home "/.cache/pw-mcp-profile"))
+                  ("launchOptions" .
+                   (("executablePath" . ,(canonicalize-path chromium))
+                    ("headless" . ,(equal? (getenv "PW_MCP_HEADLESS") "1"))
+                    ("args" . ,(vector "--no-sandbox"
+                                      (string-append "--disable-extensions-except=" ext-dir)
+                                      (string-append "--load-extension=" ext-dir)))))))))
 
-(define cache-dir (string-append home "/.cache"))
-(unless (file-exists? cache-dir)
-  (mkdir cache-dir))
+(define (read-json path)
+  (and (file-exists? path) (call-with-input-file path json->scm)))
 
-(call-with-output-file out
-  (lambda (port)
-    (format port "{
-  \"browser\": {
-    \"browserName\": \"chromium\",
-    \"userDataDir\": \"~a\",
-    \"launchOptions\": {
-      \"executablePath\": \"~a\",
-      \"headless\": ~a,
-      \"args\": [
-        \"--no-sandbox\",
-        \"--disable-extensions-except=~a\",
-        \"--load-extension=~a\"
-      ]
-    }
-  }
-}
-"
-            profile-dir chromium headless ext-dir ext-dir)))
+(define (run! . args)
+  (unless (zero? (apply system* args)) (error "MCP registration failed" (car args))))
 
-(format #t "pw-mcp-gen-config: wrote ~a (chromium=~a, headless=~a)~%"
-        out chromium headless)
+(define serialized-config (string-append (scm->json-string config) "\n"))
+(unless (file-exists? (dirname out)) (mkdir (dirname out)))
+;; Serialize concurrent launchers. The lock closes on exec so Claude cannot
+;; retain it after startup. No CLI process runs when registration matches.
+(let ((lock (open-file (string-append out ".lock") "a")))
+  (fcntl (fileno lock) F_SETFD FD_CLOEXEC)
+  (flock lock LOCK_EX)
+  (unless (and (file-exists? out)
+               (equal? serialized-config (call-with-input-file out get-string-all)))
+    (let* ((port (mkstemp (string-append out ".XXXXXX")))
+           (temporary (port-filename port)))
+      (display serialized-config port)
+      (close-port port)
+      (rename-file temporary out))
+    (format #t "pw-mcp-gen-config: updated ~a~%" out))
+  (when (member "--register" (cdr (command-line)))
+    (let* ((settings (read-json (string-append home "/.claude.json")))
+           (server (assoc-ref (or (assoc-ref (or settings '()) "mcpServers") '())
+                              "playwright"))
+           (args (list "-y" (string-append "@playwright/mcp@" mcp-version)
+                       "--config" out))
+           (cli (string-append (or (getenv "CLAUDE_NPM_PREFIX")
+                                  (string-append home "/.local/share/agent-tools/claude"))
+                               "/bin/claude")))
+      (unless (and server (equal? (assoc-ref server "command") "npx")
+                   (equal? (assoc-ref server "args") (list->vector args)))
+        (when server (run! cli "mcp" "remove" "-s" "user" "playwright"))
+        (apply run! cli "mcp" "add" "-s" "user" "playwright" "--" "npx" args))))
+  (close-port lock))

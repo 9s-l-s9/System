@@ -3,30 +3,35 @@ My personal system configuration.
 * Repository rules
 
 - Scripts in =scripts/= must be written in Guile.
-- Shell scripts are not allowed in this repo, even for trivial launchers or wrappers.
+- The Guile-only rule applies to =scripts/=, including launchers and wrappers.
+  Application-owned helpers under =home/files/= and skill tooling under
+  =.agents/skills/= may use the language their application needs; keep their
+  source in version control. Generated service commands are outside this check.
 
 * QA
 
 Pre-commit sequence (see =QA.md= for details):
 
-1. Run =make qa= for fast local checks (Guile-only =scripts/= policy, strict =guild compile= warning check, =minde-binary= unit tests, and Emacs ERT test suites).
+1. Run =make qa= for local checks (Guile-only =scripts/= policy, strict compilation checks, Minde binary, Git hook, mail and privileged helper tests, and Emacs ERT test suites).
 2. Run the dry-run Guix evaluation target(s) for what changed (all evaluated reproducibly against =channels.scm= via =guix time-machine=):
-   - =make qa-home-samuel= / =make qa-home-levi= when changing =home/=
+   - =make qa-home-samuel= / =make qa-home-samuel-wsl2= when changing =home/=
    - =make qa-system-x1= / =make qa-system-t450s= when changing =systems/=
    - =make qa-all= when changing shared files (=channels.scm=, =minde-package.scm=, =base-packages.scm=, =base-system.scm=)
 3. Only reconfigure (=make reconfigure-home= / =make reconfigure-system=) once the dry-run path is clean.
 
+The passwordless power and keyboard controls use immutable system programs
+under =/etc/system-scripts/=. Reconfigure the system before the home environment
+when adopting these paths, and reconfigure the system after editing their sources.
+
 * Installation
 
-1. Install Guix System. 
-2. Clone this repo as "$HOME/Projects/System/".
-3. Create an adapted version of the system files in /systems. Especially make sure to update the uuids for your partition.
-4. "Update" channels, system and home:   
-   
-** Update channels
-#+begin_src sh
-guix pull --channels=$HOME/Projects/System/channels.scm
-#+end_src
+1. Install Guix System.
+2. Clone this repository to =$HOME/Projects/System= and run commands from there.
+3. Adapt =systems/$HOSTNAME.scm=, especially partition UUIDs, and choose the
+   matching =home/$USER-home-configuration.scm= entry point.
+4. Provide the local sources listed below, import Minde, then run =make qa-all=.
+5. Run =make update= to pull the channels and reconfigure system and home.
+   Check =guix pull --news= after pulling, before reconfiguring.
 
 ** Import the pinned Minde binary
 
@@ -53,13 +58,32 @@ development is available with =MINDE_BUILD_LOCAL=1=.
 Keep the Minde checkout at =~/Projects/minde=: the Home configuration still
 loads the separate Shikane package recipe from its =guix-channel/= directory.
 
-** Update system
-#+begin_src sh
-sudo guix system --load-path=$HOME/Projects/System/systems reconfigure $HOME/Projects/System/systems/$HOSTNAME.scm
-#+end_src
-
-** Update home
+** Reconfigure individually
 
 #+begin_src sh
-guix home --load-path=$HOME/Projects/System/home reconfigure $HOME/Projects/System/home/$USER-home-configuration.scm
+make pull
+guix pull --news
+make reconfigure-system
+make reconfigure-home
 #+end_src
+
+These targets use the pinned channels and required module load paths.
+For WSL2 use the dedicated command in =home/README.txt=.
+
+** Local sources and private data
+
+The current desktop configuration also expects sibling checkouts of =valsi=
+(package recipe), =minde= (Shikane recipe; local Minde builds are optional),
+and =notyet= (calendar command). The =emacs-buffer-theme= checkout is optional.
+The optional SDDM wallpaper is =images/Bentheim_Forest.png= beside this
+repository; without it the stock theme image is used. Evaluation derives
+checkout paths from the source files; missing required recipes name the
+checkout to supply. Live desktop helpers still expect =~/Projects/System=
+and wallpapers under =~/Projects/images=.
+
+Mail identity and credentials live outside Git under =~/.local/share/mailfence/=;
+see =home/services/mail.scm= and =home/lib/mail-identity.scm=. Bigme's local
+Python tools are legacy, unversioned files under =~/.local/share/bigme/=;
+restore them from the working device if needed. Its timer skips machines
+without the script. Calendar sync still works without =notyet=, but text
+export and the calendar CLI require that checkout.

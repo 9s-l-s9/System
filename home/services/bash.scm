@@ -1,6 +1,7 @@
 (define-module (services bash)
   #:use-module (gnu services)
   #:use-module (gnu home services shells)
+  #:use-module (services shell-aliases)
   #:export (bash-service))
 
 (define (bash-service)
@@ -17,23 +18,4 @@
                                ":"))
                ("GUIX_LOCPATH" . "$HOME_ENVIRONMENT/profile/lib/locales")))
 
-            (aliases
-             '(("ls" . "ls -p --color=auto")
-               ("ll" . "ls -l")
-               ("grep" . "grep --color=auto")
-               ("gh" . "guix home reconfigure ~/Projects/System/home/samuel-home-configuration.scm")
-               ("gs" . "sudo guix system reconfigure ~/Projects/System/systems/$(hostname).scm")
-               ("reload-emacs" . "herd restart emacs-daemon")
-               ;; Short names for the launcher executables that
-               ;; agent-launchers installs into ~/.local/bin.
-               ("agy" . "agy-guix")
-               ("codex" . "codex-guix")
-               ("claude" . "claude-guix")
-               ("claude-host" . "claude-guix --host")   ; no container: sudo, /sys, herd
-               ("deepseek" . "dsh-guix")
-               ("dsh" . "dsh-guix")
-               ("drawio-render" . "~/.local/bin/drawio-render")
-               ("drawio-export" . "~/.local/bin/drawio-render")
-               ("opencode" . "opencode-guix")
-               ("pi" . "pi-guix")
-               ("alire-shell" . "guix shell --container --network --emulate-fhs git bash alire-bin curl coreutils nss-certs tar gzip --share=$HOME=$HOME"))))))
+            (aliases shell-aliases))))

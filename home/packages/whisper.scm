@@ -16,6 +16,9 @@
   (package
     (name "emacs-whisper")
     ;; Pinned to whisper.el HEAD as of 2026-06-24.
+    ;; On every bump, re-check modules/whisper-conf.el: it overrides
+    ;; whisper-command (input-file) and sets whisper--ffmpeg-input-format
+    ;; and whisper--ffmpeg-input-device, which are private package interfaces.
     (version "0-1.fd9bf57")
     (source (origin
               (method url-fetch)

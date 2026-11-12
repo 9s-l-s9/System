@@ -7,7 +7,8 @@
 ;;; Usage: toggle-internal-keyboard.scm [on|off]   (no argument toggles)
 ;;;
 ;;; Must run as root.  systems/X1.scm grants a NOPASSWD sudo rule for
-;;; exactly this script so the minde key (Print t) can call it via sudo.
+;;; the immutable /etc/system-scripts/toggle-internal-keyboard program so
+;;; the minde key (Print K) can call it via sudo. Reconfigure to update it.
 
 (use-modules (ice-9 format))
 

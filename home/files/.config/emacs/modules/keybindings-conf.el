@@ -77,7 +77,6 @@
    '("f" . sls-window-focus)
    ;; AI (the gptel chat itself is SPC o a)
    '("A" . gptel-menu)
-   ;; '("c" . minuet-show-suggestion) ; inline completion; needs an API key
    '("w" . whisper-run))       ; voice to text (dictation)
 
   (meow-normal-define-key
@@ -203,12 +202,6 @@
   (define-key helpful-mode-map [remap revert-buffer] #'helpful-update))
 
 (define-key minibuffer-local-map (kbd "M-A") #'marginalia-cycle)
-(with-eval-after-load 'minuet
-  (when (boundp 'minuet-active-mode-map)
-    (define-key minuet-active-mode-map (kbd "M-RET") #'minuet-accept-suggestion)
-    (define-key minuet-active-mode-map (kbd "C-g") #'minuet-dismiss-suggestion)
-    (define-key minuet-active-mode-map (kbd "M-n") #'minuet-next-suggestion)
-    (define-key minuet-active-mode-map (kbd "M-p") #'minuet-previous-suggestion)))
 
 ;; `which-key' is part of Emacs 30+; it documents the existing leader maps.
 (when (require 'which-key nil t)
@@ -223,22 +216,6 @@
       (define-key map (kbd "C-c t t") #'sls-pytest-project)
       (define-key map (kbd "C-c t f") #'sls-pytest-file)
       (define-key map (kbd "C-c t l") #'sls-pytest-last-failed))))
-
-;; ── dap-mode: debugging (C-c C-d prefix) ────────────────────────────────────
-;; `meow-leader-define-key' installs the leader into `mode-specific-map',
-;; so `C-c d' is already the dired sidebar toggle (SPC d).  Use C-c C-d.
-(global-set-key (kbd "C-c C-d d") #'dap-debug)
-(global-set-key (kbd "C-c C-d b") #'dap-breakpoint-toggle)
-(global-set-key (kbd "C-c C-d B") #'dap-breakpoint-condition)
-(global-set-key (kbd "C-c C-d c") #'dap-continue)
-(global-set-key (kbd "C-c C-d n") #'dap-next)
-(global-set-key (kbd "C-c C-d i") #'dap-step-in)
-(global-set-key (kbd "C-c C-d o") #'dap-step-out)
-(global-set-key (kbd "C-c C-d r") #'dap-restart-frame)
-(global-set-key (kbd "C-c C-d q") #'dap-disconnect)
-(global-set-key (kbd "C-c C-d l") #'dap-ui-locals)
-(global-set-key (kbd "C-c C-d s") #'dap-ui-sessions)
-(global-set-key (kbd "C-c C-d e") #'dap-eval-thing-at-point)
 
 ;; ── gptel: chat / rewrite ───────────────────────────────────────────────────
 ;; Chat is SPC o a, the menu SPC A (meow leader); `C-c a' / `C-c A' are

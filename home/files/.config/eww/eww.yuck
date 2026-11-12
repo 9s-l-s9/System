@@ -1,26 +1,13 @@
-(defvar workspace-motto "")
-
 ;; All fast-changing values come from one resident daemon (deflisten keeps
 ;; a single process alive) instead of per-second defpolls, which forked
 ;; ~15 processes a second -- see scripts/sysinfo-daemon for the numbers.
 (deflisten stats
-	:initial "{\"time\":\"--\",\"clock\":\"--\",\"up\":\"--\",\"cpu0\":\"\",\"cpu1\":\"\",\"cpu2\":\"\",\"cpu3\":\"\",\"mem\":\"\",\"swap\":\"\",\"temp0\":\"--\",\"temp1\":\"--\",\"net_stat\":\"--\",\"net_iface\":\"--\",\"net_ssid\":\"--\",\"bat\":\"--\"}"
+	:initial "{\"time\":\"--\",\"clock\":\"--\",\"up\":\"--\",\"cpus\":[],\"mem\":\"\",\"swap\":\"\",\"temp0\":\"--\",\"temp1\":\"--\",\"net_stat\":\"--\",\"net_iface\":\"--\",\"net_ssid\":\"--\",\"bat\":\"--\"}"
 	"scripts/sysinfo-daemon")
 
 (defpoll kernel-release-poll :interval "5m" "uname -r")
 (defpoll kernel-name-poll :interval "5m" "uname -s")
 (defpoll name-poll :interval "5m" "h=$(uname -n); u=$(whoami); echo $u @ $h")
-
-(defwidget show-workspace-widget []
-	(box	:orientation "h"
-		:halign "center"
-		:spacing 16
-		:space-evenly "false"
-		:class "workspace-box"
-		
-		(label :text workspace-motto :class "workspace-name")
-	)
-)
 
 (defwidget net-widget []
 	(box	:orientation "h"
@@ -96,41 +83,11 @@
 )
 
 (defwidget cpu-bar-widget []
-	(box	:orientation "h"
-		:halign "center"
-		:space-evenly "false"
-		:spacing 16
-		
-		(box	:orientation "h"
-			:space-evenly "false"
-		
-			(label :text "CPU_0: " :class "varlabel")
-			(label :text {stats.cpu0})
-		)
-		
-		(box	:orientation "h"
-			:space-evenly "false"
-		
-			(label :text "CPU_1: " :class "varlabel")
-			(label :text {stats.cpu1})
-		)
-		
-		(box	:orientation "h"
-			:space-evenly "false"
-		
-			(label :text "CPU_2: " :class "varlabel")
-			(label :text {stats.cpu2})
-		)
-		
-		(box	:orientation "h"
-			:space-evenly "false"
-		
-			(label :text "CPU_3: " :class "varlabel")
-			(label :text {stats.cpu3})
-		)
-
-	)		
-)
+    (box :orientation "v" :halign "center" :space-evenly false
+        (for cpu in {stats.cpus}
+            (box :orientation "h" :space-evenly false :spacing 16
+                (label :text "CPU_${cpu.index}: " :class "varlabel")
+                (label :text {cpu.bar})))))
 
 (defwidget core-temp-widget []
 	(box	:orientation "h"
@@ -183,7 +140,6 @@
 		:space-evenly false
 		:class "sysinfo-box"
 	
-		(show-workspace-widget)
 		(os-info-widget)
 		(uptime-widget)
 		(cpu-bar-widget)
@@ -245,7 +201,7 @@
 			(label :class "actions-heading" :halign "start" :text "03 / HARDWARE")
 			(button :class "action-button"
 				:tooltip "Unbind/bind the i8042 controller (Print K)"
-				:onclick "${EWW_CMD} close actions; sudo -n /run/current-system/profile/bin/guile -s /home/samuel/Projects/System/scripts/toggle-internal-keyboard.scm && notify-send 'Internal keyboard' toggled"
+				:onclick "${EWW_CMD} close actions; sudo -n /etc/system-scripts/toggle-internal-keyboard && notify-send 'Internal keyboard' toggled"
 				(label :halign "start" :text "Toggle internal keyboard"))
 			(button :class "action-button"
 				:tooltip "Put the mouse in pairing mode first"
@@ -295,10 +251,10 @@
 
 (defwidget group-buttons []
 	(box :class "groups" :space-evenly false :spacing 2
-		(for g in {minde-state.groups}
-			(button :class {g.focused ? "group focused" : "group"}
-				:onclick "mindectl eval '(switch-to-group! \"${g.name}\")'"
-				{g.focused ? "[${g.name}]" : g.name})))
+		(for g in {jq(minde-state.groups, "to_entries")}
+			(button :class {g.value.focused ? "group focused" : "group"}
+				:onclick "mindectl eval '(switch-to-group! ${g.key})'"
+				{g.value.focused ? "[${g.value.name}]" : g.value.name})))
 )
 
 (defwindow bar

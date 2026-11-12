@@ -1,4 +1,5 @@
 (define-module (services minde)
+  #:use-module (guix utils)
   #:use-module (gnu home services)
   #:use-module (gnu packages)
   #:use-module (guix gexp)
@@ -7,12 +8,19 @@
 (define minde-package
   ;; Share the verified, pinned binary with the system session package.
   ;; MINDE_BUILD_LOCAL=1 explicitly opts into compiling the checkout.
-  (primitive-load "/home/samuel/Projects/System/minde-package.scm"))
+  (primitive-load (string-append (dirname (dirname (current-source-directory)))
+                                 "/minde-package.scm")))
 
 ;; shikane (wlr-output-management profile daemon) lives in minde's own
 ;; channel until it reaches upstream Guix.
 (eval-when (expand load eval)
-  (add-to-load-path "/home/samuel/Projects/minde/guix-channel"))
+  (let ((channel (string-append
+                  (dirname (dirname (dirname (current-source-directory))))
+                  "/minde/guix-channel")))
+    (unless (file-exists? (string-append channel "/minde/packages.scm"))
+      (format (current-error-port) "Shikane: missing ~a; clone minde beside System.~%" channel)
+      (error "Shikane recipe missing; clone minde beside System" channel))
+    (add-to-load-path channel)))
 (define shikane-package
   (module-ref (resolve-interface '(minde packages)) 'shikane))
 
@@ -79,21 +87,19 @@ name = \"laptop-only\"
 (bind-prefix-key! \"e\" (lambda () (wm-spawn \"lem -i sdl2\")) \"Lem\")
 (bind-prefix-key! \"E\" (lambda () (wm-spawn \"emacsclient -c -a emacs\")) \"Emacs\")
 (bind-prefix-key! \"i\"
-  (lambda () (eww-run! (list \"eww open --toggle sysinfo\")))
+  (lambda () (eww-run! (list (sysinfo-command \"--toggle\"))))
   \"eww widgets\")
 (bind-prefix-key! \"a\"
   (lambda () (toggle-actions!))
   \"command center\")
 ;; Toggle the corrosion-damaged internal keyboard (i8042 controller unbind).
-;; Must be the exact command from the NOPASSWD sudoers rule in
-;; systems/X1.scm (guile + script path); ~/.local/bin/toggle-internal-kbd
-;; used sudo tee, which the rule does not cover, so it silently failed.
+;; The system installs an immutable program at this root-owned path.
+;; Its NOPASSWD rule is declared by systems/X1.scm.
 (bind-prefix-key! \"K\"
   (lambda ()
     (wm-spawn
      (string-append
-      \"sudo -n /run/current-system/profile/bin/guile\"
-      \" -s /home/samuel/Projects/System/scripts/toggle-internal-keyboard.scm\"
+      \"sudo -n /etc/system-scripts/toggle-internal-keyboard\"
       \" && notify-send 'Internal keyboard' toggled\")))
   \"toggle internal keyboard\")
 ;; Re-pair the ERGO M575 after it was used on another computer (it then
@@ -104,13 +110,12 @@ name = \"laptop-only\"
   \"re-pair ERGO mouse\")
 ;; Super-low-power toggle: min CPU freq, no turbo, half the cores off,
 ;; firmware low-power profile.  Run again to restore.  Needs the
-;; NOPASSWD sudoers rule from systems/{X1,T450s}.scm (exact guile + script path).
+;; NOPASSWD sudoers rule from systems/{X1,T450s}.scm for the system copy.
 (bind-prefix-key! \"L\"
   (lambda ()
     (wm-spawn
      (string-append
-      \"sudo -n /run/current-system/profile/bin/guile\"
-      \" -s /home/samuel/Projects/System/scripts/low-power-mode.scm\"
+      \"sudo -n /etc/system-scripts/low-power-mode\"
       \" && notify-send 'Low power' toggled\")))
   \"low power mode\")
 (bind-prefix-key! \"A\"
@@ -125,9 +130,7 @@ name = \"laptop-only\"
 (bind-prefix-key! \"V\"
   (lambda () (wm-spawn \"~/Projects/System/scripts/voice-dictate.scm\"))
   \"voice dictation\")
-;; Eco toggle (replaces the plain brightness 0/60 toggle): backlight off,
-;; turbo off, Zen SIGSTOPped, bluetooth blocked -- Wi-Fi stays up so agent
-;; sessions keep running. Second press restores everything.
+;; Eco toggle: backlight off and Bluetooth blocked; second press restores both.
 (bind-prefix-key! \"h\"
   (lambda () (wm-spawn \"~/Projects/System/scripts/eco-toggle.scm\"))
   \"eco mode on/off\")
@@ -223,6 +226,16 @@ name = \"laptop-only\"
                  (string-join (string-split text (integer->char 39)) \"'\\\\''\")
                  \"'\"))
 
+(define (sysinfo-command options)
+  (let* ((outputs (wm-outputs))
+         (output (or (assv (current-head-id) outputs)
+                     (and (pair? outputs) (car outputs)))))
+    (string-append \"eww open sysinfo \" options
+                   (if output
+                       (string-append \" --screen \"
+                                      (personal-shell-quote (list-ref output 5)))
+                       \"\"))))
+
 ;; wm-outputs reports usable height below the bar.  Width stays a monitor
 ;; percentage in Eww because opening the pane changes the usable width.
 (define (toggle-actions!)
@@ -279,13 +292,12 @@ name = \"laptop-only\"
   ;; that hook only covers later layout changes.
   (wm-spawn \"shikane\")
   ;; Minimal sessions do not start a desktop environment's Polkit agent.
-  ;; This one supplies the password dialog used by the internal-keyboard
-  ;; toggle; it grants no privileges by itself.
+  ;; This supplies password dialogs for applications using Polkit.
   (wm-spawn \"~/.guix-home/profile/libexec/polkit-gnome-authentication-agent-1\")
   ;; Wallpaper and widgets -- they are the visible part of startup.
   (next-wallpaper!)
   ;; sysinfo rides in the bars' batch rather than racing it: see eww-run!.
-  (eww-run! (cons \"eww open sysinfo\" (bar-commands)))
+  (eww-run! (cons (sysinfo-command \"\") (bar-commands)))
   ;; Same temperatures/location the old X11 redshift service used before it
   ;; was removed as dead (Wayland-only session now); needs minde's
   ;; wlr-gamma-control support.

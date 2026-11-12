@@ -68,11 +68,9 @@ Package dependencies still use `require'; only our settings are re-evaluated."
 (sls-load-module 'eglot-conf)
 (sls-load-module 'python-conf)
 (sls-load-module 'typst-conf)   ; typst-ts-mode + live preview (tinymist)
-(sls-load-module 'dap-conf)
 (sls-load-module 'gptel-conf)   ; chat / rewrite, user-in-the-loop
 (sls-load-module 'eca-conf)     ; autonomous agent (emacs-eca)
-;; (sls-load-module 'minuet-conf)  ; AI inline completion; disabled (needs API key)
-(sls-load-module 'whisper-conf)  ; local speech-to-text (no-op until emacs-whisper installed)
+(sls-load-module 'whisper-conf)  ; local speech-to-text via the pinned whisper package
 
 (sls-load-module 'magit-conf)
 

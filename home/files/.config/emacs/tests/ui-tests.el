@@ -235,11 +235,11 @@
            (dolist (sub '("cur" "new" "tmp"))
              (make-directory (expand-file-name sub maildir) t))
            (with-temp-file config
-             (insert (format "[database]\npath=%s\n[user]\nname=UI Test\nprimary_email=test@example.invalid\n[new]\ntags=unread;inbox;flagged;\n" maildir)))
+             (insert (format "[database]\npath=%s\nhook_dir=%s\n[user]\nname=UI Test\nprimary_email=test@example.invalid\n[new]\ntags=unread;inbox;flagged;\n" maildir root)))
            (with-temp-file (expand-file-name "new/test" maildir)
              (insert "From: Example <sender@example.invalid>\nTo: test@example.invalid\nSubject: UI fixture 100%% ready\nMessage-ID: <ui-test@example.invalid>\nDate: Fri, 2 Oct 2026 12:00:00 +0000\n\nFixture body.\n"))
            (setenv "NOTMUCH_CONFIG" config)
-           (should (= 0 (call-process "notmuch" nil nil nil "new")))
+           (should (= 0 (call-process "notmuch" nil nil nil "new" "--no-hooks")))
            (sls-notmuch-sidebar)
            (should (eq major-mode 'notmuch-hello-mode))
            (should (sls-side-panel-window))

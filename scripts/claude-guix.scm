@@ -12,6 +12,7 @@
              (srfi srfi-13))
 
 (define home (require-home "claude-guix"))
+(define claude-version "2.1.322")
 
 (define default-manifest
   (string-append home "/Projects/System/home/manifests/claude.scm"))
@@ -89,36 +90,19 @@
               "export npm_config_prefix=\"$CLAUDE_NPM_PREFIX\"; "
               "export npm_config_cache=\"$HOME/.cache/agent-npm\"; "
               "export PATH=\"$CLAUDE_NPM_PREFIX/bin:$PATH\"; "
-              "cd "
-              (format #f "~s" project-dir)
+              "cd \"$1\" || exit; shift; "
               ;; First install only; afterwards Claude Code keeps itself
               ;; current through its own auto-updater (see npm_config_prefix).
-              " && if [ ! -x \"$CLAUDE_NPM_PREFIX/bin/claude\" ]; then"
+              "if [ ! -x \"$CLAUDE_NPM_PREFIX/bin/claude\" ]; then"
               " npm install --global --prefix \"$CLAUDE_NPM_PREFIX\""
               " --cache \"$HOME/.cache/agent-npm\""
-              " @anthropic-ai/claude-code@latest; fi"
-              ;; Register MCP servers (user scope -> ~/.claude.json, shared into
-              ;; the container so it persists). Re-register each launch so the
-              ;; baked --executable-path always tracks the current chromium store
-              ;; path (it changes when the manifest/channels update). HEADED
-              ;; (kein --headless): der Container erbt DISPLAY/WAYLAND_DISPLAY der
-              ;; startenden Session, ein echter headed Browser umgeht Anti-Bot-
-              ;; Erkennung, die HeadlessChrome hart blockt. Bei rein
-              ;; headless/SSH ohne Display hier wieder --headless ergaenzen.
-              ;; --user-data-dir = persistentes echtes Profil (Cookies/History).
-              ;; Config wird von pw-mcp-gen-config.scm erzeugt (loest chromium-Pfad
-              ;; auf, headed, und laedt die webgl-spoof-Extension via
-              ;; launchOptions.args). Die Extension ueberschreibt den SwiftShader-
-              ;; WebGL-Renderer, den Bot-Erkennung als Tell
-              ;; fingerprinten. Fuer reinen SSH/headless-Lauf PW_MCP_HEADLESS=1.
-              " && { \"$HOME/Projects/System/scripts/pw-mcp-gen-config.scm\";"
-              " \"$CLAUDE_NPM_PREFIX/bin/claude\" mcp remove -s user playwright >/dev/null 2>&1;"
-              " \"$CLAUDE_NPM_PREFIX/bin/claude\" mcp add -s user playwright --"
-              " npx -y @playwright/mcp@latest"
-              " --config \"$HOME/.cache/pw-mcp-config.json\" || true; }"
+              " @anthropic-ai/claude-code@" claude-version " || exit; fi"
+              ;; Update browser configuration only when changed; register the
+              ;; pinned MCP server only when its saved command differs.
+              "; \"$HOME/Projects/System/scripts/pw-mcp-gen-config.scm\" --register || exit;"
               ;; Declarative settings from home/services/claude.scm (installed by
               ;; Guix Home); flag settings outrank ~/.claude/settings.json.
-              " && S=\"${XDG_CONFIG_HOME:-$HOME/.config}/claude-code/settings.json\";"
+              " S=\"${XDG_CONFIG_HOME:-$HOME/.config}/claude-code/settings.json\";"
               " if [ -f \"$S\" ]; then set -- --settings \"$S\" \"$@\"; fi;"
               " exec \"$CLAUDE_NPM_PREFIX/bin/claude\" --dangerously-skip-permissions \"$@\"")))
     (append
@@ -169,7 +153,7 @@
       (guix-profiles-expose)
       (preserve-common-env)))
      (manifest-args (cons default-manifest extra-manifests))
-     (list "--" "bash" "-c" cmd "claude-guix")
+     (list "--" "bash" "-c" cmd "claude-guix" project-dir)
      claude-args)))
 
 ;; Claude Code's shell snapshot wraps find/grep as its embedded bfs/ugrep:

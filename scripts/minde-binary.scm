@@ -85,7 +85,16 @@
                (unless (string=? (readlink root) path)
                  (error "existing GC root points at a different build" root))
                (symlink path root))))
-       '(minde xwayland)))))
+       '(minde xwayland))
+      ;; Keep the new build and the previous lock until reconfiguration.
+      ;; Older generations retain their own store references.
+      (let ((lock (string-append system-directory "/minde-binary.lock.scm")))
+        (prune-binary-roots!
+         root-directory
+         (cons commit
+               (if (file-exists? lock)
+                   (list (assoc-ref (read-metadata lock) 'commit))
+                   '())))))))
 
 (define (import-release directory commit)
   (unless (zero? (geteuid)) (error "the store import requires root"))
@@ -177,5 +186,5 @@
   (("--import" directory commit) (import-release directory commit))
   (("--restore" directory) (restore-release directory))
   (_
-   (display "usage: scripts/minde-binary.scm install COMMIT\n       scripts/minde-binary.scm fetch COMMIT\n       scripts/minde-binary.scm verify DIRECTORY COMMIT\n")
+   (display "usage: scripts/minde-binary.scm install [COMMIT]\n       scripts/minde-binary.scm ensure\n       scripts/minde-binary.scm fetch COMMIT\n       scripts/minde-binary.scm verify DIRECTORY COMMIT\n")
    (exit 2)))

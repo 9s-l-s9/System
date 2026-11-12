@@ -1,50 +1,19 @@
-File Structure
+Guix Home
+=========
 
-home/
-├── samuel-home-configuration.scm       # Full desktop config (minde Wayland session)
-├── samuel-wsl2-home-configuration.scm  # WSL2 config (no WM, portable packages)
-├── levi-home-configuration.scm         # Levi's config
-├── base-home.scm                       # Shared base services/config
-├── manifests/                          # guix-shell manifests for agent containers
-│   ├── agent-base.scm           # shared base (uv/python/nss-certs)
-│   ├── claude.scm
-│   ├── codex.scm
-│   ├── pi.scm
-│   └── deepseek-harness.scm
-├── lib/
-│   └── identity.scm            # user name / e-mail shared by services (git)
-├── packages/
-│   ├── base-packages.scm       # All package lists + all-packages() + wsl2-packages()
-│   └── ...                     # One-off package definitions (fonts, lem, whisper, etc.)
-├── services/                   # Service configurations in Guile Scheme
-│   ├── minde.scm                # Wayland session (primary desktop)
-│   ├── stumpwm.scm              # X11 session, kept only as a rollback
-│   ├── emacs.scm
-│   ├── git.scm
-│   ├── codex.scm / codex-config.toml # Writable Codex settings, seeded once
-│   ├── agent-launchers.scm
-│   ├── agent-skills.scm
-│   ├── helix.scm / helix-home-services.scm
-│   ├── lem.scm
-│   ├── redshift.scm
-│   ├── fish.scm
-│   ├── starship.scm / starship.toml # Prompt package, fish integration and theme
-│   ├── konsole.scm             # Declarative Konsole profile, palette and UI
-│   └── bash.scm
-└── files/                      # Dotfiles (shared by all configs)
-    └── .config/emacs/          # Emacs config — works on both desktop and WSL2
+The *-home-configuration.scm entry points assemble services from services/
+and package groups from packages/base-packages.scm. Static application files
+are under files/; manifests/ holds agent
+environments and lib/ the shared identity and hook helpers.
 
-
-== Daily Use ==
-
-Desktop (minde Wayland session + full packages):
-  guix home reconfigure home/samuel-home-configuration.scm
-
-WSL2 Ubuntu (portable packages, no WM):
-  guix home reconfigure home/samuel-wsl2-home-configuration.scm
-
-Validate before reconfiguring:
+From the repository root:
   make qa-all
+  make reconfigure-home
+
+For WSL2, use the dedicated entry point with pinned channels and the load path:
+  guix time-machine -C channels.scm -- home --load-path=home reconfigure home/samuel-wsl2-home-configuration.scm
+
+See ../README.org for setup and ../QA.md for validation.
 
 == Agent installations ==
 
@@ -60,7 +29,11 @@ do not replace those links with a vendor installer. Authentication and sessions
 remain in ~/.claude, ~/.claude.json, ~/.codex, and ~/.pi. All three launchers
 persist downloads in ~/.cache/agent-npm, including in sandbox mode.
 
-Claude installs only when missing. Pi still checks/installs @latest each launch
+Claude installs the version pinned in scripts/claude-guix.scm only when missing;
+its own updater can subsequently update it. Playwright's MCP package is pinned
+in scripts/pw-mcp-gen-config.scm. That helper rewrites browser settings only
+when changed and registers the server only when its saved command differs.
+Pi still checks/installs @latest each launch
 and falls back to its installed CLI if an update fails. Codex reuses a legacy
 ~/.local installation until a private one is installed; its npm update prefix
 always points at the private directory so updates preserve the Guix launcher.
@@ -78,12 +51,7 @@ configured via home/services/minde.scm. Personal keybindings, autostart
 (wallpaper, eww bar, gammastep, KDE Connect) and terminal selection live
 there, layered over minde's own defaults.
 
-StumpWM (home/services/stumpwm.scm) is kept only as an X11 rollback for when
-the Wayland session is unusable; it is not the daily driver.
-
-Terminal: foot (Wayland-native) is primary; konsole is the fallback under
-both sessions (X11-only commands in stumpwm.scm use konsole directly, since
-foot does not run under X11).
+Terminal: foot (Wayland-native) is primary; konsole is also installed.
 
 Konsole appearance is declared in home/services/konsole.scm: the Gruvbox
 profile starts fish directly, uses IBM Plex Mono at 14 pt, 12 px margins,
@@ -117,7 +85,7 @@ unmanaged configuration files when it first takes ownership.
 == Emacs Daemon ==
 
 Emacs runs as a Shepherd user service (services/emacs.scm, part of
-base-services). Open frames with:
+Samuel's desktop configuration). Open frames with:
 
   emacsclient -c        # graphical frame
   emacsclient -t        # terminal frame
@@ -128,36 +96,12 @@ Restart it after config changes with:
   herd restart emacs-daemon
 
 
-== WSL2 First-Time Setup ==
+== WSL2 ==
 
-1. Install Guix on Ubuntu WSL2:
-     curl -L https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh \
-       | sudo bash
-
-2. Enable Guix daemon (requires systemd, on by default in recent WSL2):
-     sudo systemctl enable --now guix-daemon
-
-3. Add Guix bin to PATH (add to ~/.profile for persistence):
-     export PATH="$HOME/.config/guix/current/bin:$PATH"
-
-4. Copy channels and pull:
-     mkdir -p ~/.config/guix
-     cp channels.scm ~/.config/guix/channels.scm
-     guix pull
-
-5. Reconfigure home:
-     cd ~/System
-     guix home reconfigure home/samuel-wsl2-home-configuration.scm
-
-6. Graphical Emacs:
-   - Windows 11: WSLg is built-in — run `emacs` and a window appears automatically
-   - Windows 10: install VcXsrv, then set DISPLAY=:0.0 before running emacs
-
-Notes:
-  - No WM is included — WSL2 has no bare X session to manage.
-    Use Windows Terminal as your terminal.
-  - All Emacs packages are installed by Guix, identical to the desktop setup.
-    No MELPA or package.el bootstrapping needed.
+Install Guix on the host and enable its daemon, then clone this repository at
+~/Projects/System and use the pinned WSL2 command above. WSLg provides graphical
+windows; the WSL2 home configuration does not start a compositor. Its Emacs
+packages come from Guix, as on the desktop.
 
 draw.io exports
 ---------------
