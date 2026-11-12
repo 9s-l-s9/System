@@ -100,8 +100,13 @@
 (define (indexed? query)
   (string=? "1\n" (ok (list "notmuch" "count" query))))
 
-(set! test-log-to-file #f)
-(test-begin "mail-workflows")
+;; Guile versions differ in their logging controls; keep any default log in
+;; the disposable fixture directory instead of using test-log-to-file.
+(let ((original-directory (getcwd)))
+  (dynamic-wind
+    (lambda () (chdir directory))
+    (lambda () (test-begin "mail-workflows"))
+    (lambda () (chdir original-directory))))
 (dynamic-wind
   (lambda () #t)
   (lambda ()
