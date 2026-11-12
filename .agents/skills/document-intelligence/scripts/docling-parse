@@ -7,11 +7,12 @@ python_script="$script_dir/docling_skill_parse.py"
 manifest="$skill_dir/manifest.scm"
 cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/codex-document-intelligence"
 venv_dir="${DOCLING_PARSE_VENV:-$cache_root/docling-venv}"
-docling_package="${DOCLING_PARSE_PACKAGE:-docling}"
+docling_package="${DOCLING_PARSE_PACKAGE:-docling==2.150.0}"
 torch_cpu_index="${DOCLING_PARSE_TORCH_INDEX:-https://download.pytorch.org/whl/cpu}"
-container_image="${DOCLING_CONTAINER_IMAGE:-local/document-intelligence-docling:v11}"
-container_engine="${DOCLING_CONTAINER_ENGINE:-docker}"
-container_build="${DOCLING_CONTAINER_BUILD:-1}"
+container_image="${DOCLING_CONTAINER_IMAGE:-local/document-intelligence-docling:2.150.0-v12}"
+container_engine="${DOCLING_CONTAINER_ENGINE:-auto}"
+allow_downloads="${DOCLING_ALLOW_DOWNLOADS:-0}"
+container_build="${DOCLING_CONTAINER_BUILD:-$allow_downloads}"
 use_container="${DOCLING_CONTAINER:-1}"
 default_batch_pages="${DOCLING_DEFAULT_BATCH_PAGES:-1}"
 layout_artifacts_override="${DOCLING_LAYOUT_ARTIFACTS:-$HOME/.cache/huggingface/hub/models--docling-project--docling-layout-heron/snapshots/8f39ad3c0b4c58e9c2d2c84a38465abf757272d8}"
@@ -19,6 +20,10 @@ layout_artifacts_cache="${DOCLING_LAYOUT_ARTIFACT_CACHE:-$cache_root/docling-lay
 layout_artifacts_fallback_cache="${DOCLING_LAYOUT_ARTIFACT_FALLBACK_CACHE:-${TMPDIR:-/tmp}/codex-document-intelligence-$(id -u)/docling-layout-heron-artifacts}"
 hf_layout_root="${DOCLING_LAYOUT_HF_ROOT:-${HF_HOME:-$HOME/.cache/huggingface}/hub/models--docling-project--docling-layout-heron}"
 container_config_home="${DOCLING_CONTAINER_CONFIG_HOME:-$HOME/.config}"
+
+if [ "$allow_downloads" != "1" ]; then
+  export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+fi
 
 if [ -n "${GUIX_ENVIRONMENT:-}" ]; then
   export LD_LIBRARY_PATH="$GUIX_ENVIRONMENT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
@@ -398,7 +403,7 @@ run_container() {
   fi
   layout_artifacts=$(materialize_layout_artifacts 2>/dev/null || true)
   if [ -z "${layout_artifacts:-}" ]; then
-    if [ "${DOCLING_REQUIRE_LOCAL_ARTIFACTS:-0}" = "1" ]; then
+    if [ "$allow_downloads" != "1" ] || [ "${DOCLING_REQUIRE_LOCAL_ARTIFACTS:-0}" = "1" ]; then
       explain_layout_artifacts_failure
       exit 2
     fi
@@ -423,6 +428,8 @@ run_container() {
         -e TORCH_HOME=/home/docling/.cache/torch \
         -e TORCHINDUCTOR_CACHE_DIR=/home/docling/.cache/torchinductor \
         -e DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false \
+        -e HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-0}" \
+        -e TRANSFORMERS_OFFLINE="${TRANSFORMERS_OFFLINE:-0}" \
         --entrypoint sh \
         "$container_image" \
         -lc 'unset DOCLING_ARTIFACTS_PATH; exec python /opt/document-intelligence/docling_skill_parse.py "$@"' \
@@ -449,6 +456,8 @@ run_container() {
       -e TORCH_HOME=/home/docling/.cache/torch \
       -e TORCHINDUCTOR_CACHE_DIR=/home/docling/.cache/torchinductor \
       -e DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false \
+      -e HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-0}" \
+      -e TRANSFORMERS_OFFLINE="${TRANSFORMERS_OFFLINE:-0}" \
       "$container_image" "$container_source_path" "$@"
     status=$?
     set -e
@@ -469,6 +478,8 @@ run_container() {
       -e TORCH_HOME=/home/docling/.cache/torch \
       -e TORCHINDUCTOR_CACHE_DIR=/home/docling/.cache/torchinductor \
       -e DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false \
+      -e HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-0}" \
+      -e TRANSFORMERS_OFFLINE="${TRANSFORMERS_OFFLINE:-0}" \
       --entrypoint sh \
       "$container_image" \
       -lc 'unset DOCLING_ARTIFACTS_PATH; exec python /opt/document-intelligence/docling_skill_parse.py "$@"' \
@@ -493,18 +504,24 @@ run_container() {
     -e TORCH_HOME=/home/docling/.cache/torch \
     -e TORCHINDUCTOR_CACHE_DIR=/home/docling/.cache/torchinductor \
     -e DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false \
+    -e HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-0}" \
+    -e TRANSFORMERS_OFFLINE="${TRANSFORMERS_OFFLINE:-0}" \
     "$container_image" "$container_source_path" "$@"
   status=$?
   set -e
   exit_with_container_status "$status"
 }
 
+if wants_help "$@" && python_bin=$(find_python); then
+  run_with_python "$python_bin" "$@"
+fi
+
 if [ "$use_container" != "0" ]; then
   if engine=$(find_container_engine); then
     if ! container_image_exists "$engine"; then
-      if [ "$container_build" = "0" ]; then
+      if [ "$allow_downloads" != "1" ] || [ "$container_build" = "0" ]; then
         echo "Docling container image not found: $container_image" >&2
-        echo "Set DOCLING_CONTAINER_BUILD=1 or build it manually." >&2
+        echo "Large downloads are disabled. With explicit approval, set DOCLING_ALLOW_DOWNLOADS=1." >&2
         exit 2
       fi
       build_container_image "$engine"
@@ -524,7 +541,7 @@ if [ "$use_container" != "0" ]; then
     run_container "$engine" "$@"
   elif [ "${DOCLING_CONTAINER_REQUIRED:-0}" = "1" ]; then
     echo "No usable container engine found for document-intelligence." >&2
-    echo "Default is Docker. Set DOCLING_CONTAINER_ENGINE=podman or auto only if Podman is configured on this host." >&2
+    echo "Auto-detection tried Docker and Podman. Set DOCLING_CONTAINER_ENGINE to an available engine." >&2
     exit 2
   fi
 fi
@@ -542,6 +559,11 @@ if python_bin=$(find_python); then
     run_with_python "$venv_dir/bin/python" "$@"
   fi
 
+  if [ "$allow_downloads" != "1" ]; then
+    echo "Docling is not installed; automatic installation is disabled." >&2
+    echo "Use an existing installation, or explicitly allow large downloads with DOCLING_ALLOW_DOWNLOADS=1." >&2
+    exit 2
+  fi
   mkdir -p "$cache_root"
   create_venv "$python_bin"
   "$venv_dir/bin/python" -m pip install --no-cache-dir --upgrade pip
@@ -550,7 +572,7 @@ if python_bin=$(find_python); then
   run_with_python "$venv_dir/bin/python" "$@"
 fi
 
-if [ "${DOCLING_PARSE_IN_GUIX:-0}" != "1" ]; then
+if [ "$allow_downloads" = "1" ] && [ "${DOCLING_PARSE_IN_GUIX:-0}" != "1" ]; then
   if command -v guix >/dev/null 2>&1; then
     export DOCLING_PARSE_IN_GUIX=1
     exec guix shell -m "$manifest" -- "$0" "$@"
@@ -566,6 +588,6 @@ Provide one of:
 - guix, so this script can re-enter with the skill-local manifest.scm
 
 Manual install:
-  python3 -m pip install --extra-index-url https://download.pytorch.org/whl/cpu docling
+  python3 -m pip install --extra-index-url https://download.pytorch.org/whl/cpu docling==2.150.0
 EOF
 exit 2

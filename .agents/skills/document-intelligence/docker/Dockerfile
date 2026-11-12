@@ -1,4 +1,4 @@
-FROM docker.io/library/python:3.11-slim-bookworm
+FROM docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -21,8 +21,10 @@ RUN apt-get update \
       tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python -m pip install --upgrade pip \
-    && python -m pip install --extra-index-url https://download.pytorch.org/whl/cpu docling
+# Bump the launcher image tag with these versions.
+RUN python -m pip install --timeout 120 --retries 3 \
+      --extra-index-url https://download.pytorch.org/whl/cpu \
+      docling==2.150.0 torch==2.15.0+cpu torchvision==0.29.2+cpu
 
 COPY scripts/docling_skill_parse.py /opt/document-intelligence/docling_skill_parse.py
 

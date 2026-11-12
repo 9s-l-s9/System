@@ -31,7 +31,7 @@ Do not use this skill for ordinary text files, hand-written prose, or document s
 
 ## Bundled Script
 
-Use `scripts/docling-parse` for normal conversions. It uses Docker by default to avoid native-library conflicts between Docling's PyPI wheels and Guix. By default it converts PDFs one page at a time for low-memory safety:
+Use `scripts/docling-parse` for normal conversions. It auto-detects Docker or Podman by default to avoid native-library conflicts between Docling's PyPI wheels and Guix. By default it converts PDFs one page at a time for low-memory safety:
 
 ```sh
 .agents/skills/document-intelligence/scripts/docling-parse input.pdf
@@ -73,20 +73,21 @@ Default backend:
 .agents/skills/document-intelligence/scripts/docling-parse input.pdf
 ```
 
-The launcher uses Docker by default and builds `local/document-intelligence-docling:v11` from `docker/Dockerfile` if the image is missing. Local files are copied into a mounted `.docling-inputs/` directory under the current working directory before the container runs, so host path identity does not matter.
+The launcher auto-detects a working Docker or Podman engine and uses an existing `local/document-intelligence-docling:2.150.0-v12` image. **Automatic installation and model downloads are disabled.** Docling/PyTorch images and Podman build layers consume several GB; on Samuel's small laptop, use an existing lightweight extractor when that satisfies the task. Ask before enabling `DOCLING_ALLOW_DOWNLOADS=1` to build the image from `docker/Dockerfile` or bootstrap a local installation. The base-image digest, Docling and CPU PyTorch versions are pinned there; bump the image tag with dependency changes. Transitive Python and Debian packages still resolve at build time. Local files are copied into a mounted `.docling-inputs/` directory under the current working directory before the container runs, so host path identity does not matter.
 If no `--page-range` or `--batch-pages` is provided, the launcher defaults to `--batch-pages 1` to avoid Docker status `137` on low-RAM systems.
 Docling layout model snapshots from Hugging Face are symlink-heavy, so the launcher materializes the required layout files into a regular-file cache before bind mounting them into Docker.
-If no local layout artifacts are available, the launcher unsets `DOCLING_ARTIFACTS_PATH` so Docling can download/populate models into the mounted writable cache.
-Podman is opt-in because rootless Podman depends on host `/etc/subuid`, `/etc/subgid`, policy, and storage configuration that may not exist on minimal or Guix-heavy systems.
+Without local model artifacts it stops by default. Explicitly allowing downloads lets Docling populate the writable model cache.
+Rootless Podman still requires working host user namespaces and storage configuration.
 
 Controls:
 
 - `DOCLING_CONTAINER=0` disables the container backend and uses local Python/Guix fallback.
-- `DOCLING_CONTAINER_ENGINE=docker` is the default.
+- `DOCLING_CONTAINER_ENGINE=auto` is the default (Docker, then Podman).
 - `DOCLING_CONTAINER_ENGINE=podman` selects Podman only when the host is configured for rootless image builds.
-- `DOCLING_CONTAINER_ENGINE=auto` tries Docker first, then Podman.
+- `DOCLING_CONTAINER_ENGINE=docker` explicitly selects Docker.
 - `DOCLING_CONTAINER_IMAGE=...` selects another image tag.
-- `DOCLING_CONTAINER_BUILD=0` disables automatic image builds.
+- `DOCLING_ALLOW_DOWNLOADS=1` explicitly permits installation and model downloads; default is `0`.
+- `DOCLING_CONTAINER_BUILD=0` keeps image builds disabled even when downloads were allowed.
 - `DOCLING_CONTAINER_REQUIRED=1` fails immediately if the selected container engine is unavailable.
 - `DOCLING_DEFAULT_BATCH_PAGES=1` is the default low-memory batch size. Set `DOCLING_DEFAULT_BATCH_PAGES=0` to attempt full-document conversion.
 - `DOCLING_REQUIRE_LOCAL_ARTIFACTS=1` fails if cached layout artifacts cannot be found instead of allowing Docling to download them.
@@ -96,12 +97,12 @@ Controls:
 - `DOCLING_LAYOUT_HF_ROOT=/path/to/models--docling-project--docling-layout-heron` selects the Hugging Face cache root to search.
 - When Podman is used, the launcher writes `~/.config/containers/policy.json` with `insecureAcceptAnything` so the build does not depend on host container policy configuration.
 
-The launcher is standalone: it tries the configured container backend first, then falls back to an existing `python3`/`python` with Docling, a cached virtual environment under `$XDG_CACHE_HOME/codex-document-intelligence`, and finally the skill-local Guix manifest when Guix is available. First run may need network access to build the image, install Docling into the cached venv, or download Docling model assets.
+The launcher is standalone: it tries the configured container backend first, then falls back to an existing `python3`/`python` with Docling, a cached virtual environment under `$XDG_CACHE_HOME/codex-document-intelligence`, and finally the skill-local Guix manifest when Guix is available. Without explicit download approval it stops if none is installed; it does not create a venv or fetch a Guix environment.
 
 On Linux, the launcher installs Docling with the official CPU-only PyTorch index to avoid accidentally downloading GPU/CUDA wheels:
 
 ```sh
-python3 -m pip install --extra-index-url https://download.pytorch.org/whl/cpu docling
+python3 -m pip install --extra-index-url https://download.pytorch.org/whl/cpu docling==2.150.0
 ```
 
 Controls:
@@ -160,7 +161,7 @@ For high-stakes uses, sample multiple pages manually. Docling is strong, but PDF
 If Docling is missing:
 
 ```sh
-python3 -m pip install --extra-index-url https://download.pytorch.org/whl/cpu docling
+python3 -m pip install --extra-index-url https://download.pytorch.org/whl/cpu docling==2.150.0
 ```
 
 Docling may download model assets on first use. If network access is restricted, report that model installation or cache population is required rather than falling back silently to lower-quality parsing.
