@@ -1,6 +1,6 @@
 ---
 name: guix-packaging
-description: Write, test, and debug GNU Guix package definitions for software that is missing from Guix — fonts, Python/Rust/Node/Go/Perl libraries, and standalone programs. Use when a needed package is not in Guix (e.g. `guix show NAME` fails), when asked to package a font (such as Space Mono), to import a package from PyPI/crates.io/npm/CRAN/Hackage, to compute a source hash, to write a standalone `.scm` package file, or to debug a failing `guix build`. Knows how to operate inside the claude-guix `--container --nesting` sandbox.
+description: Write, test, and debug GNU Guix package definitions for software that is missing from Guix — fonts, Python/Rust/Node/Go/Perl libraries, and standalone programs. Use when a needed package is not in Guix (e.g. `guix show NAME` fails), when asked to package a font (such as Space Mono), to import a package from PyPI/crates.io/npm/CRAN/Hackage, to compute a source hash, to write a standalone `.scm` package file, or to debug a failing `guix build`. Supports host Guix shells and explicitly selected container sessions.
 ---
 
 # Guix Packaging
@@ -10,33 +10,26 @@ usually a **standalone package file** that builds with `guix build -f file.scm`,
 which can then be installed (`guix install -f`), entered (`guix shell -f`), or
 folded into this repo's package modules / a personal channel.
 
-## Sandbox preflight (do this first)
+## Check the execution environment
 
-The `claude-guix` launcher runs inside `guix shell --container --nesting`. That
-exposes the daemon socket (`/var/guix/daemon-socket/socket`) and the store, but
-the `guix` command is often **not on PATH**. Check and fix:
+`claude-guix` defaults to a host Guix shell. Only `--full` and `--sandbox`
+select `guix shell --container --nesting`. Check the launch mode before using
+container workarounds; `GUIX_ENVIRONMENT` alone is set in both modes. If the
+launch command is unknown, inspect `/proc/self/mountinfo` and `/sys` rather
+than assuming that a Guix shell is a container.
 
-```sh
-command -v guix || echo "guix missing — relaunch with the skill manifest"
-```
-
-If `guix` is missing, exit and relaunch with this skill's manifest layered in:
-
-```sh
-claude-guix -m .agents/skills/guix-packaging/manifest.scm
-```
-
-Then confirm the toolchain works:
+Check `command -v guix`, `guix --version`, `guix describe`, and access to
+`/var/guix/daemon-socket/socket`. If Guix is absent, add this skill's manifest
+while preserving the chosen mode, e.g.:
 
 ```sh
-guix --version
-ls -l /var/guix/daemon-socket/socket   # daemon reachable
-guix describe                          # which guix/channels are in use
+claude-guix --sandbox -m .agents/skills/guix-packaging/manifest.scm
 ```
 
-`guix build`, `guix download`, and `guix import` all need the network — the
-launcher passes `--network`, so this works. If a command hangs the first time,
-it is usually fetching substitutes; let it run.
+Container notes below apply only inside a container and only when the described
+failure occurs. Do not change certificate variables or avoid working host
+commands preemptively. Both container modes expose the network and daemon;
+initial builds may spend time fetching substitutes.
 
 ## Step 1 — Confirm it is actually missing
 
@@ -171,10 +164,10 @@ See `references/templates.scm` for ready-to-edit definitions and
 
 ## Failure handling
 
-- `guix build` fails with a hash mismatch → paste the "expected" hash into the
+- `guix build` fails with a hash mismatch → paste the "actual" hash into the
   `(base32 ...)` field. That is normal on the first build.
 - "unbound variable: some-package" → add the `#:use-module`/`(use-modules ...)`
   that defines it, or it isn't in Guix and must be packaged too.
 - Network/substitute timeouts → retry; the daemon resumes partial downloads.
-- `guix` not found at all → the sandbox lacks the binary; relaunch with
+- `guix` not found at all → the active environment lacks the binary; relaunch with
   `-m .agents/skills/guix-packaging/manifest.scm` (see preflight).

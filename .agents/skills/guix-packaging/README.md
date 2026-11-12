@@ -17,7 +17,7 @@ Both build to an identical store path containing all four styles as `.ttf`/`.otf
 
 ## Trick 1 — Let the daemon do the network fetch, not local tools
 
-Inside the `claude-guix` sandbox, **local `git`/`curl` often fail TLS** with
+Inside an explicitly selected `claude-guix --sandbox` or `--full` session, **local `git`/`curl` often fail TLS** with
 `server certificate verification failed (CAfile: none)`. But the **guix build
 daemon has its own CA bundle**, so anything fetched *through* guix works:
 `guix download URL`, `guix build` (git-fetch/url-fetch), `guix import`.
@@ -77,19 +77,12 @@ finds `.ttf`/`.otf`/`.woff` in the source and installs them under
 `share/fonts/...`. No `inputs`, no compilation. License is nearly always
 `license:silofl1.1`. This makes fonts the easiest possible packaging target.
 
-## Sandbox setup (one-time)
+## Execution mode
 
-`claude-guix` runs in `guix shell --container --nesting`. Nesting exposes the
-daemon socket (`/var/guix/daemon-socket/socket`) and the store, **but the `guix`
-binary is frequently absent** (`could not add current Guix to the profile`).
-Relaunch with this skill's manifest to get it:
-
-```sh
-claude-guix -m .agents/skills/guix-packaging/manifest.scm
-```
-
-No change to `claude-guix.scm` itself is required — `--nesting` + `--network`
-(both already passed by the launcher) plus this manifest are sufficient.
+`claude-guix` defaults to the host. Container workarounds apply only with
+`--full` or `--sandbox`; see the environment check in `SKILL.md`. Preserve
+that mode when layering the manifest. Missing certificates or commands should
+be diagnosed from the actual error, not inferred from `GUIX_ENVIRONMENT`.
 
 ## Files in this skill
 

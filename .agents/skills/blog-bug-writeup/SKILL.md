@@ -6,7 +6,7 @@ description: >
   a root cause found through evidence (logs, timestamps, measurements) rather
   than a guess, or a fix that broke something else before landing. Draft a
   post in ~/Projects/CyberspaceSource (the personal blog, built with Haunt)
-  using its native `sls/bug` Skribe format under skeleton/guides/, then build
+  using its native Skribe format under skeleton/guides/, then build
   the site locally to verify it actually renders before telling the user it's
   ready. Do NOT use for trivial fixes: one-line typos, config value corrections,
   "the docs were wrong" with no investigation, or anything where the fix was
@@ -54,11 +54,11 @@ judgment call was made.
   post: `skeleton/guides/<kebab-case-topic>.skr`. (`skeleton/logs/` exists
   too, for informal running logs rather than a single resolved
   investigation — don't use it for this.)
-- The `sls/bug` macro and its child forms are defined in
+- When available, the `sls/bug` macro and its child forms are defined in
   `src/reader/skribe/bug.scm`; shared helpers (`date-line`, `tag-list`,
   `status-badge`, `refs-footer`) are in `src/reader/skribe/common.scm`. Read
-  both before writing a post — this skill's summary below can drift from the
-  actual macro signatures; the source is the source of truth.
+  both before writing a post. If this checkout lacks them, follow an existing
+  guide's `(post ...)` format instead; the checked-out source is authoritative.
 - An existing post to pattern-match against:
   `skeleton/guides/wacom-tablet-orientation-guix.skr` (short, single-attempt)
   and `skeleton/guides/guix-ci-speedup.skr` (long, multi-attempt with

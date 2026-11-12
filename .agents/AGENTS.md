@@ -1,5 +1,13 @@
 # Globale Agenten-Anweisungen
 
+## Aufgaben festhalten
+
+Konkrete zukünftige Aufgaben, Fristen, zugesagte Antworten und Nachfassaktionen
+für Samuel proaktiv mit dem Skill `todo-calendar` festhalten. Vorher nach
+Duplikaten suchen und den angelegten Eintrag berichten; nicht nur eine
+Erinnerung anbieten. Mechanik und Grenzen stehen in
+`skills/todo-calendar/SKILL.md` und `skills/calendar/SKILL.md`.
+
 Gilt für alle Repositories und Harnesses. Verlinkt über
 `home/services/agent-skills.scm` als `~/.claude/CLAUDE.md`,
 `~/.codex/AGENTS.md`, `~/.pi/agent/AGENTS.md` und

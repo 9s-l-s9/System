@@ -49,9 +49,11 @@ stored as a Mailfence tag and picks the colour.
 
 ## Changing
 
-Only when the user asked for it, or as part of a task they gave (e.g. "trag
-die Interviews aus den Mails ein"). Report every change with the line notyet
-prints.
+When the user asked for it, as part of their task (e.g. "trag die Interviews
+aus den Mails ein"), or for new reminders under the standing
+[todo-calendar instruction](../todo-calendar/SKILL.md). Report every change
+with the line notyet prints. That standing instruction does not authorize
+moving or deleting existing events.
 
 ```
 notyet new "Globex: Videointerview (Alex M.)" --type Gespräch --start "2026-11-12 14:00" --for 45m --location Teams --desc "Link: Mail vom 29.10., Message-ID <...>"
@@ -66,6 +68,8 @@ Rules:
 
 1. **Times come from the source** (the mail's `Calendar-DTSTART` or text),
    never estimated. Unknown time → ask, or make it all-day and say so.
+   For a Nachhaken reminder with a known day, todo-calendar permits choosing
+   09:00 and reporting it explicitly as the reminder time.
 2. **Search first** (`notyet search … date:…`) so you don't add a duplicate;
    invitations accepted in Mailfence are already there.
 3. **Invitations from others are read-only** (`is:invite`). Don't `--force`

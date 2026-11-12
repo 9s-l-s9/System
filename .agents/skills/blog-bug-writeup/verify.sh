@@ -1,11 +1,6 @@
 #!/bin/sh
-# Run the blog's own verification gate (make check: lint + test + smoke —
-# tests/test-skribe-bug.scm and tests/test-skribe-common.scm already
-# byte-exact-assert the sls/bug macros' SXML/class output; smoke = a full
-# haunt build), then confirm the one thing that gate can't know about: that
-# THIS specific new post file exists in the build output and is linked from
-# its index. Deliberately does not re-derive class-name/structure checks
-# `make check` already covers more rigorously — see this skill's SKILL.md.
+# Run the blog's own make check, then verify this post's generated title
+# and its link from the guides index. The current theme need not emit an h1.
 #
 # Usage: verify.sh <topic>
 #   where <topic> is the .skr filename under skeleton/guides/ without
@@ -25,13 +20,13 @@ cd "$repo"
 }
 
 echo "== make check (lint + test + smoke) =="
-guix environment -l ./guix.scm -- env SLS_GUIX_ENV=1 make check
+guix shell -D -f guix.scm -- env SLS_GUIX_ENV=1 make check
 
 echo "== checking $page exists and is wired up =="
 [ -f "$page" ] || { echo "error: $page was not generated" >&2; exit 1; }
 
 echo "-- title --"
-grep -o '<h1>[^<]*</h1>' "$page" || { echo "error: no <h1> found" >&2; exit 1; }
+grep -o '<title>[^<]*</title>' "$page" || { echo "error: no page title found" >&2; exit 1; }
 
 echo "-- linked from guides index --"
 grep -q "$topic" /tmp/pages/guides/index.html && echo "yes" || {
