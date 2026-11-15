@@ -79,7 +79,27 @@ name = \"laptop-only\"
 ;; Super, Ctrl, Alt, or any other modifier chord — prefix + plain key
 ;; (or Shift-key, or a sub-keymap) only.
 (set-prefix-key! '() \"Print\")
-(setenv \"MINDE_TERMINAL\" \"foot\")
+
+;; minde's portable defaults assume no terminal, brightness or audio
+;; programs: Return opens the run prompt and the media keys are unbound.
+;; These launchers therefore live here.
+(bind-prefix-key! \"Return\" (lambda () (wm-spawn \"foot\")) \"terminal\")
+;; Dedicated hardware keys, not modifier chords, so they stay global.
+(bind-key! '() \"XF86MonBrightnessUp\"
+           (lambda () (wm-spawn \"brightnessctl set +5%\"))
+           \"increase brightness 5%\")
+(bind-key! '() \"XF86MonBrightnessDown\"
+           (lambda () (wm-spawn \"brightnessctl set 5%-\"))
+           \"decrease brightness 5%\")
+(bind-key! '() \"XF86AudioRaiseVolume\"
+           (lambda () (wm-spawn \"wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+\"))
+           \"increase volume 5%\")
+(bind-key! '() \"XF86AudioLowerVolume\"
+           (lambda () (wm-spawn \"wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-\"))
+           \"decrease volume 5%\")
+(bind-key! '() \"XF86AudioMute\"
+           (lambda () (wm-spawn \"wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle\"))
+           \"toggle audio mute\")
 
 (bind-prefix-key! \"b\"
   (lambda () (wm-spawn \"MOZ_ENABLE_WAYLAND=1 zen || chromium --ozone-platform-hint=auto\"))
