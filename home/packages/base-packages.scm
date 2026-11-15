@@ -49,6 +49,7 @@
   (list "tree" "curl"
         "rsync" "zip" "unzip"
         "glibc-locales" "mpv" "ripgrep" "git-lfs" "yt-dlp" "d2"
+        "file"
         "guile-json"                 ; scripts/mail-export.scm
         "whisper-cpp" "ffmpeg"       ; local speech-to-text (whisper.el)
         "github-cli"))               ; `gh`, used as services/git.scm's credential helper
@@ -77,6 +78,8 @@
   (list "font-ipa-ex" "font-fira-code" "font-jetbrains-mono" "font-iosevka"
         "font-google-roboto" "font-lato" "font-inconsolata" "font-victor-mono"
         "font-fantasque-sans"
+        "font-anonymous-pro"
+        "font-ipa-mj-mincho"          ; Mincho companion to font-ipa-ex
         "font-nerd-symbols"           ; icon glyphs for emacs-nerd-icons
         "font-google-noto-emoji"      ; graphical frames, including the daemon
         ;; design-skill manual aesthetic: Plex Mono body; Space Mono is custom.
@@ -253,12 +256,14 @@
 ;; GUI apps (desktop only)
 
 (define gui-app-packages
-  (list "steam" "inkscape" "gimp"))
+  (list "steam" "inkscape" "gimp" "libreoffice"))
 
 ;; Browser / passwords
 
 (define browser-packages
-  (list "bitwarden-desktop"))
+  (list "bitwarden-desktop"
+        ;; Fallback behind Zen in minde's browser binding (`zen || chromium').
+        "ungoogled-chromium-wayland"))
 
 ;; Network
 

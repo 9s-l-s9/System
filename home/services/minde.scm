@@ -104,7 +104,6 @@ name = \"laptop-only\"
 (bind-prefix-key! \"b\"
   (lambda () (wm-spawn \"MOZ_ENABLE_WAYLAND=1 zen || chromium --ozone-platform-hint=auto\"))
   \"browser\")
-(bind-prefix-key! \"e\" (lambda () (wm-spawn \"lem -i sdl2\")) \"Lem\")
 (bind-prefix-key! \"E\" (lambda () (wm-spawn \"emacsclient -c -a emacs\")) \"Emacs\")
 (bind-prefix-key! \"i\"
   (lambda () (eww-run! (list (sysinfo-command \"--toggle\"))))
