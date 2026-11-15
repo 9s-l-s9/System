@@ -295,9 +295,25 @@
 
       (guix-service-type config => (guix-configuration
                                                      (inherit config)
+                                                     ;; The daemon fetches each item from the first
+                                                     ;; URL that has it, and nonguix also serves
+                                                     ;; plain Guix packages.  Listed first, it
+                                                     ;; delivered almost everything at ~0.3 MB/s
+                                                     ;; versus ~1.3 MB/s from bordeaux on the same
+                                                     ;; line (2026-11-15), so it goes last: it then
+                                                     ;; only supplies what the Guix servers lack.
                                                      (substitute-urls
-                                                      (append (list "https://substitutes.nonguix.org")
-                                                              %default-substitute-urls))
+                                                      (append %default-substitute-urls
+                                                              (list "https://substitutes.nonguix.org")))
+                                                     ;; The daemon counts substitute downloads as
+                                                     ;; build jobs and defaults to one, so it
+                                                     ;; fetched one item at a time.  On this line a
+                                                     ;; single connection tops out at ~1.3 MB/s while
+                                                     ;; four parallel ones reach ~5 MB/s (measured
+                                                     ;; 2026-11-15).  Builds use all cores each, so
+                                                     ;; four large local builds at once could strain
+                                                     ;; 8 GB; almost everything here is substituted.
+                                                     (extra-options '("--max-jobs=4"))
                                                      (authorized-keys
                                                       (append (list (plain-file "non-guix.pub"
 										"(public-key (ecc (curve Ed25519) (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))"))

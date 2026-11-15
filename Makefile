@@ -12,8 +12,17 @@ update: pull reconfigure-system reconfigure-home
 # a plain pull profile may lack nonguix etc.).
 GUIX_TM = guix time-machine -C channels.scm --
 
+# Download options for the commands that fetch many substitutes.  The
+# daemon fetches each item from the first server that has it and counts
+# downloads as jobs (default: one at a time); nonguix also mirrors plain
+# Guix packages but is the slowest server.  systems/base-system.scm sets the
+# same for the daemon; passing them here also covers a daemon that still
+# runs an older configuration (first reconfigure, a fresh install).
+SUBSTITUTE_URLS = https://bordeaux.guix.gnu.org https://ci.guix.gnu.org https://substitutes.nonguix.org
+GUIX_FETCH = --max-jobs=4 --substitute-urls="$(SUBSTITUTE_URLS)"
+
 pull:
-	guix pull --channels=channels.scm
+	guix pull --channels=channels.scm $(GUIX_FETCH)
 
 # Import the pinned GitHub build on a new PC, or pin an explicitly selected
 # build with `make minde-install COMMIT=<full commit>`. Never compiles Minde.
@@ -26,10 +35,10 @@ minde-ensure:
 	guix repl -q -- scripts/minde-binary.scm ensure
 
 reconfigure-system: minde-ensure
-	sudo $(GUIX_TM) system --load-path=systems reconfigure systems/$$HOSTNAME.scm
+	sudo $(GUIX_TM) system --load-path=systems reconfigure $(GUIX_FETCH) systems/$$HOSTNAME.scm
 
 reconfigure-home: minde-ensure
-	$(GUIX_TM) home --load-path=home reconfigure home/$$USER-home-configuration.scm
+	$(GUIX_TM) home --load-path=home reconfigure $(GUIX_FETCH) home/$$USER-home-configuration.scm
 
 qa-ci: qa-guile-only qa-scripts
 
