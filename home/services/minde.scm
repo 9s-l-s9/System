@@ -305,16 +305,12 @@ name = \"laptop-only\"
   (sync-bars!))
 
 (define (handle-startup!)
-  ;; Output layout first: shikane applies the matching profile from
-  ;; ~/.config/shikane/config.toml now and on every hotplug.  The bars
-  ;; are opened here rather than left to handle-output-configured!:
-  ;; minde stays silent when a re-applied profile changes nothing, so
-  ;; that hook only covers later layout changes.
+  ;; Visible parts first.  Output layout: shikane applies the matching
+  ;; profile from ~/.config/shikane/config.toml now and on every hotplug.
+  ;; The bars are opened here rather than left to
+  ;; handle-output-configured!: minde stays silent when a re-applied
+  ;; profile changes nothing, so that hook only covers later layout changes.
   (wm-spawn \"shikane\")
-  ;; Minimal sessions do not start a desktop environment's Polkit agent.
-  ;; This supplies password dialogs for applications using Polkit.
-  (wm-spawn \"~/.guix-home/profile/libexec/polkit-gnome-authentication-agent-1\")
-  ;; Wallpaper and widgets -- they are the visible part of startup.
   (next-wallpaper!)
   ;; sysinfo rides in the bars' batch rather than racing it: see eww-run!.
   (eww-run! (cons (sysinfo-command \"\") (bar-commands)))
@@ -323,6 +319,16 @@ name = \"laptop-only\"
   ;; wlr-gamma-control support.
   (wm-spawn \"gammastep -m wayland -l 35.81:-0.80 -t 3500:3000\")
   (wm-spawn \"[ $(brightnessctl get) -lt 100 ] && brightnessctl set 80% || true\")
+  ;; Everything without a window waits until the bars are up.  Started
+  ;; together with them, eleven programs competed for four hardware
+  ;; threads and the bars appeared 1.6 s after this hook (System#33).
+  (wm-run-after 3000 start-background-services!)
+  (wm-log \"personal autostart complete\"))
+
+(define (start-background-services!)
+  ;; Minimal sessions do not start a desktop environment's Polkit agent.
+  ;; This supplies password dialogs for applications using Polkit.
+  (wm-spawn \"~/.guix-home/profile/libexec/polkit-gnome-authentication-agent-1\")
   ;; A reboot mid-eco leaves Bluetooth rfkill-blocked (firmware remembers
   ;; the switch) plus a stale state file; clear both so Print h and the
   ;; Bluetooth mouse behave. Idempotent when eco mode is not on.
@@ -336,7 +342,7 @@ name = \"laptop-only\"
   ;; Sync Mailfence right away instead of waiting up to five minutes for
   ;; the mail-sync timer after a reboot.
   (wm-spawn \"herd trigger mail-sync\")
-  (wm-log \"personal autostart complete\"))
+  (wm-log \"personal background services started\"))
 
 ;; Preserve personal additions across the base configuration's atomic reload.
 (if (defined? 'register-configuration-layer!)
