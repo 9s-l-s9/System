@@ -2,8 +2,13 @@
 ;; a single process alive) instead of per-second defpolls, which forked
 ;; ~15 processes a second -- see scripts/sysinfo-daemon for the numbers.
 (deflisten stats
-	:initial "{\"time\":\"--\",\"clock\":\"--\",\"up\":\"--\",\"cpus\":[],\"mem\":\"\",\"swap\":\"\",\"temp0\":\"--\",\"temp1\":\"--\",\"net_stat\":\"--\",\"net_iface\":\"--\",\"net_ssid\":\"--\",\"bat\":\"--\"}"
+	:initial "{\"time\":\"--\",\"up\":\"--\",\"cpus\":[],\"mem\":\"\",\"swap\":\"\",\"temp0\":\"--\",\"temp1\":\"--\",\"net_stat\":\"--\",\"net_iface\":\"--\",\"net_ssid\":\"--\"}"
 	"scripts/sysinfo-daemon")
+;; The bar's own values arrive separately and only when they change, so the
+;; bar is not redrawn on every pane tick.
+(deflisten bar-stats
+	:initial "{\"clock\":\"--\",\"bat\":\"--\"}"
+	"scripts/sysinfo-daemon bar")
 
 (defpoll kernel-release-poll :interval "5m" "uname -r")
 (defpoll kernel-name-poll :interval "5m" "uname -s")
@@ -274,7 +279,7 @@
 			(label :text {minde-state.focused_window?.title ?: ""}))
 		(box)
 		(box :halign "end" :space-evenly false :spacing 12
-			(label :class "bar-bat" :text {stats.bat})
-			(label :class "bar-clock" :text {stats.clock}))
+			(label :class "bar-bat" :text {bar-stats.bat})
+			(label :class "bar-clock" :text {bar-stats.clock}))
 	)
 )
