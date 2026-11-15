@@ -30,7 +30,7 @@ when adopting these paths, and reconfigure the system after editing their source
 3. Adapt =systems/$HOSTNAME.scm=, especially partition UUIDs, and choose the
    matching =home/$USER-home-configuration.scm= entry point.
 4. Provide the local sources listed below, import Minde, then run =make qa-all=.
-5. Run =make update= to pull the channels and reconfigure system and home.
+5. Run =make reconfigure= to pull the channels and reconfigure system and home.
    Check =guix pull --news= after pulling, before reconfiguring.
 
 ** Import the pinned Minde binary

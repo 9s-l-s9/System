@@ -23,7 +23,7 @@ This repository composes a personal Guix System and Guix Home configuration.
 
 ## Evaluation and installation
 
-Run `make update` for channel pull, system reconfiguration and home
+Run `make reconfigure` for channel pull, system reconfiguration and home
 reconfiguration. Individual targets are `make pull`, `make reconfigure-system`
 and `make reconfigure-home`. Reconfiguration uses `guix time-machine -C
 channels.scm` and the matching `home/` or `systems/` load path. See `README.org`

@@ -1,10 +1,10 @@
 .PHONY: qa qa-ci qa-all qa-guile-only qa-scripts qa-minde-binary qa-git-hooks qa-privileged-scripts qa-mail qa-emacs \
 	qa-home-samuel qa-home-samuel-wsl2 qa-system-x1 qa-system-t450s \
-	update pull reconfigure-system reconfigure-home minde-install minde-ensure
+	reconfigure pull reconfigure-system reconfigure-home minde-install minde-ensure
 
-# Full update: pull the pinned channels, then reconfigure the system and
+# The whole run: pull the pinned channels, then reconfigure the system and
 # the home environment (the README's installation steps, in order).
-update: pull reconfigure-system reconfigure-home
+reconfigure: pull reconfigure-system reconfigure-home
 
 # Reconfigure and QA run through time-machine so evaluation always uses the
 # pinned channels, never whatever `guix pull` generation happens to be
