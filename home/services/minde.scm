@@ -27,10 +27,11 @@
 ;; Output profiles: shikane picks the one whose outputs match every
 ;; connected display and applies it on login and on every hotplug.  The
 ;; Samsung is matched by serial so a second identical model would not
-;; collide; the laptop panel by connector name.  Over the X1 Yoga's HDMI
-;; 1.4 port 2560x1440@60 is the sharpest full-RGB mode (4K only at 24 Hz,
-;; chroma-subsampled); switch to 3840x2160@60 + scale 1.5 once the
-;; monitor hangs off DisplayPort.
+;; collide; the laptop panel by connector name.  The Samsung (C32G75TQSR,
+;; Odyssey G7) has a native 2560x1440 panel; its 3840x2160 modes are
+;; "virtual 4K" that the monitor downscales, so 4K never adds sharpness.
+;; Over the X1 Yoga's HDMI 1.4 port 2560x1440@60 is the native mode; via
+;; the Mini DisplayPort the same resolution could run above 60 Hz.
 (define shikane-config
   (plain-file
    "shikane-config.toml"
@@ -40,9 +41,8 @@ name = \"samsung-only\"
     [[profile.output]]
     search = [\"m=LC32G7xT\", \"s=H4ZT101963\"]
     enable = true
-    # minde applies this for real since da12c1f.  Native 4K only reaches
-    # 24Hz over this HDMI 1.4 link, which feels laggy and renders tiny at
-    # scale 1.0; 1440p@60 is the usable compromise until DisplayPort.
+    # minde applies this for real since da12c1f.  2560x1440 is the
+    # panel's native resolution; the advertised 4K modes are downscaled.
     mode = \"2560x1440@59.951Hz\"
     position = \"0,0\"
     scale = 1.0

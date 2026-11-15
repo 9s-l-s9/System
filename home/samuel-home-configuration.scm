@@ -18,7 +18,8 @@
   #:use-module (services claude)
   #:use-module (services mail)
   #:use-module (services calendar)
-  #:use-module (services bigme))
+  #:use-module (services bigme)
+  #:use-module (services steam))
 
 (home-environment
  (packages
@@ -45,4 +46,5 @@
           (mail-services)
           (calendar-services)
           (bigme-services)
+          (steam-services)
           (agent-launcher-services))))
