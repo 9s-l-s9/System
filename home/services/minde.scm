@@ -130,7 +130,8 @@ name = \"laptop-only\"
 (bind-prefix-key! \"V\"
   (lambda () (wm-spawn \"~/Projects/System/scripts/voice-dictate.scm\"))
   \"voice dictation\")
-;; Eco toggle: backlight off and Bluetooth blocked; second press restores both.
+;; Eco toggle: backlight off, Bluetooth blocked, Zen/Bitwarden/adb/KDE Connect
+;; stopped; second press restores backlight, Bluetooth and KDE Connect.
 (bind-prefix-key! \"h\"
   (lambda () (wm-spawn \"~/Projects/System/scripts/eco-toggle.scm\"))
   \"eco mode on/off\")
