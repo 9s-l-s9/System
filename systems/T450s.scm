@@ -47,7 +47,13 @@
                    (operating-system-packages base-system)))
 
   ;; Print L runs an immutable system copy, never the writable checkout.
-  (services (append (privileged-script-services)
+  ;; Session keyboard layout groups, read by minde from XKB_DEFAULT_*
+  ;; (/etc/environment via pam_env at SDDM login; Print X switches).
+  ;; de(bone) first for the built-in keyboard; us second for the Corne.
+  (services (append (list (simple-service 'keyboard-layout session-environment-service-type
+                                            '(("XKB_DEFAULT_LAYOUT" . "de,us")
+                                              ("XKB_DEFAULT_VARIANT" . "bone,"))))
+                          (privileged-script-services)
                     (operating-system-user-services base-system)))
   (sudoers-file (privileged-sudoers "samuel"))
 

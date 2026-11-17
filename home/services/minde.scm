@@ -137,8 +137,9 @@ name = \"laptop-only\"
   \"eco mode on/off\")
 ;; Print X: flip the XKB layout group between de(bone) (built-in
 ;; keyboard) and us (the Corne, whose firmware already implements Bone
-;; on top of a US host layout).  Groups come from XKB_DEFAULT_LAYOUT
-;; below; handle-keyboard-layout-changed! shows the new name.
+;; on top of a US host layout).  Groups come from XKB_DEFAULT_LAYOUT,
+;; set per machine in systems/*.scm (/etc/environment);
+;; handle-keyboard-layout-changed! shows the new name.
 (when (defined? 'set-keyboard-layout!)
   (bind-prefix-key! \"X\" (lambda () (set-keyboard-layout! 'next))
                     \"keyboard layout de(bone)/us\"))
@@ -351,12 +352,9 @@ name = \"laptop-only\"
                      ("shikane/config.toml" ,shikane-config)))
    (simple-service 'minde-environment
                    home-environment-variables-service-type
-                   ;; Two layout groups: de(bone) for the built-in keyboard
-                   ;; and plain us for the Corne; Print X switches (see
-                   ;; personal-init), so no grp:* chord is configured.
-                   '(("XKB_DEFAULT_LAYOUT" . "de,us")
-                     ("XKB_DEFAULT_VARIANT" . "bone,")
-                     ;; Firefox-based browsers (Zen) keep one profile per
+                   ;; Keyboard layouts (XKB_DEFAULT_*) are per machine, in
+                   ;; systems/X1.scm and systems/T450s.scm.
+                   '(;; Firefox-based browsers (Zen) keep one profile per
                      ;; install *path*; every Guix update moves the store
                      ;; path and would start a fresh empty profile.  Legacy
                      ;; mode uses the Default=1 profile from profiles.ini
