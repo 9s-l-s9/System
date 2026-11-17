@@ -18,6 +18,7 @@
   #:use-module (services mail)
   #:use-module (services calendar)
   #:use-module (services bigme)
+  #:use-module (services steam)
   #:use-module (services xdg))
 
 (home-environment
@@ -44,5 +45,6 @@
           (mail-services)
           (calendar-services)
           (bigme-services)
+          (steam-services)
           (agent-launcher-services)
           (xdg-services))))

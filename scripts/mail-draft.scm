@@ -249,7 +249,15 @@ with \"> \", as mail clients do on reply; empty if the original is unknown."
          (subject (or (header headers "subject")
                       (and reply-to
                            (let ((s (or (original-header reply-to "Subject") "")))
-                             (if (string-prefix-ci? "re:" s) s (string-append "Re: " s))))
+                             ;; The raw header may be an RFC 2047 encoded word
+                             ;; ("=?iso-8859-1?Q?Re:_R=FCck...?="), so also look
+                             ;; for "Re:" at the start of its Q or B payload.
+                             (if (or (string-prefix-ci? "re:" s)
+                                     (string-match
+                                      "^=\\?[^?]+\\?([Qq]\\?[Rr][Ee](:|=3[Aa])|[Bb]\\?(UmU6|UkU6|cmU6))"
+                                      s))
+                                 s
+                                 (string-append "Re: " s))))
                       (die "no Subject:")))
          (references (and reply-to
                           (string-trim-both

@@ -23,7 +23,16 @@
 
   ;; The damaged keyboard and CPU power controls need root. Install immutable
   ;; programs so passwordless sudo cannot execute edits to the checkout.
-  (services (append (privileged-script-services #:keyboard? #t)
+  ;; Session keyboard layout groups, read by minde from XKB_DEFAULT_*
+  ;; (/etc/environment via pam_env at SDDM login; Print X switches).
+  ;; The X1 runs with the Corne (Bone in its firmware on a US host layout),
+  ;; so us comes first; de(bone) is the second group for the built-in keyboard.
+  (services (append (list (simple-service 'keyboard-layout session-environment-service-type
+                                            '(("XKB_DEFAULT_LAYOUT" . "us,de")
+                                              ("XKB_DEFAULT_VARIANT" . ",bone")
+                                              ;; Caps Lock does nothing.
+                                              ("XKB_DEFAULT_OPTIONS" . "caps:none"))))
+                          (privileged-script-services #:keyboard? #t)
                     (operating-system-user-services base-system)))
   (sudoers-file (privileged-sudoers "samuel" #:keyboard? #t))
 

@@ -27,10 +27,11 @@
 ;; Output profiles: shikane picks the one whose outputs match every
 ;; connected display and applies it on login and on every hotplug.  The
 ;; Samsung is matched by serial so a second identical model would not
-;; collide; the laptop panel by connector name.  Over the X1 Yoga's HDMI
-;; 1.4 port 2560x1440@60 is the sharpest full-RGB mode (4K only at 24 Hz,
-;; chroma-subsampled); switch to 3840x2160@60 + scale 1.5 once the
-;; monitor hangs off DisplayPort.
+;; collide; the laptop panel by connector name.  The Samsung (C32G75TQSR,
+;; Odyssey G7) has a native 2560x1440 panel; its 3840x2160 modes are
+;; "virtual 4K" that the monitor downscales, so 4K never adds sharpness.
+;; Over the X1 Yoga's HDMI 1.4 port 2560x1440@60 is the native mode; via
+;; the Mini DisplayPort the same resolution could run above 60 Hz.
 (define shikane-config
   (plain-file
    "shikane-config.toml"
@@ -40,9 +41,8 @@ name = \"samsung-only\"
     [[profile.output]]
     search = [\"m=LC32G7xT\", \"s=H4ZT101963\"]
     enable = true
-    # minde applies this for real since da12c1f.  Native 4K only reaches
-    # 24Hz over this HDMI 1.4 link, which feels laggy and renders tiny at
-    # scale 1.0; 1440p@60 is the usable compromise until DisplayPort.
+    # minde applies this for real since da12c1f.  2560x1440 is the
+    # panel's native resolution; the advertised 4K modes are downscaled.
     mode = \"2560x1440@59.951Hz\"
     position = \"0,0\"
     scale = 1.0
@@ -149,14 +149,16 @@ name = \"laptop-only\"
 (bind-prefix-key! \"V\"
   (lambda () (wm-spawn \"~/Projects/System/scripts/voice-dictate.scm\"))
   \"voice dictation\")
-;; Eco toggle: backlight off and Bluetooth blocked; second press restores both.
+;; Eco toggle: backlight off, Bluetooth blocked, Zen/Bitwarden/adb/KDE Connect
+;; stopped; second press restores backlight, Bluetooth and KDE Connect.
 (bind-prefix-key! \"h\"
   (lambda () (wm-spawn \"~/Projects/System/scripts/eco-toggle.scm\"))
   \"eco mode on/off\")
 ;; Print X: flip the XKB layout group between de(bone) (built-in
 ;; keyboard) and us (the Corne, whose firmware already implements Bone
-;; on top of a US host layout).  Groups come from XKB_DEFAULT_LAYOUT
-;; below; handle-keyboard-layout-changed! shows the new name.
+;; on top of a US host layout).  Groups come from XKB_DEFAULT_LAYOUT,
+;; set per machine in systems/*.scm (/etc/environment);
+;; handle-keyboard-layout-changed! shows the new name.
 (when (defined? 'set-keyboard-layout!)
   (bind-prefix-key! \"X\" (lambda () (set-keyboard-layout! 'next))
                     \"keyboard layout de(bone)/us\"))
@@ -375,12 +377,9 @@ name = \"laptop-only\"
                      ("shikane/config.toml" ,shikane-config)))
    (simple-service 'minde-environment
                    home-environment-variables-service-type
-                   ;; Two layout groups: de(bone) for the built-in keyboard
-                   ;; and plain us for the Corne; Print X switches (see
-                   ;; personal-init), so no grp:* chord is configured.
-                   '(("XKB_DEFAULT_LAYOUT" . "de,us")
-                     ("XKB_DEFAULT_VARIANT" . "bone,")
-                     ;; Firefox-based browsers (Zen) keep one profile per
+                   ;; Keyboard layouts (XKB_DEFAULT_*) are per machine, in
+                   ;; systems/X1.scm and systems/T450s.scm.
+                   '(;; Firefox-based browsers (Zen) keep one profile per
                      ;; install *path*; every Guix update moves the store
                      ;; path and would start a fresh empty profile.  Legacy
                      ;; mode uses the Default=1 profile from profiles.ini
