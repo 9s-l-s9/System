@@ -7,12 +7,15 @@
 # with shell builtins instead: steady-state it forks only `sleep` per tick
 # and `nmcli` on network refreshes.
 #
-# Output: one JSON object per line, every TICK seconds. eww exposes it as
-# `stats` and widgets read {stats.cpus}, {stats.mem}, ...
+# Output: one JSON object per line. Without an argument, the sysinfo pane's
+# values every TICK seconds; eww exposes them as `stats` and widgets read
+# {stats.cpus}, {stats.mem}, ... With the argument "bar", the bar's clock
+# and battery text, only when they change (`bar-stats`).
 
-TICK=2        # seconds between updates
+TICK=2        # seconds between pane updates
 NET_EVERY=5   # refresh network fields every NET_EVERY ticks
-BAT_EVERY=10  # refresh battery fields every BAT_EVERY ticks
+BAR_TICK=5        # seconds between checks of the bar's values
+BAR_BAT_EVERY=4   # refresh battery fields every BAR_BAT_EVERY bar ticks
 
 # --- battery sysfs dirs, located once. The T450s has TWO batteries
 # (internal BAT0 + removable Power Bridge BAT1); reading only one shows
@@ -177,10 +180,28 @@ json_string() {
     JSON_STRING=${JSON_STRING//$'\f'/\\f}
 }
 
+# "bar" mode: the two values the bar shows. They change about once a minute,
+# so they must not ride on the pane's two-second object: eww re-evaluates
+# every widget that reads a changed variable, and each redraw of the bar is
+# a surface commit that the compositor renders. Emit only on change.
+if [ "${1:-pane}" = bar ]; then
+    last="" tick=0
+    while :; do
+        printf -v clock '%(%a %d %b  %H:%M)T' -1
+        [ $((tick % BAR_BAT_EVERY)) -eq 0 ] && refresh_bat
+        line="{\"clock\":\"$clock\",\"bat\":\"$bat\"}"
+        if [ "$line" != "$last" ]; then
+            printf '%s\n' "$line"
+            last=$line
+        fi
+        tick=$((tick + 1))
+        sleep "$BAR_TICK"
+    done
+fi
+
 tick=0
 while :; do
     printf -v now '%(%H.%M %a %b %d)T' -1
-    printf -v clock '%(%a %d %b  %H:%M)T' -1
     read -r up _ < /proc/uptime
     up=${up%.*}
     upstr="$((up / 3600)):$((up % 3600 / 60)):$((up % 60))"
@@ -189,12 +210,11 @@ while :; do
     read_temp "$temp0_file"; temp0=$TEMP
     read_temp "$temp1_file"; temp1=$TEMP
     [ $((tick % NET_EVERY)) -eq 0 ] && refresh_net
-    [ $((tick % BAT_EVERY)) -eq 0 ] && refresh_bat
     json_string "$net_ssid"; ssid_json=$JSON_STRING
     json_string "$net_iface"; iface_json=$JSON_STRING
-    printf '{"time":"%s","clock":"%s","up":"%s","cpus":%s,"mem":"%s","swap":"%s","temp0":"%s","temp1":"%s","net_stat":"%s","net_iface":"%s","net_ssid":"%s","bat":"%s"}\n' \
-        "$now" "$clock" "$upstr" "$cpus" "$mem" "$swap" \
-        "$temp0" "$temp1" "$net_stat" "$iface_json" "$ssid_json" "$bat"
+    printf '{"time":"%s","up":"%s","cpus":%s,"mem":"%s","swap":"%s","temp0":"%s","temp1":"%s","net_stat":"%s","net_iface":"%s","net_ssid":"%s"}\n' \
+        "$now" "$upstr" "$cpus" "$mem" "$swap" \
+        "$temp0" "$temp1" "$net_stat" "$iface_json" "$ssid_json"
     tick=$((tick + 1))
     sleep "$TICK"
 done

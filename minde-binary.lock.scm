@@ -1,12 +1,1 @@
-(
- (schema . 1)
- (repository . "9s-l-s9/minde")
- (commit . "cb3b7a07a2ead76a569a3e71ef95f52e905e809b")
- (version . "1.0.0-rc1")
- (system . "x86_64-linux")
- (minde . "/gnu/store/ghcjkyl6pbisyn36r8ss0bb2l7cg72zl-minde-1.0.0-rc1")
- (xwayland . "/gnu/store/jgmka7yixxfrh130b6h1p19hr9ha3sps-xorg-server-xwayland-24.1.12")
- (archive-sha256 . "683282a6a3be4b969d1578ae16d598236e44af56d3c608c377c1471af4178787")
- (key-sha256 . "76273553f884d526a04968082697171185afc77688c085ccac1ee3db687a0b51")
- (closure-sha256 . "8332e0fed917e79af91a0e695f04e11ef21799e9ed1f2aa4d6efc85b03ffe98b")
-)
+((schema . 1) (repository . "9s-l-s9/minde") (commit . "c1ddef6c5e34fdd3f6fd8257272ff376dc7d12f7") (version . "1.0.0-rc1") (system . "x86_64-linux") (minde . "/gnu/store/gd2ziyr9b4phjgf28g3ppj9jx1fk09py-minde-1.0.0-rc1") (xwayland . "/gnu/store/jgmka7yixxfrh130b6h1p19hr9ha3sps-xorg-server-xwayland-24.1.12") (archive-sha256 . "9feebd914c73e0f379e5a4d43a3af95a8e326936f1305b896ee5120497a2242f") (key-sha256 . "de84af174455ed79e61a4e3ff7c8c42f25495717b0a1008742948c60fb352622") (closure-sha256 . "17fdce2003da92e519dd63f2369a6c8b096c990949316dc4de5cf4757a2a519f"))

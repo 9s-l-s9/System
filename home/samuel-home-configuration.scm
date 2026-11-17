@@ -12,14 +12,14 @@
   #:use-module (services starship)
   #:use-module (services konsole)
   #:use-module (services helix)
-  #:use-module (services lem)
   #:use-module (services agent-skills)
   #:use-module (services agent-launchers)
   #:use-module (services claude)
   #:use-module (services mail)
   #:use-module (services calendar)
   #:use-module (services bigme)
-  #:use-module (services steam))
+  #:use-module (services steam)
+  #:use-module (services xdg))
 
 (home-environment
  (packages
@@ -39,7 +39,6 @@
                 (fish-service)
                 (starship-service)
                 (helix-service)
-                (lem-service)
                 (agent-skills-service)
                 (claude-service))
           (konsole-services)
@@ -47,4 +46,5 @@
           (calendar-services)
           (bigme-services)
           (steam-services)
-          (agent-launcher-services))))
+          (agent-launcher-services)
+          (xdg-services))))
