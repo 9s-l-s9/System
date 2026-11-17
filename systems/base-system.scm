@@ -293,6 +293,22 @@
                              (handle-lid-switch-external-power 'ignore)
                              (handle-lid-switch-docked 'ignore)))
 
+      ;; Power off at 5 % instead of the default hybrid sleep at 2 %. Hybrid
+      ;; sleep needs a hibernation image, but the disk swap is smaller than RAM
+      ;; and there is no resume= target, so it never happened: the battery ran
+      ;; flat, and with a worn CMOS cell (X1 Yoga 1st) the RTC reset to 2001.
+      ;; That forced setting the clock in the firmware setup by hand and made
+      ;; shepherd's timers spin after the NTP jump (mail/calendar sync, TLS
+      ;; "certificate not yet valid"). A clean power-off keeps enough charge
+      ;; in the main battery to hold the RTC for days.
+      (upower-service-type config =>
+                           (upower-configuration
+                            (inherit config)
+                            ;; UPower requires low > critical > action.
+                            (percentage-critical 8)
+                            (percentage-action 5)
+                            (critical-power-action 'power-off)))
+
       (guix-service-type config => (guix-configuration
                                                      (inherit config)
                                                      (substitute-urls
