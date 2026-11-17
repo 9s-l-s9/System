@@ -29,7 +29,9 @@
   ;; so us comes first; de(bone) is the second group for the built-in keyboard.
   (services (append (list (simple-service 'keyboard-layout session-environment-service-type
                                             '(("XKB_DEFAULT_LAYOUT" . "us,de")
-                                              ("XKB_DEFAULT_VARIANT" . ",bone"))))
+                                              ("XKB_DEFAULT_VARIANT" . ",bone")
+                                              ;; Caps Lock does nothing.
+                                              ("XKB_DEFAULT_OPTIONS" . "caps:none"))))
                           (privileged-script-services #:keyboard? #t)
                     (operating-system-user-services base-system)))
   (sudoers-file (privileged-sudoers "samuel" #:keyboard? #t))
