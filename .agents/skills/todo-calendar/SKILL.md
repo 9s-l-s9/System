@@ -24,7 +24,12 @@ notyet commands, event types, synchronization and invitation rules.
    and explicitly report that chosen reminder time. Undated tasks need a date
    before they can be entered.
 4. Put the context in `--desc`: mail Message-ID, file path, meeting name or
-   conversation context, plus the action and responsible person.
+   conversation context, plus the action and responsible person. Start the
+   description with the **first concrete step**, the sentence Samuel would
+   otherwise have to work out again: not "continue the report" but "open
+   table 2 and check whether the three returns explain the 48-euro gap"
+   (exact file, page, link or command). Where the agent can prepare that step
+   (draft, file, opened link), prepare it and name it in the description.
 5. Report the actual line returned by notyet. If creation or synchronization
    fails, say what was saved locally and what remains unresolved; never claim
    a reminder exists based only on an intention to create it.

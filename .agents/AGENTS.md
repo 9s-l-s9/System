@@ -43,3 +43,11 @@ Genannte etablierte Begriffe zusätzlich an
 Schreibzugriff besteht (Format siehe Dateikopf; Vorderseite = Situation
 oder Umschreibung, Rückseite = Begriff, Fachgebiet und Definition).
 Doppelte Einträge vermeiden.
+
+## Podcasts und Audio-Zusammenfassungen
+
+Fokus-Prompts für Audio-Zusammenfassungen (Gemini Notebook, NotebookLM u. ä.)
+machen ein Thema zuerst spannend: offene Fragen, ein überraschender Befund,
+warum es gerade jetzt zählt. Ziel ist, dass Samuel danach Lust hat, die
+Details selbst zu lernen; Vollständigkeit ist zweitrangig, Details stehen in
+Lernkarten oder Quellen.
