@@ -22,6 +22,7 @@
             preserve-common-env
             git-config-mounts
             maybe-dry-run
+            pinned-guix-args
             run-guix))
 
 (define (env name default)
@@ -131,11 +132,25 @@
     (for-each (lambda (a) (format #t "~a~%" a)) args)
     (exit 0)))
 
-;; Run `guix ARGS...`, reporting failures as "NAME: guix shell exited with
-;; status N".
+;; Prefix ARGS with `time-machine -C channels.scm --' so manifests are
+;; always evaluated against the repo's pinned channels (pantherx, nonguix,
+;; ...), never against whatever `guix' happens to be first on PATH: a
+;; missing ~/.config/guix/current or a stale pull would otherwise make
+;; packages from third-party channels "not found". The pinned set is
+;; cached after the first run, so later starts only add a few seconds.
+(define (pinned-guix-args args)
+  (append (list "time-machine" "-C"
+                (string-append (require-home "agent-launch")
+                               "/Projects/System/channels.scm")
+                "--")
+          args))
+
+;; Run `guix time-machine -C channels.scm -- ARGS...`, reporting failures as
+;; "NAME: guix shell exited with status N".
 (define (run-guix name args)
-  (maybe-dry-run args)
-  (let ((status (apply system* "guix" args)))
+  (let* ((args (pinned-guix-args args))
+         (_ (maybe-dry-run args))
+         (status (apply system* "guix" args)))
     (if (zero? status)
         (exit 0)
         (begin

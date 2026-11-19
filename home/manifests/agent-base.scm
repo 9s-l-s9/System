@@ -37,7 +37,7 @@
   "guile"
   "make"
   "findutils"
-  "d2"
+  "d2"            ; from the pantherx channel; launchers use time-machine
   ;; Wayland screenshots so an agent can capture the real screen for UI/debug
   ;; work; the launchers expose WAYLAND_DISPLAY/XDG_RUNTIME_DIR into the
   ;; container. slurp adds interactive region selection.

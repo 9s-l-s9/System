@@ -100,7 +100,7 @@
       (format #t "dsh-guix: mode: ~a~%"
               (mode-name mode))
       (format #t "dsh-guix: dsh args: ~a~%" (string-join dsh-args " "))
-      (let ((args (guix-args mode dsh-args)))
+      (let ((args (pinned-guix-args (guix-args mode dsh-args))))
         (maybe-dry-run args)
         (let ((status (apply system* "guix" args)))
           (exit (if (zero? status) 0 1)))))))
