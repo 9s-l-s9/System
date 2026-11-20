@@ -89,6 +89,13 @@ Rules:
    check anyway. When the user has done the task (the mail is in Sent),
    delete the event; before a day starts, check that day's Nachhaken events
    against `Sent Items` and drop the ones already done.
+9. **On-site appointments get generous travel blocks** (online ones none):
+   with every event at a physical location, also create `Anreise: …` before
+   and `Rückreise: …` after it, type **Privat**. Assume the train from
+   Kaufbeuren unless the user names another starting point, and add at least
+   one hour of reserve to the usual travel time; say in `--desc` that the
+   duration is an estimate. This is the one exception to rule 1. Check that
+   the blocks do not cut into other events of the day and report any overlap.
 
 ## To-dos
 
