@@ -67,6 +67,9 @@ name = \"laptop-only\"
    "minde-init.scm"
    "(setenv \"MINDE_CONFIG\"
         (string-append (getenv \"HOME\") \"/.config/minde/config.scm\"))
+;; Prefer native Wayland clients unless the login environment selects a backend.
+(unless (getenv \"GDK_BACKEND\") (setenv \"GDK_BACKEND\" \"wayland,x11\"))
+(unless (getenv \"MOZ_ENABLE_WAYLAND\") (setenv \"MOZ_ENABLE_WAYLAND\" \"1\"))
 (primitive-load (string-append (getenv \"MINDE_SCHEME_DIR\") \"/init.scm\"))
 
 ;; Samuel's policy, layered over minde's portable C-t defaults.
@@ -102,7 +105,7 @@ name = \"laptop-only\"
            \"toggle audio mute\")
 
 (bind-prefix-key! \"b\"
-  (lambda () (wm-spawn \"MOZ_ENABLE_WAYLAND=1 zen || chromium --ozone-platform-hint=auto\"))
+  (lambda () (wm-spawn \"zen || chromium --ozone-platform-hint=auto\"))
   \"browser\")
 (bind-prefix-key! \"E\" (lambda () (wm-spawn \"emacsclient -c -a emacs\")) \"Emacs\")
 (bind-prefix-key! \"i\"
