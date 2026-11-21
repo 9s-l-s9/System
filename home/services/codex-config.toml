@@ -1,6 +1,6 @@
 # Initial defaults only. services/codex.scm seeds a writable
 # ~/.codex/config.toml; Codex owns subsequent settings and trust changes.
-model = "gpt-6.1-sol"
+# Kein festes model: Codex nimmt dann sein neuestes Standardmodell (Samuel, 21.11.2026: immer das neueste Modell einer Familie).
 model_reasoning_effort = "xhigh"
 approvals_reviewer = "auto_review"
 service_tier = "default"
