@@ -56,8 +56,8 @@
         (maybe-mount "--share"
                      (string-append home "/.codex")
                      (string-append home "/.codex"))
-        ;; Keep legacy installs available while new installs use a private
-        ;; prefix. npm must never overwrite ~/.local/bin/codex, our launcher.
+        ;; npm installs into a private prefix; it must never overwrite
+        ;; ~/.local/bin/codex, our launcher.
         (maybe-mount "--share"
                      (string-append home "/.local")
                      (string-append home "/.local"))
@@ -81,11 +81,13 @@
           "export NPM_CONFIG_CACHE=\"$HOME/.cache/agent-npm\"; "
           "export PATH=\"$NPM_CONFIG_PREFIX/bin:$PATH\"; "
           "CODEX_ENTRY=\"$NPM_CONFIG_PREFIX/lib/node_modules/@openai/codex/bin/codex.js\"; "
-          "if [ ! -f \"$CODEX_ENTRY\" ]; then "
-          ;; Reuse the installed CLI without downloading or deleting it.
-          "  if [ -f \"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\" ]; then "
-          "    CODEX_ENTRY=\"$HOME/.local/lib/node_modules/@openai/codex/bin/codex.js\"; "
-          "  else npm install -g @openai/codex; fi; "
+          ;; Refresh @latest at most once a day (new models need a current CLI);
+          ;; fall back to the installed CLI when the update fails or is offline.
+          "STAMP=\"$NPM_CONFIG_PREFIX/.last-update\"; "
+          "if [ ! -f \"$CODEX_ENTRY\" ] || [ -z \"$(find \"$STAMP\" -mmin -1440 2>/dev/null)\" ]; then "
+          "  if npm install -g @openai/codex@latest >&2; then touch \"$STAMP\"; "
+          "  else [ -f \"$CODEX_ENTRY\" ] || exit 1; "
+          "    printf '%s\\n' 'codex-guix: update failed; starting installed Codex.' >&2; fi; "
           "fi; "
           "exec node \"$CODEX_ENTRY\" \"$@\"")
          "codex-guix")

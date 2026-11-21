@@ -34,9 +34,10 @@ its own updater can subsequently update it. Playwright's MCP package is pinned
 in scripts/pw-mcp-gen-config.scm. That helper rewrites browser settings only
 when changed and registers the server only when its saved command differs.
 Pi still checks/installs @latest each launch
-and falls back to its installed CLI if an update fails. Codex reuses a legacy
-~/.local installation until a private one is installed; its npm update prefix
-always points at the private directory so updates preserve the Guix launcher.
+and falls back to its installed CLI if an update fails. Codex installs into a private
+prefix (~/.local/share/agent-tools/codex) and refreshes @latest at most once a
+day (stamp .last-update), falling back to the installed CLI if the update fails;
+the prefix keeps updates from overwriting the Guix launcher.
 Pi requires newer Node than these Guix pins provide: it reuses dsh's checksummed
 Node 24 download, but keeps a private interpreter-patched executable in its
 own runtime directory.
