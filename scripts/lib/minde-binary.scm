@@ -9,6 +9,7 @@
   #:use-module (srfi srfi-13)
   #:use-module (rnrs bytevectors)
   #:use-module (gcrypt hash)
+  #:use-module (json)
   #:use-module (guix base16)
   #:use-module (guix base64)
   #:use-module (guix build utils)
@@ -19,7 +20,8 @@
   #:export (minde-repository minde-workflow release-files
             run! full-commit? store-item? read-metadata read-closure
             file-digest set-download-trust! verify-release!
-            prebuilt-minde-package prune-binary-roots!))
+            prebuilt-minde-package prune-binary-roots!
+            latest-run-url compare-url latest-run-commit comparison-status))
 
 (define minde-repository "9s-l-s9/minde")
 (define minde-workflow
@@ -27,6 +29,38 @@
 (define release-files
   '("binary.scm" "minde-x86_64-linux.nar.xz" "signing-key.pub"
     "closure.txt" "provenance.json"))
+
+;; Public REST API (no login). Only used to choose a candidate commit; the
+;; candidate is authenticated afterwards by verify-release!.
+(define latest-run-url
+  (string-append "https://api.github.com/repos/" minde-repository
+                 "/actions/workflows/guix-binary.yml/runs"
+                 "?branch=main&event=push&status=success&per_page=1"))
+
+(define (compare-url base head)
+  (string-append "https://api.github.com/repos/" minde-repository
+                 "/compare/" base "..." head "?per_page=1"))
+
+(define (latest-run-commit json-text)
+  "Commit of the newest successful push run on main in the API answer, or #f."
+  (let* ((data (catch #t (lambda () (json-string->scm json-text)) (lambda _ #f)))
+         (runs (and (list? data) (assoc-ref data "workflow_runs")))
+         (run (and (vector? runs) (> (vector-length runs) 0)
+                   (vector-ref runs 0))))
+    (and (list? run)
+         (equal? (assoc-ref run "head_branch") "main")
+         (equal? (assoc-ref run "event") "push")
+         (equal? (assoc-ref run "status") "completed")
+         (equal? (assoc-ref run "conclusion") "success")
+         (equal? (assoc-ref run "path") ".github/workflows/guix-binary.yml")
+         (full-commit? (assoc-ref run "head_sha"))
+         (assoc-ref run "head_sha"))))
+
+(define (comparison-status json-text)
+  "The compare API's status (\"ahead\", \"behind\", ...) or #f."
+  (let ((data (catch #t (lambda () (json-string->scm json-text)) (lambda _ #f))))
+    (and (list? data) (string? (assoc-ref data "status"))
+         (assoc-ref data "status"))))
 
 (define (run! . args)
   (unless (zero? (apply system* args))

@@ -4,6 +4,7 @@
 (use-modules (lib minde-binary)
              (srfi srfi-1)
              (srfi srfi-64)
+             (ice-9 string-fun)
              (ice-9 textual-ports)
              (guix build utils)
              ((guix build syscalls) #:select (mkdtemp!)))
@@ -55,6 +56,17 @@
   (read-metadata metadata-file))
 (rejects "reject malformed digest"
   (metadata (replace-field 'key-sha256 "checksum")))
+(let ((run (lambda (f) (format #f "{\"workflow_runs\":[{\"head_branch\":\"main\",\"event\":\"push\",\"status\":\"completed\",\"conclusion\":\"success\",\"path\":\".github/workflows/guix-binary.yml\",\"head_sha\":\"~a\"}]}" f))))
+  (test-equal "latest run commit" (make-string 40 #\a) (latest-run-commit (run (make-string 40 #\a))))
+  (test-assert "short sha rejected" (not (latest-run-commit (run "abc"))))
+  (test-assert "wrong conclusion rejected"
+    (not (latest-run-commit (string-replace-substring (run (make-string 40 #\a)) "success" "failure"))))
+  (test-assert "other branch rejected"
+    (not (latest-run-commit (string-replace-substring (run (make-string 40 #\a)) "main" "evil"))))
+  (test-assert "garbage rejected" (not (latest-run-commit "not json")))
+  (test-assert "empty runs rejected" (not (latest-run-commit "{\"workflow_runs\":[]}")))
+  (test-equal "compare status" "ahead" (comparison-status "{\"status\":\"ahead\"}"))
+  (test-assert "compare garbage" (not (comparison-status "x"))))
 (test-assert "reject non-store paths" (not (store-item? "/tmp/minde")))
 (test-assert "reject paths inside a store item"
   (not (store-item? (string-append (assoc-ref valid 'minde) "/bin/minde"))))

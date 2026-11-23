@@ -30,8 +30,8 @@ when adopting these paths, and reconfigure the system after editing their source
 3. Adapt =systems/$HOSTNAME.scm=, especially partition UUIDs, and choose the
    matching =home/$USER-home-configuration.scm= entry point.
 4. Provide the local sources listed below, import Minde, then run =make qa-all=.
-5. Run =make reconfigure= to pull the channels and reconfigure system and home.
-   Check =guix pull --news= after pulling, before reconfiguring.
+5. Run =make reconfigure=: one sudo prompt, pull the pinned channels, move the
+   Minde pin to the newest successful build (see below), reconfigure system and home.
 
 ** Import the pinned Minde binary
 
@@ -49,8 +49,15 @@ hash, and Guix signatures. No GitHub login is needed. It does not add a permanen
 ACL. The build/download path excludes the affected eMudhra trust roots; this
 does not change the general system trust store.
 
-To select a newer successful [[https://github.com/9s-l-s9/minde/actions/workflows/guix-binary.yml][guix-binary run]], use =make minde-install COMMIT=<full commit>=,
-then commit the updated lock file with the configuration. Other PCs can run
+=make reconfigure= looks up the newest successful [[https://github.com/9s-l-s9/minde/actions/workflows/guix-binary.yml][guix-binary run]] on =main=
+through the public GitHub API. If it is ahead of the lock, it is imported with
+the same verification as =minde-install= and the lock is rewritten; the lock is
+committed on its own (only that file) after a successful run and pushed unless
+the branch is behind its upstream. =make reconfigure
+MINDE_UPDATE=0= skips the lookup and keeps the committed pin; if GitHub is
+unreachable the pin is kept as well. To select a specific build, use
+=make minde-install COMMIT=<full commit>=.
+Commit the updated lock file with the configuration. Other PCs can run
 =make minde-install= to fetch that same build. Reconfiguration creates only
 small symlinks for Minde and Xwayland; it never compiles Minde. Explicit local
 development is available with =MINDE_BUILD_LOCAL=1=.
@@ -63,6 +70,7 @@ loads the separate Shikane package recipe from its =guix-channel/= directory.
 #+begin_src sh
 make pull
 guix pull --news
+make minde-update   # optional; needs sudo for a new build
 make reconfigure-system
 make reconfigure-home
 #+end_src

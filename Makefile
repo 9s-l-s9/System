@@ -1,15 +1,48 @@
 .PHONY: qa qa-ci qa-all qa-guile-only qa-scripts qa-minde-binary qa-git-hooks qa-privileged-scripts qa-mail qa-emacs \
 	qa-home-samuel qa-home-samuel-wsl2 qa-system-x1 qa-system-t450s \
-	reconfigure pull reconfigure-system reconfigure-home minde-install minde-ensure
+	reconfigure pull reconfigure-system reconfigure-home minde-install minde-ensure minde-update minde-commit-lock sudo-warm
 
-# The whole run: pull the pinned channels, then reconfigure the system and
-# the home environment (the README's installation steps, in order).
-reconfigure: pull reconfigure-system reconfigure-home
+# The whole run: one sudo prompt up front, pull the pinned channels (the pins
+# in channels.scm are bumped by hand, never here), move the Minde pin to the
+# newest successful GitHub build when there is one (MINDE_UPDATE=0 disables
+# that), then reconfigure the system and the home environment. The lock file
+# is committed (alone) after a successful run, see minde-commit-lock.
+# Recipe order, not prerequisites, so the steps run sequentially under -j.
+reconfigure:
+	$(MAKE) sudo-warm
+	$(MAKE) pull
+	$(MAKE) sudo-warm minde-update
+	$(MAKE) reconfigure-system
+	$(MAKE) reconfigure-home
+	$(MAKE) minde-commit-lock
+
+# Commit only the changed lock (never other pending files); push unless the
+# branch is behind its upstream. No change: nothing happens.
+minde-commit-lock:
+	@if git diff --quiet -- minde-binary.lock.scm; then :; else \
+	  sha=$$(guix repl -q -- scripts/minde-binary.scm commit | tail -n1); \
+	  git commit -q -m "minde: Binary auf $$(echo $$sha | cut -c1-8) aktualisieren" -- minde-binary.lock.scm && \
+	  echo "Committed minde-binary.lock.scm ($$sha)."; \
+	  git fetch -q 2>/dev/null; \
+	  if [ "$$(git rev-list --count HEAD..@{u} 2>/dev/null || echo x)" = 0 ]; then \
+	    git push -q && echo "Pushed." || echo "WARNING: push failed; lock committed locally."; \
+	  else echo "WARNING: branch is behind or has no upstream; lock committed locally, not pushed."; fi; \
+	fi
+
+# Refresh the sudo timestamp (also after a long pull, where it may expire).
+sudo-warm:
+	sudo -v
+
+# Newest successful guix-binary run on main, imported when ahead of the lock.
+minde-update:
+	MINDE_UPDATE=$(MINDE_UPDATE) guix repl -q -- scripts/minde-binary.scm update
 
 # Reconfigure and QA run through time-machine so evaluation always uses the
 # pinned channels, never whatever `guix pull` generation happens to be
 # current (a stale or rolled-back one silently swaps package versions, and
 # a plain pull profile may lack nonguix etc.).
+MINDE_UPDATE ?= 1
+
 GUIX_TM = guix time-machine -C channels.scm --
 
 # Download options for the commands that fetch many substitutes.  The

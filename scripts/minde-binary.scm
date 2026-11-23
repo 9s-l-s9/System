@@ -157,8 +157,72 @@
           (copy-file (string-append directory "/binary.scm") temporary)
           (rename-file temporary target)
           (format #t "Minde binary imported and pinned to ~a.~%" commit)
-          (format #t "Run make reconfigure-system and make reconfigure-home to select it.~%")))
+          (format #t "Run make reconfigure-system and make reconfigure-home to select it.~%")
+          (format #t "Commit minde-binary.lock.scm with the configuration.~%")))
       (lambda () (delete-file-recursively directory)))))
+
+(define (api-get url)
+  "Fetch a public GitHub API URL as a string, with the filtered CA bundle."
+  (let* ((directory (temporary-directory))
+         (port #f))
+    (dynamic-wind
+      (lambda () (set-download-trust! (string-append directory "/trust")))
+      (lambda ()
+        (set! port (open-pipe* OPEN_READ "curl" "--fail" "--silent" "--show-error"
+                               "--proto" "=https" "--proto-redir" "=https"
+                               "--max-time" "30" "--retry" "2"
+                               "--cacert" (getenv "SSL_CERT_FILE")
+                               "-H" "Accept: application/vnd.github+json" url))
+        (let ((text (get-string-all port)))
+          (and (zero? (close-pipe port)) text)))
+      (lambda () (delete-file-recursively directory)))))
+
+(define (pinned-commit)
+  (assoc-ref (read-metadata (string-append system-directory "/minde-binary.lock.scm"))
+             'commit))
+
+(define (ensure-pinned)
+  (let ((pinned (read-metadata (string-append system-directory "/minde-binary.lock.scm"))))
+    (unless (every (lambda (name) (file-exists? (assoc-ref pinned name)))
+                   '(minde xwayland))
+      (format #t "Pinned Minde binary ~a is not in this store; importing it.~%"
+              (assoc-ref pinned 'commit))
+      (install-release (assoc-ref pinned 'commit)))))
+
+;; Update to the newest successful guix-binary run on main when it is ahead of
+;; the lock. Looking it up is best effort (offline, rate limit): the pinned
+;; build is then used. Anything chosen is verified by install-release exactly
+;; like `make minde-install COMMIT=...`. MINDE_UPDATE=0 disables the lookup.
+(define (update-pinned)
+  (if (equal? (getenv "MINDE_UPDATE") "0")
+      (begin (format #t "MINDE_UPDATE=0: keeping the pinned Minde build.~%")
+             (ensure-pinned))
+      (let* ((pinned (pinned-commit))
+             (latest (catch #t
+                       (lambda ()
+                         (let ((text (api-get latest-run-url)))
+                           (and text (latest-run-commit text))))
+                       (lambda _ #f)))
+             (status (and latest (not (string=? latest pinned))
+                          (catch #t
+                            (lambda ()
+                              (let ((text (api-get (compare-url pinned latest))))
+                                (and text (comparison-status text))))
+                            (lambda _ #f)))))
+        (cond
+         ((not latest)
+          (format #t "Could not determine the latest Minde build; keeping ~a.~%" pinned)
+          (ensure-pinned))
+         ((string=? latest pinned)
+          (format #t "Minde is up to date (~a).~%" pinned)
+          (ensure-pinned))
+         ((equal? status "ahead")
+          (format #t "Newer Minde build ~a (pinned: ~a); importing it.~%" latest pinned)
+          (install-release latest))
+         (else
+          (format #t "Latest successful build ~a is not ahead of the pin (~a); keeping the pin.~%"
+                  latest (or status "unknown"))
+          (ensure-pinned))))))
 
 (match (cdr (command-line))
   (("fetch" commit)
@@ -166,13 +230,10 @@
   (("install" commit) (install-release commit))
   ;; Import the pinned build only when it is missing from this store, e.g.
   ;; on another machine after the lock was bumped. Called by reconfigure.
-  (("ensure")
-   (let ((pinned (read-metadata (string-append system-directory "/minde-binary.lock.scm"))))
-     (unless (every (lambda (name) (file-exists? (assoc-ref pinned name)))
-                    '(minde xwayland))
-       (format #t "Pinned Minde binary ~a is not in this store; importing it.~%"
-               (assoc-ref pinned 'commit))
-       (install-release (assoc-ref pinned 'commit)))))
+  (("ensure") (ensure-pinned))
+  (("update") (update-pinned))
+  ;; Print the pinned commit (for the lock commit message).
+  (("commit") (display (pinned-commit)) (newline))
   (("install")
    (install-release
     (assoc-ref (read-metadata (string-append system-directory "/minde-binary.lock.scm"))
@@ -186,5 +247,5 @@
   (("--import" directory commit) (import-release directory commit))
   (("--restore" directory) (restore-release directory))
   (_
-   (display "usage: scripts/minde-binary.scm install [COMMIT]\n       scripts/minde-binary.scm ensure\n       scripts/minde-binary.scm fetch COMMIT\n       scripts/minde-binary.scm verify DIRECTORY COMMIT\n")
+   (display "usage: scripts/minde-binary.scm install [COMMIT]\n       scripts/minde-binary.scm ensure\n       scripts/minde-binary.scm update   (MINDE_UPDATE=0 keeps the pin)\n       scripts/minde-binary.scm fetch COMMIT\n       scripts/minde-binary.scm verify DIRECTORY COMMIT\n")
    (exit 2)))
