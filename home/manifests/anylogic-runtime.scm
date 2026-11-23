@@ -14,4 +14,6 @@
               "libxdamage" "libxfixes" "libxrandr" "libxcb"
               "libxkbcommon" "libdrm" "dbus" "cups"
               "fontconfig" "freetype" "zlib" "mesa" "eudev"
-              "openssl" "expat" "patchelf" "unzip" "nss-certs"))))
+              "openssl" "expat" "patchelf" "unzip" "nss-certs"
+              "adwaita-icon-theme" "hicolor-icon-theme"
+              "gsettings-desktop-schemas" "shared-mime-info"))))

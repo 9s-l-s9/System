@@ -22,6 +22,7 @@
                         bundle "/natives/linux-amd64"))
 (prepend "PATH" (string-append runtime "/bin"))
 (prepend "XDG_DATA_DIRS" (string-append runtime "/share"))
+(setenv "GSETTINGS_SCHEMA_DIR" (string-append runtime "/share/glib-2.0/schemas"))
 (prepend "GUIX_GTK3_PATH" (string-append runtime "/lib/gtk-3.0"))
 (prepend "GUIX_GDK_PIXBUF_MODULE_FILES"
          (string-append runtime "/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"))
@@ -44,7 +45,8 @@
                              "gtk-theme-name=Adwaita\n"
                              "gtk-application-prefer-dark-theme=false\n"
                              "gtk-icon-theme-name=Adwaita\n"
-                             "gtk-font-name=Noto Sans 10\n"
+                             "gtk-font-name=Noto Sans 11\n"
+                             "gtk-key-theme-name=Default\n"
                              "gtk-modules=\n"))
   ;; Keep fontconfig user settings visible under the changed config home.
   (let ((fonts (string-append gtk-config "/fontconfig"))
